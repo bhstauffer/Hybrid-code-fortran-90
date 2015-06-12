@@ -49,7 +49,7 @@ module inputs
              
              
       real, parameter:: beta_particle = 1.0     !beta value of intial particles       
-      real, parameter:: beta_pu = 1.0            !beta value of pickup ions
+      real, parameter:: beta_pu = 10.0            !beta value of pickup ions
       real:: omega_p                            !ion gyrofrequency
       
 !       Electron ion collision frequency

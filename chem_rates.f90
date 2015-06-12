@@ -107,7 +107,7 @@ module chem_rates
             use MPI
             use misc
             use gutsp
-            use mult_proc, only: procnum
+            use mult_proc, only: procnum, my_rank
             use grid, only: qx,qy,qz,dz_grid
             use inputs, only: PI,dt,mion,nf_init,mu0,b0_init,dx,dy,beta_pu,m_pu,ion_amu,km_to_m, load_rate
             use var_arrays, only: input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,np,vp,vp1,xp
@@ -116,22 +116,34 @@ module chem_rates
             real:: ddni, theta2, rand1, mdot, sca1 !scaling parameter
             integer:: i,j,k,l,m,l1,dNi,flg,ierr
             
-            if ((m_tstep .gt. 20) .and. (m_tstep .lt. 600)) then
+     !       if ((m_tstep .gt. 20) .and. (m_tstep .lt. 600)) then
                   ! default load_rate = 0.1
-                  sca1 = load_rate*exp(-(dt*m_tstep-30)**2/10**2)
+                  sca1 = exp(-(dt*m_tstep-2)**2/load_rate**2)
                   
-                  mdot = 2.0*sca1*sqrt(mion*nf_init/mu0/1e9)*b0_init*dx*dy*1e6
+                  mdot = sca1*sqrt(mion*nf_init/mu0/1e9)*b0_init*dx*dy*1e6
+                  if (my_rank == 0) then
+                  write(*,*) 'mdot.........', mdot
+                  endif
+                  
+                 
                   
                   ddni = dt*mdot*beta*beta_pu/(procnum*1.67e-27*m_pu)
+                  if (my_rank == 0) then
+                  write(*,*) 'ddni......', ddni
+                  endif
+                  !stop
                   
-                  if (ddni .gt. 1.0) then
+                  if (ddni .lt. 1.0) then
                         if (ddni .gt. pad_ranf()) then
                               ddni = 1.0
+                        else
+                              ddni = 0.0
                         endif
                   endif
                   
                   dNi = nint(ddni)
-                  
+                  !write(*,*) 'dNi per processor......', dNi
+                  !stop
                   l1 = Ni_tot + 1
                   
                   do l= l1, l1+ dNi-1
@@ -142,8 +154,8 @@ module chem_rates
 !                        vp(l,2) = 0
 !                        vp(l,3) = 0
                         theta2 = pad_ranf()*2*PI
-                        vp(l,1) = 57.0*cos(theta2)
-                        vp(l,2) = 57.0*sin(theta2)
+                        vp(l,1) = 0.0!57.0*cos(theta2)
+                        vp(l,2) = 0.0!57.0*sin(theta2)
                         vp(l,3) = 0.0
                         
                         xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
@@ -191,7 +203,7 @@ module chem_rates
                   call update_np()
                   call update_up(vp)
                  
-            endif
+      !      endif
             
       end subroutine Mass_load_Io
       

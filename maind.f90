@@ -192,7 +192,7 @@ program hybrid
             endif
             if (Ni_tot .lt. Ni_max) then
                   !Call ionizing subroutine  (adds ions to the domain)
-                  call Mass_load_Io(m)
+                  !call Mass_load_Io(m)
             endif
             call get_interp_weights()
             call update_np()                  !np at n+1/2
