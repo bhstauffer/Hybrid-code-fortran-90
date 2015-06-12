@@ -209,7 +209,7 @@ module gutsp
                         Ep(l,m) = Ep(l,m) * mrat(l)
                   enddo
                   Ep(l,3) = cc(m)
-                  Ep(l,3) = Ep(l,m) * mrat(l) + grav3*mrat(l)  ! Second term is for gravity
+                  Ep(l,3) = Ep(l,m) * mrat(l) !+ grav3*mrat(l)  ! Second term is for gravity
 !                  write(*,*) 'Electric field..............', Ep(l,m)*mrat(l)
 !                  write(*,*) 'Gravity field...............', grav3*mrat(l), gravc(2,2,2), sum(wght(l,:))
 !                  stop
