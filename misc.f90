@@ -148,7 +148,7 @@ module misc
       subroutine seed_mpi(my_rank)
             integer, intent(in):: my_rank
             integer::i, time(8)
-            integer, dimension(2):: seed
+            integer, dimension(12):: seed
             real:: r
 
             call date_and_time(values=time)
