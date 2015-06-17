@@ -1,15 +1,15 @@
 module misc
       implicit none
       contains
-      
+
 !!!!!!!!!RANDOM NUMBER GENERATOR!!!!!!!!!!!!!!
 
       real function pad_ranf()
             implicit none
             call random_number(pad_ranf)
       end function pad_ranf
-      
-      
+
+
       subroutine random_initialize(seed_input)
 !**********************************************************************
 !
@@ -87,7 +87,7 @@ module misc
 !
 !     Input, integer ( kind = 4 ) SEED_INPUT, the user's "suggestion" for a seed
 !     However, if the input value is 0, the routine will come up with
-!     its own "suggestion", based on the system clock.   
+!     its own "suggestion", based on the system clock.
 
             implicit none
             integer, intent(in):: seed_input
@@ -97,9 +97,9 @@ module misc
             real:: t
             integer, parameter:: warm_up = 100
             integer:: i
-            
+
             seed = seed_input
-            
+
             !initialize the random seed routine
             call random_seed()
             !Determine the size of the random number seed vector
@@ -107,9 +107,9 @@ module misc
             !Allocate a vector of the right size to be used as a random seed
             allocate (seed_vector(seed_size))
             !If user supplied a SEED value, use that
-            
+
             !Otherwise, use the system clock value to make up a value that is likely to change based on when the routine is called.
-            
+
             if (seed /= 0 ) then
                   if (debug) then
                         write(*,*) ' '
@@ -118,50 +118,50 @@ module misc
                   endif
             else
                   call system_clock(count,count_rate,count_max)
-                  
+
                   seed = count
-                  
+
                   if (debug) then
                         write(*,*) ' '
                         write(*,*) 'RANDOM_INITIALIZE'
                         write(*,*) 'Initialize RANDOM_NUMBER, arbitrary SEED = ',seed
                   endif
             endif
-            
+
             !Set the seed vector.  Set all entries to seed
-            
+
             seed_vector(1:seed_size) = seed
-            
+
             !Free up the seed space
-            
+
             deallocate(seed_vector)
-            
+
             !Call the random number routine a bunch of time to "warm up"
-            
+
             do i = 1, warm_up
                   call random_number(harvest = t)
             enddo
-            
+
       end subroutine
-           
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine seed_mpi(my_rank)
             integer, intent(in):: my_rank
             integer::i, time(8)
             integer, dimension(2):: seed
             real:: r
-            
+
             call date_and_time(values=time)
             
             seed(:) = time(4) * ( 360000*time(5) + 6000*time(6) + 100*time(7) + time(8)) + my_rank*100
             call random_seed(PUT=seed)
-            
 
-            
+
+
             do i=1,100
                   call random_number(r)
             enddo
-            
+
       end subroutine seed_mpi
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine get_bndry_Eflux(b1,E,bndry_Eflux)
@@ -172,7 +172,7 @@ module misc
             real, intent(inout):: bndry_Eflux
             integer:: i,j,k
             real:: exb_flux, mO_q
-            
+
             mO_q = mO/q
             !k=2 face
             do i = 2, nx
@@ -183,12 +183,12 @@ module misc
                               (E(i,j,k,1)*b1(i,j,k,2) - E(i,j,k,2)*b1(i,j,k,1))* &
                               km_to_m**3
                         bndry_Eflux = bndry_Eflux + exb_flux
-                        
+
                   enddo
             enddo
-            
+
             !k=nx face
-            
+
             do i =2,nx
                   do j=2,ny
                         k = nz-1
@@ -196,10 +196,10 @@ module misc
                               (E(i,j,k,1)*b1(i,j,k,2) - E(i,j,k,2)*b1(i,j,k,1))* &
                               km_to_m**3
                         bndry_Eflux = bndry_Eflux - exb_flux
-                        
+
                   enddo
             enddo
-      
+
       end subroutine get_bndry_Eflux
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -211,12 +211,12 @@ module misc
             integer(4), intent(in):: Ni_tot_sys
             real, intent(out):: beta
             real:: vol
-            
+
             vol = ((qx(nx-1)-qx(1))*(qy(ny-1)-qy(1))*(qz(nz)-qz(1)))
             beta = (Ni_tot_sys/vol)/np_top
-            
+
             write(*,*) 'beta....',beta
-            
+
       end subroutine get_beta
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -227,7 +227,7 @@ module misc
             real, intent(in):: nfp(nx,ny,nz)
             real, intent(out):: np3(nx,ny,nz,3)
             integer:: i,j,k
-            
+
             do i = 2, nx-1
                   do j= 2, ny-1
                         do k = 2, nz-1
@@ -237,9 +237,9 @@ module misc
                         enddo
                   enddo
             enddo
-            
+
             call periodic(np3)
-            
+
       end subroutine get_np3
 
 end module misc
