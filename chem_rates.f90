@@ -61,21 +61,7 @@ module chem_rates
                   xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))
                   xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
                   
-                  i=1
-                  do while (xp(l,1) .gt. qx(i))
-                        i=1+1
-                  enddo
-                  i=i-1
-                  ijkp(l,1) = i
-                  
-                  ijkp(l,2) = floor(xp(l,2)/dy)
-                  
-                  k=1
-                  do while (xp(l,3) .gt. qz(k))
-                        k=k+1
-                  enddo
-                  k=k-1
-                  ijkp(l,3) = k
+                  call get_pindex(i,j,k,l)
                   
                   mrat(l) = 1.0
                   m_arr(l) = mion
@@ -170,21 +156,7 @@ module chem_rates
                               endif
                         enddo
                         
-                        i=1
-                        do while (xp(l,1) .gt. qx(i))
-                              i=1+1
-                        enddo
-                        i=i-1
-                        ijkp(l,1) = i
-                  
-                        ijkp(l,2) = floor(xp(l,2)/dy)
-                  
-                        k=1
-                        do while (xp(l,3) .gt. qz(k))
-                              k=k+1
-                        enddo
-                        k=k-1
-                        ijkp(l,3) = k
+                        call get_pindex(i,j,k,l)
                   
                         do m=1,3
                               vp1(l,m) = vp(l,m)

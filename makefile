@@ -1,7 +1,7 @@
 F90 = mpif90 -g3 -fbounds-check -mcmodel=medium
 
 FILES = dimensions.f90 mult_proc.f90 grid.f90 var_arrays.f90 inputs.f90 misc.f90 boundary.f90 grid_interp.f90 gutsf.f90 gutsp.f90 initial.f90 part_init.f90 chem_rates.f90 maind.f90
-
+DEBUG = -check all -g -warn
 FILESO = dimensions.f90 boundary.f90 grid_interp.f90 mult_proc.f90 var_arrays.f90 inputs.f90 grid.f90 initial.f90 gutsf.f90 misc.f90 part_init.f90 gutsp.f90 chem_rates.f90 maind.f90
 INCLUDE = dimensions.o inputs.o grid.o mult_proc.o var_arrays.o
 INCLUDE2 = dimensions.o inputs.o grid.o mult_proc.o boundary.o misc.o var_arrays.o
@@ -11,7 +11,9 @@ OBJECTS = dimensions.o inputs.o grid.o mult_proc.o boundary.o misc.o grid_interp
 MODS = dimensions.mod mult_proc.mod var_array.mod inputs.mod grid.mod initial.mod gutsf.mod misc.mod boundary.mod part_init.mod grid_interp.mod gutsp.mod chem_rates.f90
 
 hybrid: $(OBJECTS)
-	$(F90) -o hybrid $(OBJECTS)
+	$(F90) -o hybrid $(OBJECTS) -O2
+debug: $(OBJECTS)
+	$(F90) -o hybrid_d $(OBJECTS) $(DEBUG)
 
 clean:
 	rm *.o hybrid *.out *.mod
