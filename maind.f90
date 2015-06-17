@@ -43,7 +43,7 @@ program hybrid
 
       write(filenum, '(I2)') my_rank
 
-      Ni_tot=nz*(ppc/procnum) !1D
+      Ni_tot=(nx-2)*(ny-2)*(nz-2)*(ppc/procnum) !1D
       Ni_tot_0 = Ni_tot
       Ni_tot_sw = Ni_tot
       Ni_tot_sys = Ni_tot*procnum
@@ -78,12 +78,12 @@ program hybrid
       endif
       
       input_Eb = 0.0
-      
+      input_EeP= 0.0
       
       call grd7()
       call grd6_setup(b0,bt,b12,b1,b1p2,nu,input_Eb)
       call get_beta(Ni_tot_sys,beta)
-      
+  
       input_E = 0.0
       bndry_Eflux = 0.0
       
@@ -317,6 +317,7 @@ program hybrid
                   endif
                    
             endif
+!            write(*,*) 'minimum density.....', minval(np(:,:,:))
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !       Write restart file
 
@@ -333,7 +334,6 @@ program hybrid
 !            endif
             
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            
             
       enddo     !End Main Loop
       close(110)

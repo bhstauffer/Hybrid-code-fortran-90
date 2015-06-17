@@ -89,11 +89,11 @@ module part_init
                                   
             integer:: disp
             real:: amp, grad, vth2, vx, vy, vz, Temp, Tempcalc
-            integer:: i,l,k,m,j
+            integer:: l,m,i,j,k
             
             disp = 0 !Displacement of gradient
             amp = 20.0  !amplitude of density
-            grad = 400.0 ! density gradient (larger = more gradual
+            grad = 800.0 ! density gradient (larger = more gradual
             
 !            v1=1.0
             
@@ -112,25 +112,27 @@ module part_init
 !     x     (grad*dz_grid(nz/2+disp))))+1.0) !Weighting function hyperbolic tangent
 !          write(*,*) beta_p(l), 'beta'
 !         ijkp(l,1) = floor(xp(l,1)/dx)
-                  i=1
-                  do 
-                        if (xp(l,3) .le. qx(i)) exit
-                        i = i+1
-                  enddo
-                  i=i-1
+!!!!!!!!!!!!!Get P-index!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!                  i=1
+!                  do 
+!                        if (xp(l,1) .le. qx(i)) exit
+!                        i = i+1
+!                  enddo
+!                  i=i-1
                   
-                  ijkp(l,1) = i
-                  ijkp(l,2) = floor(xp(l,2)/dy)
+!                  ijkp(l,1) = i
+!                  ijkp(l,2) = floor(xp(l,2)/dy)
                   
-                  k=1
-                  do
-                        if (xp(l,3) .le. qz(k)) exit
-                        k=k+1
-                  enddo
-                  k=k-1
+!                  k=1
+!                  do
+!                        if (xp(l,3) .le. qz(k)) exit
+!                        k=k+1
+!                  enddo
+!                  k=k-1
                   
-                  ijkp(l,3) = k
-                  
+!                  ijkp(l,3) = k
+!!!!!!!!!!!!!End get P-index!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+                  call get_pindex(i,j,k,l)
 !                  vth2=sqrt(vth*vth*beta_p(l)) !thermal speed dependent on np to set up pressure balance for density gradient
                   
                   vx = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
@@ -162,11 +164,11 @@ module part_init
             ! Depends on the density gradient.  Currently set as a gaussian.
             
             Temp = vth**2/(3*kboltz)*mion*1.48*10-23!8.61738e-5
-            write(*,*) 'vth.................', vth
-            write(*,*) 'boltzman............', kboltz
+!            write(*,*) 'vth.................', vth
+!            write(*,*) 'boltzman............', kboltz
 !            write(*,*) 'temperature(analytic)..', Temp
             call get_temperature()
-            Tempcalc = sum(temp_p(2,2,:))/nz
+            Tempcalc = sum(temp_p(2,2,:))/1e6/nz !in kg km^2/s^2
 !            write(*,*) 'temperature (2,2,100)..', temp_p(2,2,2:10)/1.6e-19
 !            stop
             
@@ -176,10 +178,12 @@ module part_init
 !                  grav(i,j,k) = amp*2/(grad*dz_grid(nz/2-disp))**2*(qz(nz/2-disp)-qz(k))* &
 !                        exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2) * Temp / np(2,2,k)
                   grav(i,j,k) = -2*Tempcalc/(mion*(grad*dz_grid(nz/2-disp))**2)*(qz(k)-qz(nz/2-disp))
+!                  write(*,*) 'gravity.....', grav(i,j,k), i,j,k
 !                  grav(i,j,k) = 8.0;
             enddo
             enddo
             enddo
+
             
       end subroutine load_Maxwellian
       
@@ -197,7 +201,7 @@ module part_init
                                   
             integer:: disp, flg, l1
             real:: amp, grad, vth2, vx, vy, vz, rand1, theta2
-            integer:: i,l,k,m
+            integer:: i,j,k,l,m
             
             disp = 0 !Displacement of gradient
             amp = 20.0  !amplitude of density
@@ -223,24 +227,7 @@ module part_init
                         mrat(l) = mratio
                   
                   
-                  i=1
-                  do 
-                        if (xp(l,3) .le. qx(i)) exit
-                        i = i+1
-                  enddo
-                  i=i-1
-                  
-                  ijkp(l,1) = i
-                  ijkp(l,2) = floor(xp(l,2)/dy)
-                  
-                  k=1
-                  do
-                        if (xp(l,3) .le. qz(k)) exit
-                        k=k+1
-                  enddo
-                  k=k-1
-                  
-                  ijkp(l,3) = k
+                  call get_pindex(i,j,k,l)
                   
                   
 !                  ii = ijkp(l,1)
@@ -282,7 +269,7 @@ module part_init
             integer(4), intent(in):: Ni_tot_1
             real:: vx,vy,vz
             real:: aniso_frac, vthx, vthy, vthz
-            integer:: l,i,k,m
+            integer:: i,j,k,l,m
             
             aniso_frac = 0.06
             
@@ -295,25 +282,7 @@ module part_init
                   mrat(l) = 1.0
                   beta_p(l) = beta_particle
                   
-                  i=1
-                  do
-                        if (xp(l,1) .le. qx(i)) exit
-                        i=i+1
-                  enddo
-                  i=i-1
-                  
-                  ijkp(l,1)=i
-                  
-                  ijkp(l,2) = floor(xp(l,2)/dy)
-                  
-                  k=1
-                  do
-                        if (xp(l,3) .le. qz(k)) exit
-                        k=k+1
-                  enddo
-                  k=k-1
-                  
-                  ijkp(l,3) = k
+                  call get_pindex(i,j,k,l)
                   
                   vx = vsw+vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
                   vy = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
@@ -346,25 +315,7 @@ module part_init
                   mrat(l) = 1.0
                   beta_p(l) = beta_particle
                   
-                  i=1
-                  do
-                        if (xp(l,1) .le. qx(i)) exit
-                        i=i+1
-                  enddo
-                  i=i-1
-                  
-                  ijkp(l,1)=i
-                  
-                  ijkp(l,2) = floor(xp(l,2)/dy)
-                  
-                  k=1
-                  do
-                        if (xp(l,3) .le. qz(k)) exit
-                        k=k+1
-                  enddo
-                  k=k-1
-                  
-                  ijkp(l,3) = k
+                  call get_pindex(i,j,k,l)
                   
                   vx = vsw+vthx*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
                   vy = vthy*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
@@ -395,25 +346,7 @@ module part_init
                   mrat(l) = 0.5
                   beta_p(l) = beta_particle
                   
-                  i=1
-                  do
-                        if (xp(l,1) .le. qx(i)) exit
-                        i=i+1
-                  enddo
-                  i=i-1
-                  
-                  ijkp(l,1)=i
-                  
-                  ijkp(l,2) = floor(xp(l,2)/dy)
-                  
-                  k=1
-                  do
-                        if (xp(l,3) .le. qz(k)) exit
-                        k=k+1
-                  enddo
-                  k=k-1
-                  
-                  ijkp(l,3) = k
+                  call get_pindex(i,j,k,l)
                   
                   vx = vsw+vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
                   vy = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())

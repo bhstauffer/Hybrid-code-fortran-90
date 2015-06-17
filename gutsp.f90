@@ -47,7 +47,7 @@ module gutsp
             use var_arrays, only: np,xp,vp,up,Ni_tot,ijkp,beta,beta_p,m_arr,mrat
             implicit none
             real:: den_part, minden
-            integer:: i,j,k,l,m,kk,ipart,npart
+            integer:: i,j,k,l,m,kk,ipart,npart,ii,jj
             
             den_part = 1.0/(beta*dx**3)
             minden=2.0*den_part
@@ -74,9 +74,9 @@ module gutsp
                                           xp(l,2) = qy(j) + (0.5-pad_ranf())*dy
                                           xp(l,3) = qz(k) + (0.5-pad_ranf())*dz_grid(k)
                                           
-                                          ijkp(l,1) = nint(xp(l,1)/dx)
-                                          ijkp(l,2) = nint(xp(l,2)/dy)
-                                          
+!                                          ijkp(l,1) = nint(xp(l,1)/dx)
+!                                          ijkp(l,2) = nint(xp(l,2)/dy)
+                                          call get_pindex(ii,jj,kk,l)
                                           kk = 1
                                           do while (xp(l,3) .gt. qz(kk))
                                                 ijkp(l,3) = kk
@@ -105,7 +105,7 @@ module gutsp
 ! bulk flow velocity to time level n, and replaces up_n-3/2 
 ! with up_n-1/2
             use dimensions
-            use var_arrays, only: up,vp,vp1,np,Ni_tot,ijkp,beta,beta_p,wght
+            use var_arrays, only: up,vp,vp1,np,Ni_tot,beta,beta_p,wght
             implicit none
             real:: v_at_n(Ni_max,3)
             integer:: l,m
@@ -209,7 +209,7 @@ module gutsp
                         Ep(l,m) = Ep(l,m) * mrat(l)
                   enddo
                   Ep(l,3) = cc(m)
-                  Ep(l,3) = Ep(l,m) * mrat(l) !+ grav3*mrat(l)  ! Second term is for gravity
+                  Ep(l,3) = Ep(l,m) * mrat(l) + grav3*mrat(l)  ! Second term is for gravity
 !                  write(*,*) 'Electric field..............', Ep(l,m)*mrat(l)
 !                  write(*,*) 'Gravity field...............', grav3*mrat(l), gravc(2,2,2), sum(wght(l,:))
 !                  stop
@@ -217,6 +217,7 @@ module gutsp
 
                   
             enddo
+            !write(*,*) 'electric field, gravity....', maxval(Ep(:,:)), maxval(gravc(:,:,:))
             
       end subroutine get_Ep
       
@@ -292,7 +293,7 @@ module gutsp
 ! flow velocity up using the v+, v- technique.  The new up at
 ! time level n replaces the provisional extrapolation for up.
             use dimensions
-            use var_arrays, only:vp1,vplus,vminus,up,np,Ni_tot,ijkp,beta,beta_p,wght
+            use var_arrays, only:vp1,vplus,vminus,up,np,Ni_tot,beta,beta_p,wght
             implicit none
             integer:: l,m
             
@@ -341,7 +342,7 @@ module gutsp
                   xp(l,2) = xp(l,2) + dth*vp(l,2)
                   xp(l,3) = xp(l,3) + dth*vp(l,3)
                   
-                  if (xp(l,1) .gt. qz(nx-1)) then
+                  if (xp(l,1) .gt. qx(nx-1)) then
                         xp(l,1) = qx(1) + (xp(l,1) - qx(nx-1))
                   else if (xp(l,1) .le. qx(1)) then
                         xp(l,1) = qx(nx-1) -(qx(1)-xp(l,1))
@@ -370,7 +371,7 @@ module gutsp
             use misc
             implicit none
             real:: den_part, minden,v,f,rnd,vx,vy,vz
-            integer:: i,j,k,l,m,kk,flg,npart,ipart
+            integer:: i,j,k,l,m,kk,flg,npart,ipart,ii,jj
             
             den_part = 1/(beta*dx**3)
             k = nx-1                    !top boundary
@@ -424,9 +425,9 @@ module gutsp
                                           xp(l,3) = qz(k) + 2.0*(0.5-pad_ranf())*dz_grid(k)
 
                      
-                                          ijkp(l,1) = nint(xp(l,1)/dx) !particle grid location index
-                                          ijkp(l,2) = nint(xp(l,2)/dy)
-                                          
+!                                          ijkp(l,1) = nint(xp(l,1)/dx) !particle grid location index
+!                                          ijkp(l,2) = nint(xp(l,2)/dy)
+                                          call get_pindex(ii,jj,kk,l)
                                           kk = 1
                                           do while (xp(l,3) .gt. qz(kk))
                                                 ijkp(l,3) = kk
@@ -504,9 +505,9 @@ module gutsp
                                           xp(l,3) = qz(k) + 2.0*(0.5-pad_ranf())*dz_grid(k)
 
                      
-                                          ijkp(l,1) = nint(xp(l,1)/dx) !particle grid location index
-                                          ijkp(l,2) = nint(xp(l,2)/dy)
-                                          
+!                                          ijkp(l,1) = nint(xp(l,1)/dx) !particle grid location index
+!                                          ijkp(l,2) = nint(xp(l,2)/dy)
+                                          call get_pindex(ii,jj,kk,l)
                                           kk = 1
                                           do while (xp(l,3) .gt. qz(kk))
                                                 ijkp(l,3) = kk
@@ -545,7 +546,7 @@ module gutsp
             use var_arrays, only: np,xp,vp,Ni_tot,input_E,ijkp,beta,beta_p,m_arr,mrat
             implicit none
             real:: den_part, minden,v,f,rnd,vx,vy,vz
-            integer:: i,j,k,l,m,kk,flg,npart,ipart
+            integer:: i,j,k,l,m,kk,flg,npart,ipart,ii,jj
             
             den_part = 1/(beta*dx**3)
             k = nz-1    !top boundary
@@ -580,9 +581,9 @@ module gutsp
                                           xp(l,3) = qz(k) + 2.0*(0.5-pad_ranf())*dz_grid(k)
 
                      
-                                          ijkp(l,1) = nint(xp(l,1)/dx) !particle grid location index
-                                          ijkp(l,2) = nint(xp(l,2)/dy)
-                     
+!                                          ijkp(l,1) = nint(xp(l,1)/dx) !particle grid location index
+!                                          ijkp(l,2) = nint(xp(l,2)/dy)
+                                          call get_pindex(ii,jj,kk,l)
                                           kk=1
                                           do while (xp(l,3) .gt. qz(kk))
                                                 ijkp(l,3) = kk
@@ -641,9 +642,9 @@ module gutsp
                                           xp(l,3) = qz(k) + 2.0*(0.5-pad_ranf())*dz_grid(k)
 
                      
-                                          ijkp(l,1) = nint(xp(l,1)/dx) !particle grid location index
-                                          ijkp(l,2) = nint(xp(l,2)/dy)
-                     
+!                                          ijkp(l,1) = nint(xp(l,1)/dx) !particle grid location index
+!                                          ijkp(l,2) = nint(xp(l,2)/dy)
+                                          call get_pindex(ii,jj,kk,l)
                                           kk=1
                                           do while (xp(l,3) .gt. qz(kk))
                                                 ijkp(l,3) = kk
@@ -848,22 +849,23 @@ module gutsp
             integer:: i,j,k,l
             
             do l=1, Ni_tot
-                  i=1
+!                  i=1
 
-                  do while (xp(l,1) .gt. qx(i))
-                        i=i+1
-                  enddo
+!                  do while (xp(l,1) .gt. qx(i))
+!                        i=i+1
+!                  enddo
 
-                  i=i-1
-                  ijkp(l,1)=i
-                  j = floor(xp(l,2)/dy)
-                  ijkp(l,2) = j
-                  k=1
-                  do while (xp(l,3) .gt. qz(k))
-                        k=k+1
-                  enddo
-                  k=k-1
-                  ijkp(l,3) = k
+!                  i=i-1
+!                  ijkp(l,1)=i
+!                  j = floor(xp(l,2)/dy)
+!                  ijkp(l,2) = j
+!                  k=1
+!                  do while (xp(l,3) .gt. qz(k))
+!                        k=k+1
+!                  enddo
+!                  k=k-1
+!                  ijkp(l,3) = k
+                  call get_pindex(i,j,k,l)
                   
                   vol = 1.0/((qx(i+1)-qx(i))*(qy(j+1)-qy(j))*(qz(k+1)-qz(k)))
                   x1=abs(xp(l,1)-qx(i))
@@ -882,6 +884,7 @@ module gutsp
                   wght(l,8) = x1*y1*z1*vol
                   
             enddo
+
             
       end subroutine get_interp_weights
       
@@ -925,6 +928,7 @@ module gutsp
                   np(i,jp,kp) = np(i,jp,kp) + wght(l,7)*volb
                   np(ip,jp,kp) = np(ip,jp,kp) + wght(l,8)*volb
                   
+                  
             enddo
                   
             !Used for periodic boundary conditions
@@ -932,6 +936,7 @@ module gutsp
             np(nx-1,:,:) = np(nx-1,:,:) + np(1,:,:)
             np(:,ny-1,:) = np(:,ny-1,:) + np(:,1,:)
             np(:,:,nz-1) = np(:,:,nz-1) + np(:,:,1)
+            
             
             call MPI_BARRIER(MPI_COMM_WORLD,ierr)
             call MPI_ALLREDUCE(np(:,:,:),recvbuf,count,MPI_REAL,MPI_SUM,MPI_COMM_WORLD,ierr)
@@ -1205,6 +1210,8 @@ module gutsp
                         enddo
                   enddo
             enddo
+            
+            call periodic(up)
             
       end subroutine update_up
       
@@ -1787,6 +1794,32 @@ module gutsp
       end subroutine check_index
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine get_pindex(i,j,k,l)
+!            use dimensions
+            use inputs, only: dx,dy
+            use grid, only: qx,qy,qz
+            use var_arrays, only: ijkp,xp
+            implicit none
+            integer, intent(in):: l
+            integer, intent(out):: i,j,k
+            i=1
+
+            do while (xp(l,1) .gt. qx(i))
+                  i=i+1
+            enddo
+
+            i=i-1
+            ijkp(l,1)=i
+            j = floor(xp(l,2)/dy)
+            ijkp(l,2) = j
+            k=1
+            do while (xp(l,3) .gt. qz(k))
+                  k=k+1
+            enddo
+            k=k-1
+            ijkp(l,3) = k
             
+      end subroutine get_pindex
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!            
                   
 end module gutsp
