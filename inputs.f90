@@ -53,7 +53,7 @@ module inputs
       real:: omega_p                            !ion gyrofrequency
       
 !       Electron ion collision frequency
-      real, parameter:: lww2 = 0.99
+      real, parameter:: lww2 = 1.00             !artificial diffusion for the magnetic field update
       real, parameter:: lww1 = (1-lww2)/6.0     !divide by six for nearest neighbor
       
 !       Density scaling paramter, alpha, and ion particle array dims
