@@ -1555,7 +1555,7 @@ module gutsp
             ct(:,:,:,:) = 0.0
             
             do m=1,3
-                  mvp(:,m) = vp(:,m)/sqrt(mrat(:))
+                  mvp(1:Ni_tot,m) = vp(1:Ni_tot,m)/sqrt(mrat(:))
             enddo
             
             do l=1,Ni_tot
