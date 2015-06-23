@@ -48,7 +48,7 @@ module part_init
             Evp = 0.0
             do l=1, Ni_tot
                   do m=1,3
-                        Evp = Evp + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2 / beta*beta_p(l)
+                        Evp = Evp + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2 / (beta*beta_p(l))
                   enddo
             enddo
             
@@ -93,7 +93,7 @@ module part_init
             
             disp = 0 !Displacement of gradient
             amp = 20.0  !amplitude of density
-            grad = 800.0 ! density gradient (larger = more gradual
+            grad = 100.0 ! density gradient (larger = more gradual
             
 !            v1=1.0
             
@@ -103,15 +103,13 @@ module part_init
                   xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
                   m_arr(l) = mass
                   mrat(l) = mratio
-                  beta_p(l) = beta_particle + &       ! Comment for no density gradient
-                        amp*(1-exp(-((xp(l,3)-qz(nz/2-disp))/ &         !Gaussian distribution
-                        (grad*dz_grid(nz/2-disp)))**2)) 
-!     x     (.5*amp*(-tanh((xp(l,3)-qz(nz/2-disp))                      !hyperbolic tangent density
-!     x     /(grad*dz_grid(nz/2-disp)))
-!     x     +tanh((xp(l,3)-qz(nz/2+disp))/
-!     x     (grad*dz_grid(nz/2+disp))))+1.0) !Weighting function hyperbolic tangent
-!          write(*,*) beta_p(l), 'beta'
-!         ijkp(l,1) = floor(xp(l,1)/dx)
+!                  beta_p(l) = beta_particle + &       ! Comment for no density gradient
+!                        amp*(1-exp(-((xp(l,3)-qz(nz/2-disp))/ &         !Gaussian distribution
+!                        (grad*dz_grid(nz/2-disp)))**2)) 
+
+                  beta_p(l) = 1/(beta_particle+amp*exp(-((xp(l,3)-qz(nz/2-disp))/ &
+                        (grad*dz_grid(nz/2-disp)))**2))
+!                  beta_p(l) = beta_particle
 !!!!!!!!!!!!!Get P-index!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !                  i=1
 !                  do 
@@ -144,14 +142,14 @@ module part_init
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) = vx!+57.0!*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation
+                  vp(l,1) = vx+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(2*dz_grid(nz/2))**2) !Gaussian velocity perturbation
                   vp(l,2) = vy 
                   vp(l,3) = vz 
                   
                   do m=1,3
                         vp1(l,m) = vp(l,m)
-                        input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2/beta * beta_p(l)
-                        input_p(m) = input_p(m) + m_arr(l) * vp(l,m) / beta * beta_p(l)
+                        input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2/(beta * beta_p(l))
+                        input_p(m) = input_p(m) + m_arr(l) * vp(l,m) / (beta * beta_p(l))
                   enddo
                   
             enddo
@@ -159,6 +157,7 @@ module part_init
             call get_interp_weights()
             call update_np()
             call update_up(vp)
+
             
             ! Add a centrifugal gravity term to keep the plasma confined to the torus.  Use T * dn/dz = nmg.  
             ! Depends on the density gradient.  Currently set as a gaussian.
@@ -175,11 +174,21 @@ module part_init
             do i=1,nx
             do j=1,ny
             do k=1,nz
-!                  grav(i,j,k) = amp*2/(grad*dz_grid(nz/2-disp))**2*(qz(nz/2-disp)-qz(k))* &
-!                        exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2) * Temp / np(2,2,k)
-                  grav(i,j,k) = -2*Tempcalc/(mion*(grad*dz_grid(nz/2-disp))**2)*(qz(k)-qz(nz/2-disp))
+                  ! Gravity is based on the analytical expression for the density profile (look at beta_p)
+                  ! np = const/(beta*beta_p), and grav = const * (dn/dx) / n
+                  
+                  grav(i,j,k) = -2*Tempcalc/(mion*(grad*dz_grid(nz/2-disp))**2 &
+                        *(beta_particle+amp*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2))) &
+                        *amp*(qz(k)-qz(nz/2-disp))*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)
+                 
+!                 grav(i,j,k) = 0.0
+                  
+!                  grav(i,j,k) = -2*Tempcalc/(mion*(grad*dz_grid(nz/2-disp))**2 &
+!                        *(beta_particle+amp*(1-exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)))) &
+!                        *amp*(qz(k)-qz(nz/2-disp))*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)
+                        
+!                  grav(i,j,k) = -2*Tempcalc/(mion*(grad*dz_grid(nz/2-disp))**2)*(qz(k)-qz(nz/2-disp))
 !                  write(*,*) 'gravity.....', grav(i,j,k), i,j,k
-!                  grav(i,j,k) = 8.0;
             enddo
             enddo
             enddo
@@ -242,8 +251,8 @@ module part_init
                   
                   do m=1,3
                         vp1(l,m) = vp(l,m)
-                        input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2/beta * beta_p(l)
-                        input_p(m) = input_p(m) + m_arr(l) * vp(l,m) / beta * beta_p(l)
+                        input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2/(beta * beta_p(l))
+                        input_p(m) = input_p(m) + m_arr(l) * vp(l,m) / (beta * beta_p(l))
                   enddo
                   
             enddo
@@ -297,8 +306,8 @@ module part_init
                   
                   do m = 1,3
                         vp1(l,m) = vp(l,m)
-                        input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2 / beta * beta_p(l)
-                        input_p(m) = input_p(m) + m_arr(l)*vp(l,m) / beta * beta_p(l)
+                        input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2 / (beta * beta_p(l))
+                        input_p(m) = input_p(m) + m_arr(l)*vp(l,m) / (beta * beta_p(l))
                   enddo
                   
             enddo
@@ -330,8 +339,8 @@ module part_init
                   
                   do m = 1,3
                         vp1(l,m) = vp(l,m)
-                        input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2 / beta * beta_p(l)
-                        input_p(m) = input_p(m) + m_arr(l)*vp(l,m) / beta * beta_p(l)
+                        input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2 / (beta * beta_p(l))
+                        input_p(m) = input_p(m) + m_arr(l)*vp(l,m) / (beta * beta_p(l))
                   enddo
                   
             enddo
@@ -361,8 +370,8 @@ module part_init
                   
                   do m = 1,3
                         vp1(l,m) = vp(l,m)
-                        input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2 / beta * beta_p(l)
-                        input_p(m) = input_p(m) + m_arr(l)*vp(l,m) / beta * beta_p(l)
+                        input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2 / (beta * beta_p(l))
+                        input_p(m) = input_p(m) + m_arr(l)*vp(l,m) / (beta * beta_p(l))
                   enddo
                   
             enddo
@@ -446,8 +455,8 @@ module part_init
 !            do  m=1,3
 !               vp1(l,m) = vp(l,m)
 !               input_E = input_E + 
-!     x              0.5*m_arr(l)*(vp(l,m)*km_to_m)**2 /beta*beta_p(l)
-!               input_p(m) = input_p(m) + m_arr(l)*vp(l,m)/beta*beta_p(l)
+!     x              0.5*m_arr(l)*(vp(l,m)*km_to_m)**2 /(beta*beta_p(l))
+!               input_p(m) = input_p(m) + m_arr(l)*vp(l,m)/(beta*beta_p(l))
 !            enddo
             
 

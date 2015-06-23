@@ -70,8 +70,8 @@ module chem_rates
                   do m=1,3
                         vp1(l,m) = vp(l,m)
                         input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2 / &
-                              beta*beta_p(l)
-                        input_p(m) = input_p(m) + m_arr(l)*vp(l,m) / beta*beta_p(l)
+                              (beta*beta_p(l))
+                        input_p(m) = input_p(m) + m_arr(l)*vp(l,m) / (beta*beta_p(l))
                   enddo
                   
             enddo
@@ -161,9 +161,9 @@ module chem_rates
                         do m=1,3
                               vp1(l,m) = vp(l,m)
                               input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2 / &
-                                    beta*beta_p(l)
+                                    (beta*beta_p(l))
                               input_p(m) = input_p(m) + m_arr(l)*vp(l,m)/ &
-                                    beta*beta_p(l)
+                                    (beta*beta_p(l))
                         enddo
                         
                   enddo      
