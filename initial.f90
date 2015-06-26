@@ -71,11 +71,11 @@ module initial
       subroutine grd7()
             use grid
             use mult_proc, only: my_rank
-            use inputs, only: dx,dy,delz,out_dir
+            use inputs, only: dx,dy,delz,out_dir,zsf,nrgrd
             implicit none
-            integer, parameter:: nrgrd = 20
+!            integer, parameter:: nrgrd = 20
             integer:: i,j,k,ind
-            real:: xsf,zsf,zplus,zminus,xplus,xminus,yplus,yminus
+            real:: xsf,zplus,zminus,xplus,xminus,yplus,yminus
             
             rk = nz/2
             rj= ny/2
@@ -91,6 +91,7 @@ module initial
                   qx(i) = i*dx
                   dx_grid(i) = dx
             enddo
+            
             
 !!!!!!!Stretch X direction!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -126,14 +127,18 @@ module initial
             
             
 !!!!!!!Stretch Z direction!!!!!!!!!!!!!!!!!!!!!!!!!!!!!            
-            zsf = 0.0   !z stretch factor
+!            zsf = 0.0   !z stretch factor
             !up from center
+            
             do k = rk, rk + nrgrd
                   dz_grid(k) = delz
             enddo
+                      
+            
             do k = rk + nrgrd + 1, nz
                   dz_grid(k) = delz + zsf*delz*(k-(rk+nrgrd+1))/(nz-(rk+nrgrd+1))
             enddo
+            
             !down from center
             do k = rk - nrgrd, rk - 1
                   dz_grid(k) = delz
@@ -203,6 +208,7 @@ module initial
                   close(40)
                   
             endif
+
             
       end subroutine grd7
       

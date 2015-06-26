@@ -49,7 +49,7 @@ program hybrid
       Ni_tot_sys = Ni_tot*procnum
       
       if (my_rank .eq. 0) then
-            call check_inputs()
+!            call check_inputs()
             write(*,*) 'Partilces per cell... ', Ni_tot_sys/nz
             write(*,*) ' '
       endif
@@ -91,6 +91,9 @@ program hybrid
       
       !Initialize particles: use load Maxwellian, or sw_part_setup, etc.
       call load_Maxwellian(vth,1,mion,1.0)
+      if (my_rank .eq. 0) then
+            call check_inputs()
+      endif
 !      call load_ring_beam(57.0,40000,mion,1.0)
       
       Ni_tot_sys = Ni_tot*procnum

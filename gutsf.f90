@@ -408,6 +408,7 @@ module gutsf
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine check_time_step(bt,np,dtsub,ntf)
             use dimensions
+            use grid, only: dz_grid
             use inputs, only: dx,alpha
             implicit none
             real, intent(in):: bt(nx,ny,nz,3), np(nx,ny,nz)
@@ -419,14 +420,14 @@ module gutsf
             do i=1,nx
                   do j=1,ny
                         do k=1,nz
-                              ak = 2.0/dx
+                              ak = 2.0/dz_grid(k)
                               btot = sqrt(bt(i,j,k,1)**2 + bt(i,j,k,2)**2 + &
                                     bt(i,j,k,3)**2)
                               a1 = ak**2*Btot/(alpha*(np(i,j,k)))
                               a2 = (ak*Btot)**2/(alpha*(np(i,j,k)))
                               womega = 0.5*(a1 + sqrt(a1**2 + 4*a2))
                               phi = womega/ak
-                              deltat = dx/phi
+                              deltat = dz_grid(k)/phi
                               if(deltat .le. 2.0*dtsub) then 
                                     write(*,*) 'time stepping error...',i,j,k
                                     dtsub = dtsub/2.0

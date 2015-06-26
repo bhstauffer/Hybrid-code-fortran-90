@@ -1,16 +1,20 @@
 1700e-9               !magnetic field (Tesla)
 23                    !atomic mass for reference species
 64                    !mass of pickup ion species
-2000e15               !density (km^-3)
-0.08                   !particle time step (fraction of omega_i)
-10000                   !number of time steps (4000)
-100                     !diagnostic output interval (100)
+40e15                 !minimum density (km^-3) (2000)
+50.0                   !maximum density (scaled by minimum density)
+0.08                   !particle time step (fraction of omega_i) (0.08 is the default)
+10000                   !number of time steps (10000)
+50                     !diagnostic output interval (100)
 0.0                   !flow speed (km/s) 
 40.0                  !thermal speed for Maxwellian (km/s)
 0.1                   !Ni_tot initial (fraction of Ni_max)
-1.0                   !grid size as fraction of lambda_i
-0.002 		      !nu_init_frac, fraction of gyrofrequency for nu_init
-200                   !number of particles per cell per species
+1.5                   !grid size as fraction of lambda_i
+100                   !density scale height (grid cells)
+3.0                   !scale height to start stretching
+0.0                   !dz stretching scale
+0.001 		      !nu_init_frac, fraction of gyrofrequency for nu_init (0.002)
+500                   !number of particles per cell per species
 2020                   !Location of fft analysis (integer)
-0.1                   !mass load rate scalar (default = 0.1)
-'./mloadtest/'             !output directory 
+1.0                   !mass load rate scalar (default = 1.0)
+'./tmp1/'             !output directory 

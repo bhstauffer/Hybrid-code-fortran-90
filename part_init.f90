@@ -79,7 +79,7 @@ module part_init
       subroutine load_Maxwellian(vth,Ni_tot_1,mass,mratio)
             use dimensions
             use misc
-            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion
+            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad
             use grid, only: qx,qy,qz,dz_grid
             use gutsp
             use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p
@@ -88,12 +88,12 @@ module part_init
             real, intent(in):: mratio, mass, vth
                                   
             integer:: disp
-            real:: amp, grad, vth2, vx, vy, vz, Temp, Tempcalc
+            real:: vth2, vx, vy, vz, Temp, Tempcalc
             integer:: l,m,i,j,k
             
             disp = 0 !Displacement of gradient
-            amp = 20.0  !amplitude of density
-            grad = 100.0 ! density gradient (larger = more gradual
+!            amp = 100.0
+!            grad = 100.0 ! density gradient (larger = more gradual
             
 !            v1=1.0
             
@@ -200,7 +200,7 @@ module part_init
       subroutine load_ring_beam(vring,dNi,mass,mratio)
             use dimensions
             use misc
-            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_pu, ion_amu,m_pu,beta_particle
+            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_pu, ion_amu,m_pu,beta_particle, amp, grad
             use grid, only: qx,qy,qz,dz_grid
             use gutsp
             use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght
@@ -209,12 +209,12 @@ module part_init
             real, intent(in):: vring, mass,mratio
                                   
             integer:: disp, flg, l1
-            real:: amp, grad, vth2, vx, vy, vz, rand1, theta2
+            real:: vth2, vx, vy, vz, rand1, theta2
             integer:: i,j,k,l,m
             
             disp = 0 !Displacement of gradient
-            amp = 20.0  !amplitude of density
-            grad = 400.0 ! density gradient (larger = more gradual
+!            amp = 100.0
+!            grad = 400.0 ! density gradient (larger = more gradual
             
 !            v1=1.0
             l1=Ni_tot+1
