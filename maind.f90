@@ -46,7 +46,7 @@ program hybrid
 
       write(filenum, '(I2)') my_rank
 
-      Ni_tot=(nx-2)*(ny-2)*(nz-2)*(ppc/procnum) !1D
+      Ni_tot=(nx-2)*(ny-2)*(nz-2)*int(ppc/procnum) !1D
       Ni_tot_0 = Ni_tot
       Ni_tot_sw = Ni_tot
       Ni_tot_sys = Ni_tot*procnum
