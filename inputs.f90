@@ -128,7 +128,7 @@ module inputs
                   vtop = vsw
                   vbottom = -vsw
                   
-                  Ni_tot_0 = Ni_max*Ni_tot_frac
+                  Ni_tot_0 = int(Ni_max*Ni_tot_frac)
                   write(*,*) 'Ni_tot_0...',Ni_tot_0, Ni_max, Ni_tot_frac
                   
                   mO = mion     !mass of H (kg)

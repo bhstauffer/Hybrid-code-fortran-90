@@ -13,6 +13,7 @@ program hybrid
       use grid_interp
       use chem_rates
       use grid
+      use iso_fortran_env
       
       implicit none
       
@@ -25,6 +26,8 @@ program hybrid
       logical:: restart = .false.
       integer(4):: Ni_tot_sw,Ni_tot_sys
       integer:: i,j,k,n,ntf !looping indicies
+      real (real64) :: dp
+      integer, parameter :: dp_kind = kind(dp)
       
 !      filenum = (/'1 ','2 ','3 ','4 ','5 ','6 ','7 ','8 ','9 ', &
 !            '10','11','12','13','14','15','16'/)
@@ -43,7 +46,7 @@ program hybrid
 
       write(filenum, '(I2)') my_rank
 
-      Ni_tot=(nx-2)*(ny-2)*(nz-2)*(ppc/procnum) !1D
+      Ni_tot=(nx-2)*(ny-2)*(nz-2)*int(ppc/procnum) !1D
       Ni_tot_0 = Ni_tot
       Ni_tot_sw = Ni_tot
       Ni_tot_sys = Ni_tot*procnum
@@ -364,7 +367,7 @@ program hybrid
       close(350)
       
       call system_clock(t2,cnt_rt)
-      time=(real(t2) - real(t1))/real(cnt_rt)
+      time=(real(t2,dp_kind) - real(t1,dp_kind))/real(cnt_rt,dp_kind)
       if (my_rank .eq. 0) then
             write(*,*)
             write(*,*) 'Elapsed time .....', time, ' sec'
