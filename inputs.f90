@@ -3,6 +3,7 @@ module inputs
       use mpi
 !      use var_arrays, only: Ni_tot_0
       implicit none
+      save
       
       real:: b0_init, nf_init,dt_frac, vsw, vth, Ni_tot_frac, dx_frac, &
             nu_init_frac,lambda_i,m_pu, mO, ppc, nu_init, ion_amu, load_rate

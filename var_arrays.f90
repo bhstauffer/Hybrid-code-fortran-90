@@ -1,6 +1,7 @@
 module Var_Arrays
       use dimensions
       implicit none
+      save
       real::      b0(nx,ny,nz,3), &     !ambient mag field
                   b1(nx,ny,nz,3), &     !1st order mag field   
                   b12(nx,ny,nz,3), &    !b1 at previous time step
