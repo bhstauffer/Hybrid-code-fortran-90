@@ -1,5 +1,6 @@
 module part_init
       implicit none
+      save
       contains
 
       subroutine Energy_diag(Evp,Euf,EB1,EB1x,EB1y,EB1z,EE,EeP)
@@ -133,16 +134,16 @@ module part_init
                   call get_pindex(i,j,k,l)
 !                  vth2=sqrt(vth*vth*beta_p(l)) !thermal speed dependent on np to set up pressure balance for density gradient
                   
-                  vx = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
-                  vy = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
-                  vz = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vx = vth*sqrt(-2*log(pad_ranf()))*cos(2*PI*pad_ranf()) !remember to add in vsw to get the flow velocity
+                  vy = vth*sqrt(-2*log(pad_ranf()))*cos(2*PI*pad_ranf())
+                  vz = vth*sqrt(-2*log(pad_ranf()))*cos(2*PI*pad_ranf())
                   
 !                  ii = ijkp(l,1)
 !                  kk = ijkp(l,3)
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) = vx+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(2*dz_grid(nz/2))**2) !Gaussian velocity perturbation
+                  vp(l,1) = vx+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(20*dz_grid(nz/2))**2) !Gaussian velocity perturbation
                   vp(l,2) = vy 
                   vp(l,3) = vz 
                   

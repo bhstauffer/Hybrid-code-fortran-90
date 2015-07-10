@@ -1,6 +1,7 @@
 module initial
       use dimensions
       implicit none
+      save
       contains
       
       
@@ -211,6 +212,111 @@ module initial
 
             
       end subroutine grd7
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
+      subroutine grid_gaussian()
+! Generates a grid that scales the z axis so that the spacing between grid points is a multiple of lambda_i
+! using an analytical gaussian.
+            use grid
+            use mult_proc, only: my_rank
+            use inputs, only: dx,dy,delz,out_dir,zsf,nrgrd,grad,amp,q,mion,nf_init
+            implicit none
+            integer:: i,j,k,ind
+            real:: xsf,zplus,zminus,xplus,xminus,yplus,yminus
+            
+            rk = nz/2
+            rj= ny/2
+            ri = nx/2
+!!!!!!!!!Unstretched grids!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
+  
+            do j=1,ny
+                  qy(j) = j*dy
+                  dy_grid(j) = dy
+            enddo
+            
+            do i = 1,nx
+                  qx(i) = i*dx
+                  dx_grid(i) = dx
+            enddo
+            
+!!!!!!!!!Stretch z!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            qz(nz/2) = 0
+            do k=rk+1, nz
+                  qz(k) = qz(k-1) + zsf*3e8/1e3*sqrt(8.85e-12*mion/(q*q* &
+                  (nf_init/1e9+nf_init/1e9*(amp-1.0)*exp(-(qz(k-1)/(grad*delz))**2))))
+            enddo
+            
+!            do k = 1, rk-1
+!                  ind = rk-k
+!                  qz(ind) = qz(ind+1) - zsf*3e8/1e3*sqrt(8.85e-12*mion/(q*q* &
+!                  (nf_init/1e9+nf_init/1e9*(amp-1.0)*exp(-(qz(ind+1)/(grad*delz))**2))))
+!            enddo
+
+            do k = 1 , rk-1
+                  ind = rk - k
+                  qz(ind) = -qz(rk+k)
+            enddo
+            zplus = qz(nz-1)
+            do k=1,nz
+                  qz(k) = qz(k) + zplus
+            enddo
+            
+            do k=1, nz-1
+                  dz_grid(k) = qz(k+1)-qz(k)
+            enddo
+            
+            dz_grid(nz) = dz_grid(nz-1)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+            dz_cell(1) = dz_grid(1)
+            dz_cell(nz) = dz_grid(nz)
+            zrat(1) = 0.5
+            zrat(nz) = 0.5
+            do k=2, nz-1
+                  dz_cell(k) = ((qz(k+1) + qz(k))/2.0) - ((qz(k) + qz(k-1))/2.0)
+                  zplus = (qz(k+1) + qz(k))/2.0
+                  zminus = (qz(k) + qz(k-1))/2.0
+                  zrat(k) = (qz(k) - zminus)/(zplus - zminus)
+            enddo
+            
+            dx_cell(1) = dx_grid(1)
+            dx_cell(nx) = dx_grid(nx)
+            xrat(1) = 0.5
+            xrat(nx) = 0.5
+            do i=2, nx-1
+                  dx_cell(i) = ((qx(i+1) + qx(i))/2.0) - ((qx(i) + qx(i-1))/2.0)
+                  xplus = (qx(i+1) + qx(i))/2.0
+                  xminus = (qx(i) + qx(i-1))/2.0
+                  xrat(i) = (qx(i) - xminus)/(xplus - xminus)
+            enddo
+            
+            dy_cell(1) = dy_grid(1)
+            dy_cell(ny) = dy_grid(ny)
+            yrat(1) = 0.5
+            yrat(ny) = 0.5
+            do j=2, ny-1
+                  dy_cell(j) = ((qy(j+1) + qy(j))/2.0) - ((qy(j) + qy(j-1))/2.0)
+                  yplus = (qy(j+1) + qy(j))/2.0
+                  yminus = (qy(j) + qy(j-1))/2.0
+                  yrat(j) = (qy(j) - yminus)/(yplus - yminus)
+            enddo
+            
+            if (my_rank .eq. 0) then
+                  open(40,file=trim(out_dir)//'c.coord.dat',status='unknown',form='unformatted')
+                  
+                  write(40) nx
+                  write(40) ny
+                  write(40) nz
+                  write(40) qx
+                  write(40) qy
+                  write(40) qz
+                  write(40) dz_grid
+                  write(40) dz_cell
+                  close(40)
+                  
+            endif
+
+      end subroutine grid_gaussian
+
       
 end module initial
             

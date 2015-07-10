@@ -181,10 +181,10 @@ program hybrid
        endif
        
        if (my_rank .gt. 0) then
-            open(305,file=trim(out_dir)//'c.xp_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
-            open(310,file=trim(out_dir)//'c.vp_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
-            open(315,file=trim(out_dir)//'c.mrat_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
-            open(317,file=trim(out_dir)//'c.beta_p__'//trim(filenum)//'.dat',status='unknown',form='unformatted')
+!            open(305,file=trim(out_dir)//'c.xp_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
+!            open(310,file=trim(out_dir)//'c.vp_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
+!            open(315,file=trim(out_dir)//'c.mrat_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
+!            open(317,file=trim(out_dir)//'c.beta_p__'//trim(filenum)//'.dat',status='unknown',form='unformatted')
        endif
        
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -290,14 +290,14 @@ program hybrid
                         write(180) up
                         write(300) m
                         write(300) temp_p/1.6e-19  !output in eV
-                        write(305) m
-                        write(305) xp
-                        write(310) m
-                        write(310) vp
-                        write(315) m
-                        write(315) mrat
-                        write(317) m
-                        write(317) beta_p
+!                        write(305) m
+!                        write(305) xp
+!                        write(310) m
+!                        write(310) vp
+!                        write(315) m
+!                        write(315) mrat
+!                        write(317) m
+!                        write(317) beta_p
                         write(330) m
                         write(330) up_t
                         write(340) m
@@ -309,14 +309,14 @@ program hybrid
                    endif
                    
                    if (my_rank .gt. 0) then
-                        write(305) m
-                        write(305) xp
-                        write(310) m
-                        write(310) vp
-                        write(315) m
-                        write(315) mrat
-                        write(317) m
-                        write(317) beta_p
+!                        write(305) m
+!                        write(305) xp
+!                        write(310) m
+!                        write(310) vp
+!                        write(315) m
+!                        write(315) mrat
+!                        write(317) m
+!                        write(317) beta_p
                         
                         ndiag = 0
                   endif
