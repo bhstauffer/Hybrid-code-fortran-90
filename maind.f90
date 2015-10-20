@@ -124,7 +124,6 @@ program hybrid
                   read(211) vp,vp1,vplus,vminus,xp,Ep,input_E,Ni_tot,ijkp,input_p,mrat,m_arr
             endif
       endif
-      
       close(211)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Write parameter file
@@ -146,8 +145,14 @@ program hybrid
                   close(109)
                   
 ! Write fft parameter file
-!                  open(401, file = trim(out_dir)//'fft.dat',status='unknown',form='unformatted')
+!                  open(401, file = trim(out_dir)//'fft_520.dat',status='unknown',form='unformatted')
 !                  write(401) dt,nt,omega_p
+                  
+!                  open(402, file = trim(out_dir)//'fft_700.dat',status='unknown',form='unformatted')
+!                  write(402) dt,nt,omega_p
+                  
+!                  open(403, file = trim(out_dir)//'fft_950.dat',status='unknown',form='unformatted')
+!                  write(403) dt,nt,omega_p
 
             endif
       
@@ -188,16 +193,14 @@ program hybrid
        endif
        
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 !       MAIN LOOP
-
       do m = mstart+1, nt
             if (my_rank .eq. 0) then
                   write(*,*) 'time...', m, m*dt,my_rank
             endif
-            if (Ni_tot .lt. Ni_max) then
+            if (m .lt. 300) then
                   !Call ionizing subroutine  (adds ions to the domain)
-                  !call Mass_load_Io(m)
+                  call Mass_load_Io(m)
             endif
             call get_interp_weights()
             call update_np()                  !np at n+1/2
@@ -207,20 +210,21 @@ program hybrid
             call get_bndry_Eflux(b1,E,bndry_Eflux)
 
             call Energy_diag(Evp,Euf,EB1,EB1x,EB1y,EB1z,EE,EeP)
-          
+ 
             call curlB(bt,np,aj)
             call edge_to_center(bt,btc)
             call extrapol_up()
             call get_Ep()
+
             
             call get_vplus_vminus()
             call improve_up()
- 
-            call get_Ep()
 
+            call get_Ep()
+         
             call get_vplus_vminus()
             call get_vp_final()
-                      
+      
             call move_ion_half() !1/2 step ion move to n+1/2
 
             call get_interp_weights()
@@ -228,6 +232,7 @@ program hybrid
             call update_np()                  !np at n+1/2
 
             call update_up(vp)            !up at n+1/2
+      
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !       Subcycling loop
@@ -247,7 +252,7 @@ program hybrid
                   
             enddo
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!           
-
+ 
             call move_ion_half()       !final ion move to n+1
 
 
@@ -264,7 +269,9 @@ program hybrid
                   write(190) pup,puf,peb,input_p
                   
                   !fft output
-!                  write(401) b1(2,2,loc,1), b1(2,2,loc,2), b1(2,2,loc,3)
+!                  write(401) b1(2,2,500,1), b1(2,2,500,2), b1(2,2,500,3)
+!                  write(402) b1(2,2,720,1), b1(2,2,720,2), b1(2,2,720,3)
+!                  write(403) b1(2,2,950,1), b1(2,2,950,2), b1(2,2,950,3)
                   
             endif
             
@@ -367,6 +374,9 @@ program hybrid
       close(340)
       close(342)
       close(350)
+!      close(401)
+!      close(402)
+!      close(403)
       
       call system_clock(t2,cnt_rt)
       time=(real(t2) - real(t1))/real(cnt_rt)

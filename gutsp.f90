@@ -866,6 +866,7 @@ module gutsp
 !                  k=k-1
 !                  ijkp(l,3) = k
                   call get_pindex(i,j,k,l)
+                 
                   
                   vol = 1.0/((qx(i+1)-qx(i))*(qy(j+1)-qy(j))*(qz(k+1)-qz(k)))
                   x1=abs(xp(l,1)-qx(i))
@@ -874,6 +875,7 @@ module gutsp
                   y2=abs(xp(l,2)-qy(j+1))
                   z1=abs(xp(l,3)-qz(k))
                   z2=abs(xp(l,3)-qz(k+1))
+                 
                   wght(l,1) = x2*y2*z2*vol
                   wght(l,2) = x1*y2*z2*vol
                   wght(l,3) = x2*y2*z1*vol
@@ -882,9 +884,10 @@ module gutsp
                   wght(l,6) = x1*y1*z2*vol
                   wght(l,7) = x2*y1*z1*vol
                   wght(l,8) = x1*y1*z1*vol
-                  
+                 
+                
             enddo
-
+            
             
       end subroutine get_interp_weights
       

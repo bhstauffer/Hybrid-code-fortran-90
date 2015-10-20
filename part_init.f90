@@ -104,13 +104,10 @@ module part_init
                   xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
                   m_arr(l) = mass
                   mrat(l) = mratio
-!                  beta_p(l) = beta_particle + &       ! Comment for no density gradient
-!                        amp*(1-exp(-((xp(l,3)-qz(nz/2-disp))/ &         !Gaussian distribution
-!                        (grad*dz_grid(nz/2-disp)))**2)) 
 
-                  beta_p(l) = 1.0/(beta_particle+amp*exp(-((xp(l,3)-qz(nz/2-disp))/ &
-                        (grad*dz_grid(nz/2-disp)))**2))
-!                  beta_p(l) = beta_particle
+!                  beta_p(l) = 1.0/(beta_particle+amp*exp(-((xp(l,3)-qz(nz/2-disp))/ &
+!                        (grad*dz_grid(nz/2-disp)))**2))
+                  beta_p(l) = beta_particle
 !!!!!!!!!!!!!Get P-index!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !                  i=1
 !                  do 
@@ -143,7 +140,7 @@ module part_init
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) = vx!+57.0!*exp(-(xp(l,3)-qz(nz/2))**2/(20*dz_grid(nz/2))**2) !Gaussian velocity perturbation
+                  vp(l,1) = vx!+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(20*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
                   vp(l,2) = vy 
                   vp(l,3) = vz 
                   
@@ -178,17 +175,12 @@ module part_init
                   ! Gravity is based on the analytical expression for the density profile (look at beta_p)
                   ! np = const/(beta*beta_p), and grav = const * (dn/dx) / n
                   
-             !     grav(i,j,k) = -2*Tempcalc/(mion*(grad*dz_grid(nz/2-disp))**2 &
-             !           *(beta_particle+amp*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2))) &
-             !           *amp*(qz(k)-qz(nz/2-disp))*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)
-                 
-!                 grav(i,j,k) = 0.0
-                  
 !                  grav(i,j,k) = -2*Tempcalc/(mion*(grad*dz_grid(nz/2-disp))**2 &
-!                        *(beta_particle+amp*(1-exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)))) &
+!                        *(beta_particle+amp*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2))) &
 !                        *amp*(qz(k)-qz(nz/2-disp))*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)
-                        
-!                  grav(i,j,k) = -2*Tempcalc/(mion*(grad*dz_grid(nz/2-disp))**2)*(qz(k)-qz(nz/2-disp))
+                 
+                 grav(i,j,k) = 0.0
+                  
 !                  write(*,*) 'gravity.....', grav(i,j,k), i,j,k
             enddo
             enddo

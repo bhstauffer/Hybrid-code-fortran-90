@@ -60,10 +60,10 @@ module initial
             enddo
             
             
-            open(40,file='b0.dat',status='unknown',form='unformatted')
-            write(40) nz
-            write(40) b0
-            close(40)
+!            open(40,file='b0.dat',status='unknown',form='unformatted')
+!            write(40) nz
+!            write(40) b0
+!            close(40)
             
       end subroutine grd6_setup
  
@@ -92,7 +92,7 @@ module initial
                   qx(i) = i*dx
                   dx_grid(i) = dx
             enddo
-            
+
             
 !!!!!!!Stretch X direction!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -128,7 +128,7 @@ module initial
             
             
 !!!!!!!Stretch Z direction!!!!!!!!!!!!!!!!!!!!!!!!!!!!!            
-!            zsf = 0.0   !z stretch factor
+            zsf = 0.0   !z stretch factor
             !up from center
             
             do k = rk, rk + nrgrd
