@@ -20,9 +20,10 @@ program hybrid
       real:: input_chex, input_bill,dtsub
       real:: pup(3),puf(3),peb(3)
       character(2):: filenum!(16) !max 16 processors
-      integer:: ierr,t1,t2,cnt_rt,m,mstart,ndiag,seed
+      character(1):: mstart
+      integer:: ierr,t1,t2,cnt_rt,m,mstart_n,ndiag,seed
       real(8):: time
-      logical:: restart = .false.
+      logical:: restart = .true.
       integer(4):: Ni_tot_sw,Ni_tot_sys
       integer:: i,j,k,n,ntf !looping indicies
       
@@ -42,6 +43,7 @@ program hybrid
 !Initialize all variables
 
       write(filenum, '(I2)') my_rank
+      
 
       Ni_tot=(nx-2)*(ny-2)*(nz-2)*(ppc/procnum) !1D
       Ni_tot_0 = Ni_tot
@@ -54,7 +56,9 @@ program hybrid
             write(*,*) ' '
       endif
       
-      mstart = 0
+      mstart_n = 2 !number of times restarted
+      write(mstart, '(I1)') mstart_n
+      
       ndiag = 0
       prev_Etot = 1.0
 !      nuei = 0.0
@@ -65,20 +69,22 @@ program hybrid
       call MPI_BARRIER(MPI_COMM_WORLD, ierr)
       
       if (.not. restart) then
-            do i=1,nx
-                  do j=1,ny
-                        do k=1,nz
+!            do i=1,nx
+!                  do j=1,ny
+!                        do k=1,nz
                               input_E = 0.0
                               input_p = 0.0
                               input_chex = 0.0
                               input_bill = 0.0
-                        enddo
-                  enddo
-            enddo
+                             
+                              input_Eb = 0.0
+                              input_EeP= 0.0
+!                        enddo
+!                  enddo
+!            enddo
       endif
       
-      input_Eb = 0.0
-      input_EeP= 0.0
+
       
 !      call grd7()
       call grid_gaussian()
@@ -108,23 +114,28 @@ program hybrid
 !  Check for restart flag
 
       write(*,*) 'restart status...', restart
-      if (restart) then
+      if ((restart) .and. (mstart_n .gt. 0)) then
+            if (my_rank .eq. 0) then
             write(*,*) 'opening restar vars....'
-            open(210,file='restart.vars',status='unknown',form='unformatted')
+            open(210,file=trim(out_dir)//'restart.vars',status='unknown',form='unformatted')
             write(*,*) 'reading restart vars......'
-!            read(210) b1,b12,b1p2,bt,btmp,nn,n,nf,vp,vp1,vplus,vminus, &
-!                  up,xp,uf,uf2,ufp2,aj,Ep,Ef,E,uplus,uminus,Evp,Euf, &
-!                  EB1,EB1x,EB1y,EB1z,EE,EeP,input_E,Ni_tot, &
-!                  ijkp,mstart,input_p,input_EeP,prev_Etot,nf1,nf3,nfp1, &
-!                  input_chex,input_bill,pf,pf1,mrat,m_arr
+            read(210) b1,b12,b1p2,bt,btmf,btc,np,np3,vp,vp1,vplus,vminus, &
+                  up,xp,aj,nu,Ep,E,temp_p,mnp,beta,beta_p,Evp,Euf, &
+                  EB1,EB1x,EB1y,EB1z,EE,EeP,input_E,Ni_tot, &
+                  ijkp,input_p,input_EeP,input_Eb,prev_Etot,bndry_Eflux,grav, &
+                  input_chex,input_bill,mrat,m_arr
             write(*,*) 'restarting hybrid ....'
             
-            if (my_rank .gt. 0) then
-                  open(211,file='restart.part'//trim(filenum),status='unknown',form='unformatted')
-                  read(211) vp,vp1,vplus,vminus,xp,Ep,input_E,Ni_tot,ijkp,input_p,mrat,m_arr
             endif
+            
+            if (my_rank .gt. 0) then
+                  open(211,file=trim(out_dir)//'restart.part'//trim(filenum),status='unknown',form='unformatted')
+                  read(211) vp,vp1,vplus,vminus,xp,Ep,input_E,Ni_tot,ijkp,input_p,mrat,m_arr,beta_p
+            endif
+            close(210)
+            close(211)
       endif
-      close(211)
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Write parameter file
             if (my_rank .eq. 0) then
@@ -160,47 +171,48 @@ program hybrid
 !       Inititalize diagnositc output files
 
       if (my_rank .eq. 0) then
-            open(110,file=trim(out_dir)//'c.np.dat',status='unknown',form='unformatted')
-            open(115,file=trim(out_dir)//'c.np_b.dat',status='unknown',form='unformatted')
-            open(120,file=trim(out_dir)//'c.mixed.dat',status='unknown',form='unformatted')
-            open(130,file=trim(out_dir)//'c.b1.dat',status='unknown',form='unformatted')
-            open(140,file=trim(out_dir)//'c.aj.dat',status='unknown',form='unformatted')
-            open(150,file=trim(out_dir)//'c.E.dat',status='unknown',form='unformatted')
-            open(160,file=trim(out_dir)//'c.energy.dat',status='unknown',form='unformatted')
+            open(110,file=trim(out_dir)//'c.np_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(115,file=trim(out_dir)//'c.np_b_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(120,file=trim(out_dir)//'c.mixed_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(130,file=trim(out_dir)//'c.b1_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(140,file=trim(out_dir)//'c.aj_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(150,file=trim(out_dir)//'c.E_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(160,file=trim(out_dir)//'c_'//trim(mstart)//'.energy.dat',status='unknown',form='unformatted')
             
             !diagnostics chex,bill,satnp
             
-            open(180,file=trim(out_dir)//'c.up.dat',status='unknown',form='unformatted')
-            open(190,file=trim(out_dir)//'c.momentum.dat',status='unknown',form='unformatted')
-            open(192,file=trim(out_dir)//'c.p_conserve.dat',status='unknown',form='unformatted')
-            open(300,file=trim(out_dir)//'c.temp_p.dat',status='unknown',form='unformatted')
-            open(305,file=trim(out_dir)//'c.xp_0.dat',status='unknown',form='unformatted')
-            open(310,file=trim(out_dir)//'c.vp_0.dat',status='unknown',form='unformatted')
-            open(315,file=trim(out_dir)//'c.mrat_0.dat',status='unknown',form='unformatted')
-            open(317,file=trim(out_dir)//'c.beta_p_0.dat',status='unknown',form='unformatted')
-            open(320,file=trim(out_dir)//'c.np_wake.dat',status='unknown',form='unformatted')
-            open(330,file=trim(out_dir)//'c.up_t.dat',status='unknown',form='unformatted')
-            open(340,file=trim(out_dir)//'c.up_b.dat',status='unknown',form='unformatted')
-            open(342,file=trim(out_dir)//'c.test_part.dat',status='unknown',form='unformatted')
-            open(350,file=trim(out_dir)//'c.mnp.dat',status='unknown',form='unformatted')
+            open(180,file=trim(out_dir)//'c.up_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(190,file=trim(out_dir)//'c.momentum_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(192,file=trim(out_dir)//'c.p_conserve_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(300,file=trim(out_dir)//'c.temp_p_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(305,file=trim(out_dir)//'c.xp_0_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(310,file=trim(out_dir)//'c.vp_0_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(315,file=trim(out_dir)//'c.mrat_0_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(317,file=trim(out_dir)//'c.beta_p_0_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(320,file=trim(out_dir)//'c.np_wake_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(330,file=trim(out_dir)//'c.up_t_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(340,file=trim(out_dir)//'c.up_b_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(342,file=trim(out_dir)//'c.test_part_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(350,file=trim(out_dir)//'c.mnp_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            
        endif
        
        if (my_rank .gt. 0) then
-!            open(305,file=trim(out_dir)//'c.xp_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
-!            open(310,file=trim(out_dir)//'c.vp_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
-!            open(315,file=trim(out_dir)//'c.mrat_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
-!            open(317,file=trim(out_dir)//'c.beta_p__'//trim(filenum)//'.dat',status='unknown',form='unformatted')
+!            open(305,file=trim(out_dir)//'c.xp_'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+!            open(310,file=trim(out_dir)//'c.vp_'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+!            open(315,file=trim(out_dir)//'c.mrat_'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+!            open(317,file=trim(out_dir)//'c.beta_p__'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
        endif
        
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !       MAIN LOOP
-      do m = mstart+1, nt
+      do m = 1, nt !mstart_n+1, nt
             if (my_rank .eq. 0) then
                   write(*,*) 'time...', m, m*dt,my_rank
             endif
             if (m .lt. 300) then
                   !Call ionizing subroutine  (adds ions to the domain)
-                  call Mass_load_Io(m)
+                  !call Mass_load_Io(m)
             endif
             call get_interp_weights()
             call update_np()                  !np at n+1/2
@@ -333,21 +345,34 @@ program hybrid
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !       Write restart file
 
-!            if (my_rank .eq. 0) then
-!                  if (m .eq. mrestart) then
-!                        open(220),file='restart.vars.new',status='unknown',form='unformatted')
-!                        write(220) b1,b12,b1p2,bt,btmp,nn,n,nf,vp,vp1,vplus,vminus, &
-!                              up,xp,uf,uf2,ufp2,aj,Ep,Ef,E,uplus,uminus,Evp,Euf, &
-!                              EB1,EB1x,EB1y,EB1z,EE,EeP,input_E,Ni_tot, &
-!                              ijkp,mstart,input_p,input_EeP,prev_Etot,nf1,nf3,nfp1, &
-!                              input_chex,input_bill,pf,pf1,mrat,m_arr
-                              
-!                  endif
-!            endif
+            
             
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             
       enddo     !End Main Loop
+      
+!      if (my_rank .eq. 0) then
+            if (restart) then
+                  if (my_rank .eq. 0) then
+                        write(*,*) 'Writing restart file...'
+                        open(220,file=trim(out_dir)//'restart.vars',status='unknown',form='unformatted')
+                        write(220) b1,b12,b1p2,bt,btmf,btc,np,np3,vp,vp1,vplus,vminus, &
+                        up,xp,aj,nu,Ep,E,temp_p,mnp,beta,beta_p,Evp,Euf, &
+                        EB1,EB1x,EB1y,EB1z,EE,EeP,input_E,Ni_tot, &
+                        ijkp,input_p,input_EeP,input_Eb,prev_Etot,bndry_Eflux,grav, &
+                        input_chex,input_bill,mrat,m_arr
+                  endif
+                              
+                              
+                  if (my_rank .gt. 0) then
+                        open(211,file=trim(out_dir)//'restart.part'//trim(filenum),status='unknown',form='unformatted')
+                        write(211) vp,vp1,vplus,vminus,xp,Ep,input_E,Ni_tot,ijkp,input_p,mrat,m_arr,beta_p
+                  endif
+                  close(220)
+                  close(211)
+            endif
+!      endif
+      
       close(110)
       close(115)
       close(120)
