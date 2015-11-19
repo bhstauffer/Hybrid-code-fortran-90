@@ -23,7 +23,7 @@ program hybrid
       character(1):: mstart
       integer:: ierr,t1,t2,cnt_rt,m,mstart_n,ndiag,seed
       real(8):: time
-      logical:: restart = .true.
+      logical:: restart = .false.
       integer(4):: Ni_tot_sw,Ni_tot_sys
       integer:: i,j,k,n,ntf !looping indicies
       
@@ -56,7 +56,7 @@ program hybrid
             write(*,*) ' '
       endif
       
-      mstart_n = 2 !number of times restarted
+      mstart_n = 0 !number of times restarted
       write(mstart, '(I1)') mstart_n
       
       ndiag = 0
@@ -106,7 +106,7 @@ program hybrid
       
       Ni_tot_sys = Ni_tot*procnum
       write(*,*) Ni_tot_sys, Ni_tot, procnum
-      write(*,*) 'Particles per cell...', Ni_tot_sys/nz
+      write(*,*) 'Particles per cell...', Ni_tot_sys/(nz*ny)
       
       call f_update_tlev(b1,b12,b1p2,bt,b0)
 
@@ -170,14 +170,14 @@ program hybrid
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !       Inititalize diagnositc output files
 
-      if (my_rank .eq. 0) then
+      if ((my_rank .eq. 0) .and. restart) then
             open(110,file=trim(out_dir)//'c.np_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
             open(115,file=trim(out_dir)//'c.np_b_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
             open(120,file=trim(out_dir)//'c.mixed_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
             open(130,file=trim(out_dir)//'c.b1_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
             open(140,file=trim(out_dir)//'c.aj_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
             open(150,file=trim(out_dir)//'c.E_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
-            open(160,file=trim(out_dir)//'c_'//trim(mstart)//'.energy.dat',status='unknown',form='unformatted')
+            open(160,file=trim(out_dir)//'c_.energy_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
             
             !diagnostics chex,bill,satnp
             
@@ -195,6 +195,32 @@ program hybrid
             open(342,file=trim(out_dir)//'c.test_part_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
             open(350,file=trim(out_dir)//'c.mnp_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
             
+       endif
+       if ((my_rank .eq. 0) .and. (.not. restart)) then
+            open(110,file=trim(out_dir)//'c.np.dat',status='unknown',form='unformatted')
+            open(115,file=trim(out_dir)//'c.np_b.dat',status='unknown',form='unformatted')
+            open(120,file=trim(out_dir)//'c.mixed.dat',status='unknown',form='unformatted')
+            open(130,file=trim(out_dir)//'c.b1.dat',status='unknown',form='unformatted')
+            open(140,file=trim(out_dir)//'c.aj.dat',status='unknown',form='unformatted')
+            open(150,file=trim(out_dir)//'c.E.dat',status='unknown',form='unformatted')
+            open(160,file=trim(out_dir)//'c.energy.dat',status='unknown',form='unformatted')
+            
+            !diagnostics chex,bill,satnp
+            
+            open(180,file=trim(out_dir)//'c.up.dat',status='unknown',form='unformatted')
+            open(190,file=trim(out_dir)//'c.momentum.dat',status='unknown',form='unformatted')
+            open(192,file=trim(out_dir)//'c.p_conserve.dat',status='unknown',form='unformatted')
+            open(300,file=trim(out_dir)//'c.temp_p.dat',status='unknown',form='unformatted')
+            open(305,file=trim(out_dir)//'c.xp_0.dat',status='unknown',form='unformatted')
+            open(310,file=trim(out_dir)//'c.vp_0.dat',status='unknown',form='unformatted')
+            open(315,file=trim(out_dir)//'c.mrat_0.dat',status='unknown',form='unformatted')
+            open(317,file=trim(out_dir)//'c.beta_p_0.dat',status='unknown',form='unformatted')
+            open(320,file=trim(out_dir)//'c.np_wake.dat',status='unknown',form='unformatted')
+            open(330,file=trim(out_dir)//'c.up_t.dat',status='unknown',form='unformatted')
+            open(340,file=trim(out_dir)//'c.up_b.dat',status='unknown',form='unformatted')
+            open(342,file=trim(out_dir)//'c.test_part.dat',status='unknown',form='unformatted')
+            open(350,file=trim(out_dir)//'c.mnp.dat',status='unknown',form='unformatted')
+       
        endif
        
        if (my_rank .gt. 0) then
