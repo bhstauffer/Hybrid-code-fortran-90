@@ -212,6 +212,7 @@ module misc
             real, intent(out):: beta
             real:: vol
             
+            
             vol = ((qx(nx-1)-qx(1))*(qy(ny-1)-qy(1))*(qz(nz-1)-qz(1)))
             beta = (Ni_tot_sys/vol)/np_top
             
@@ -241,5 +242,8 @@ module misc
             call periodic(np3)
             
       end subroutine get_np3
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+
+            
 end module misc

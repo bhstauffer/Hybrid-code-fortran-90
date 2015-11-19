@@ -21,7 +21,8 @@ program hybrid
       real:: input_chex, input_bill,dtsub
       real:: pup(3),puf(3),peb(3)
       character(2):: filenum!(16) !max 16 processors
-      integer:: ierr,t1,t2,cnt_rt,m,mstart,ndiag,seed
+      character(1):: mstart
+      integer:: ierr,t1,t2,cnt_rt,m,mstart_n,ndiag,seed
       real(8):: time
       logical:: restart = .false.
       integer(4):: Ni_tot_sw,Ni_tot_sys
@@ -45,6 +46,7 @@ program hybrid
 !Initialize all variables
 
       write(filenum, '(I2)') my_rank
+      
 
       Ni_tot=(nx-2)*(ny-2)*(nz-2)*int(ppc/procnum) !1D
       Ni_tot_0 = Ni_tot
@@ -52,12 +54,14 @@ program hybrid
       Ni_tot_sys = Ni_tot*procnum
       
       if (my_rank .eq. 0) then
-            call check_inputs()
+!            call check_inputs()
             write(*,*) 'Partilces per cell... ', Ni_tot_sys/nz
             write(*,*) ' '
       endif
       
-      mstart = 0
+      mstart_n = 0 !number of times restarted
+      write(mstart, '(I1)') mstart_n
+      
       ndiag = 0
       prev_Etot = 1.0
 !      nuei = 0.0
@@ -68,22 +72,25 @@ program hybrid
       call MPI_BARRIER(MPI_COMM_WORLD, ierr)
       
       if (.not. restart) then
-            do i=1,nx
-                  do j=1,ny
-                        do k=1,nz
+!            do i=1,nx
+!                  do j=1,ny
+!                        do k=1,nz
                               input_E = 0.0
                               input_p = 0.0
                               input_chex = 0.0
                               input_bill = 0.0
-                        enddo
-                  enddo
-            enddo
+                             
+                              input_Eb = 0.0
+                              input_EeP= 0.0
+!                        enddo
+!                  enddo
+!            enddo
       endif
       
-      input_Eb = 0.0
-      input_EeP= 0.0
+
       
-      call grd7()
+!      call grd7()
+      call grid_gaussian()
       call grd6_setup(b0,bt,b12,b1,b1p2,nu,input_Eb)
       call get_beta(Ni_tot_sys,beta)
   
@@ -91,14 +98,18 @@ program hybrid
       bndry_Eflux = 0.0
       
       call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+     
       
       !Initialize particles: use load Maxwellian, or sw_part_setup, etc.
       call load_Maxwellian(vth,1,mion,1.0)
+      if (my_rank .eq. 0) then
+            call check_inputs()
+      endif
 !      call load_ring_beam(57.0,40000,mion,1.0)
       
       Ni_tot_sys = Ni_tot*procnum
       write(*,*) Ni_tot_sys, Ni_tot, procnum
-      write(*,*) 'Particles per cell...', Ni_tot_sys/nz
+      write(*,*) 'Particles per cell...', Ni_tot_sys/(nz*ny)
       
       call f_update_tlev(b1,b12,b1p2,bt,b0)
 
@@ -106,24 +117,28 @@ program hybrid
 !  Check for restart flag
 
       write(*,*) 'restart status...', restart
-      if (restart) then
+      if ((restart) .and. (mstart_n .gt. 0)) then
+            if (my_rank .eq. 0) then
             write(*,*) 'opening restar vars....'
-            open(210,file='restart.vars',status='unknown',form='unformatted')
+            open(210,file=trim(out_dir)//'restart.vars',status='unknown',form='unformatted')
             write(*,*) 'reading restart vars......'
-!            read(210) b1,b12,b1p2,bt,btmp,nn,n,nf,vp,vp1,vplus,vminus, &
-!                  up,xp,uf,uf2,ufp2,aj,Ep,Ef,E,uplus,uminus,Evp,Euf, &
-!                  EB1,EB1x,EB1y,EB1z,EE,EeP,input_E,Ni_tot, &
-!                  ijkp,mstart,input_p,input_EeP,prev_Etot,nf1,nf3,nfp1, &
-!                  input_chex,input_bill,pf,pf1,mrat,m_arr
+            read(210) b1,b12,b1p2,bt,btmf,btc,np,np3,vp,vp1,vplus,vminus, &
+                  up,xp,aj,nu,Ep,E,temp_p,mnp,beta,beta_p,Evp,Euf, &
+                  EB1,EB1x,EB1y,EB1z,EE,EeP,input_E,Ni_tot, &
+                  ijkp,input_p,input_EeP,input_Eb,prev_Etot,bndry_Eflux,grav, &
+                  input_chex,input_bill,mrat,m_arr
             write(*,*) 'restarting hybrid ....'
             
-            if (my_rank .gt. 0) then
-                  open(211,file='restart.part'//trim(filenum),status='unknown',form='unformatted')
-                  read(211) vp,vp1,vplus,vminus,xp,Ep,input_E,Ni_tot,ijkp,input_p,mrat,m_arr
             endif
+            
+            if (my_rank .gt. 0) then
+                  open(211,file=trim(out_dir)//'restart.part'//trim(filenum),status='unknown',form='unformatted')
+                  read(211) vp,vp1,vplus,vminus,xp,Ep,input_E,Ni_tot,ijkp,input_p,mrat,m_arr,beta_p
+            endif
+            close(210)
+            close(211)
       endif
-      
-      close(211)
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Write parameter file
             if (my_rank .eq. 0) then
@@ -132,7 +147,7 @@ program hybrid
                         status='unknown',form='unformatted')
          
                   write(109) nx,ny,nz,dx,dy,delz
-                  write(109) nt,dtsub_init,ntsub,dt,nout
+                  write(109) nt,dtsub_init,ntsub,dt,nout,mion
                   write(109) out_dir
                   write(109) vtop,vbottom
                   write(109) Ni_max
@@ -144,15 +159,47 @@ program hybrid
                   close(109)
                   
 ! Write fft parameter file
-!                  open(401, file = trim(out_dir)//'fft.dat',status='unknown',form='unformatted')
+!                  open(401, file = trim(out_dir)//'fft_520.dat',status='unknown',form='unformatted')
 !                  write(401) dt,nt,omega_p
+                  
+!                  open(402, file = trim(out_dir)//'fft_700.dat',status='unknown',form='unformatted')
+!                  write(402) dt,nt,omega_p
+                  
+!                  open(403, file = trim(out_dir)//'fft_950.dat',status='unknown',form='unformatted')
+!                  write(403) dt,nt,omega_p
 
             endif
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !       Inititalize diagnositc output files
 
-      if (my_rank .eq. 0) then
+      if ((my_rank .eq. 0) .and. restart) then
+            open(110,file=trim(out_dir)//'c.np_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(115,file=trim(out_dir)//'c.np_b_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(120,file=trim(out_dir)//'c.mixed_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(130,file=trim(out_dir)//'c.b1_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(140,file=trim(out_dir)//'c.aj_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(150,file=trim(out_dir)//'c.E_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(160,file=trim(out_dir)//'c_.energy_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            
+            !diagnostics chex,bill,satnp
+            
+            open(180,file=trim(out_dir)//'c.up_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(190,file=trim(out_dir)//'c.momentum_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(192,file=trim(out_dir)//'c.p_conserve_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(300,file=trim(out_dir)//'c.temp_p_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(305,file=trim(out_dir)//'c.xp_0_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(310,file=trim(out_dir)//'c.vp_0_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(315,file=trim(out_dir)//'c.mrat_0_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(317,file=trim(out_dir)//'c.beta_p_0_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(320,file=trim(out_dir)//'c.np_wake_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(330,file=trim(out_dir)//'c.up_t_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(340,file=trim(out_dir)//'c.up_b_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(342,file=trim(out_dir)//'c.test_part_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(350,file=trim(out_dir)//'c.mnp_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            
+       endif
+       if ((my_rank .eq. 0) .and. (.not. restart)) then
             open(110,file=trim(out_dir)//'c.np.dat',status='unknown',form='unformatted')
             open(115,file=trim(out_dir)//'c.np_b.dat',status='unknown',form='unformatted')
             open(120,file=trim(out_dir)//'c.mixed.dat',status='unknown',form='unformatted')
@@ -176,24 +223,23 @@ program hybrid
             open(340,file=trim(out_dir)//'c.up_b.dat',status='unknown',form='unformatted')
             open(342,file=trim(out_dir)//'c.test_part.dat',status='unknown',form='unformatted')
             open(350,file=trim(out_dir)//'c.mnp.dat',status='unknown',form='unformatted')
+       
        endif
        
        if (my_rank .gt. 0) then
-            open(305,file=trim(out_dir)//'c.xp_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
-            open(310,file=trim(out_dir)//'c.vp_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
-            open(315,file=trim(out_dir)//'c.mrat_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
-            open(317,file=trim(out_dir)//'c.beta_p__'//trim(filenum)//'.dat',status='unknown',form='unformatted')
+!            open(305,file=trim(out_dir)//'c.xp_'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+!            open(310,file=trim(out_dir)//'c.vp_'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+!            open(315,file=trim(out_dir)//'c.mrat_'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+!            open(317,file=trim(out_dir)//'c.beta_p__'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
        endif
        
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 !       MAIN LOOP
-
-      do m = mstart+1, nt
+      do m = 1, nt !mstart_n+1, nt
             if (my_rank .eq. 0) then
                   write(*,*) 'time...', m, m*dt,my_rank
             endif
-            if (Ni_tot .lt. Ni_max) then
+            if (m .lt. 300) then
                   !Call ionizing subroutine  (adds ions to the domain)
                   !call Mass_load_Io(m)
             endif
@@ -205,20 +251,21 @@ program hybrid
             call get_bndry_Eflux(b1,E,bndry_Eflux)
 
             call Energy_diag(Evp,Euf,EB1,EB1x,EB1y,EB1z,EE,EeP)
-          
+ 
             call curlB(bt,np,aj)
             call edge_to_center(bt,btc)
             call extrapol_up()
             call get_Ep()
+
             
             call get_vplus_vminus()
             call improve_up()
- 
-            call get_Ep()
 
+            call get_Ep()
+         
             call get_vplus_vminus()
             call get_vp_final()
-                      
+      
             call move_ion_half() !1/2 step ion move to n+1/2
 
             call get_interp_weights()
@@ -226,6 +273,7 @@ program hybrid
             call update_np()                  !np at n+1/2
 
             call update_up(vp)            !up at n+1/2
+      
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !       Subcycling loop
@@ -245,7 +293,7 @@ program hybrid
                   
             enddo
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!           
-
+ 
             call move_ion_half()       !final ion move to n+1
 
 
@@ -262,7 +310,9 @@ program hybrid
                   write(190) pup,puf,peb,input_p
                   
                   !fft output
-!                  write(401) b1(2,2,loc,1), b1(2,2,loc,2), b1(2,2,loc,3)
+!                  write(401) b1(2,2,500,1), b1(2,2,500,2), b1(2,2,500,3)
+!                  write(402) b1(2,2,720,1), b1(2,2,720,2), b1(2,2,720,3)
+!                  write(403) b1(2,2,950,1), b1(2,2,950,2), b1(2,2,950,3)
                   
             endif
             
@@ -288,14 +338,14 @@ program hybrid
                         write(180) up
                         write(300) m
                         write(300) temp_p/1.6e-19  !output in eV
-                        write(305) m
-                        write(305) xp
-                        write(310) m
-                        write(310) vp
-                        write(315) m
-                        write(315) mrat
-                        write(317) m
-                        write(317) beta_p
+!                        write(305) m
+!                        write(305) xp
+!                        write(310) m
+!                        write(310) vp
+!                        write(315) m
+!                        write(315) mrat
+!                        write(317) m
+!                        write(317) beta_p
                         write(330) m
                         write(330) up_t
                         write(340) m
@@ -307,14 +357,14 @@ program hybrid
                    endif
                    
                    if (my_rank .gt. 0) then
-                        write(305) m
-                        write(305) xp
-                        write(310) m
-                        write(310) vp
-                        write(315) m
-                        write(315) mrat
-                        write(317) m
-                        write(317) beta_p
+!                        write(305) m
+!                        write(305) xp
+!                        write(310) m
+!                        write(310) vp
+!                        write(315) m
+!                        write(315) mrat
+!                        write(317) m
+!                        write(317) beta_p
                         
                         ndiag = 0
                   endif
@@ -324,21 +374,34 @@ program hybrid
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !       Write restart file
 
-!            if (my_rank .eq. 0) then
-!                  if (m .eq. mrestart) then
-!                        open(220),file='restart.vars.new',status='unknown',form='unformatted')
-!                        write(220) b1,b12,b1p2,bt,btmp,nn,n,nf,vp,vp1,vplus,vminus, &
-!                              up,xp,uf,uf2,ufp2,aj,Ep,Ef,E,uplus,uminus,Evp,Euf, &
-!                              EB1,EB1x,EB1y,EB1z,EE,EeP,input_E,Ni_tot, &
-!                              ijkp,mstart,input_p,input_EeP,prev_Etot,nf1,nf3,nfp1, &
-!                              input_chex,input_bill,pf,pf1,mrat,m_arr
-                              
-!                  endif
-!            endif
+            
             
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             
       enddo     !End Main Loop
+      
+!      if (my_rank .eq. 0) then
+            if (restart) then
+                  if (my_rank .eq. 0) then
+                        write(*,*) 'Writing restart file...'
+                        open(220,file=trim(out_dir)//'restart.vars',status='unknown',form='unformatted')
+                        write(220) b1,b12,b1p2,bt,btmf,btc,np,np3,vp,vp1,vplus,vminus, &
+                        up,xp,aj,nu,Ep,E,temp_p,mnp,beta,beta_p,Evp,Euf, &
+                        EB1,EB1x,EB1y,EB1z,EE,EeP,input_E,Ni_tot, &
+                        ijkp,input_p,input_EeP,input_Eb,prev_Etot,bndry_Eflux,grav, &
+                        input_chex,input_bill,mrat,m_arr
+                  endif
+                              
+                              
+                  if (my_rank .gt. 0) then
+                        open(211,file=trim(out_dir)//'restart.part'//trim(filenum),status='unknown',form='unformatted')
+                        write(211) vp,vp1,vplus,vminus,xp,Ep,input_E,Ni_tot,ijkp,input_p,mrat,m_arr,beta_p
+                  endif
+                  close(220)
+                  close(211)
+            endif
+!      endif
+      
       close(110)
       close(115)
       close(120)
@@ -365,6 +428,9 @@ program hybrid
       close(340)
       close(342)
       close(350)
+!      close(401)
+!      close(402)
+!      close(403)
       
       call system_clock(t2,cnt_rt)
       time=(real(t2,dp_kind) - real(t1,dp_kind))/real(cnt_rt,dp_kind)

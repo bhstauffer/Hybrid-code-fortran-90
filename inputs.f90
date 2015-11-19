@@ -3,11 +3,13 @@ module inputs
       use mpi
 !      use var_arrays, only: Ni_tot_0
       implicit none
+      save
       
       real:: b0_init, nf_init,dt_frac, vsw, vth, Ni_tot_frac, dx_frac, &
-            nu_init_frac,lambda_i,m_pu, mO, ppc, nu_init, ion_amu, load_rate
+            nu_init_frac,lambda_i,m_pu, mO, ppc, nu_init, ion_amu, load_rate, amp, &
+            height_stretch, zsf
       real, parameter:: mion = 3.841e-26
-      integer:: mp, nt, nout, loc
+      integer:: mp, nt, nout, loc, grad, nrgrd
       integer(4):: Ni_tot_0
 
       real, parameter:: q=1.6e-19         !electron charge
@@ -76,6 +78,8 @@ module inputs
                  write(*,*) 'm_pu..............',m_pu
                  read(100,*) nf_init
                  write(*,*) 'nf_init...........',nf_init
+                 read(100,*) amp
+                 write(*,*) 'amplitude.........', amp
                  read(100,*) dt_frac
                  write(*,*) 'dt_frac...........',dt_frac
                  read(100,*) nt
@@ -90,6 +94,12 @@ module inputs
                  write(*,*) 'Ni_tot_frac.......',Ni_tot_frac
                  read(100,*) dx_frac
                  write(*,*) 'dx_frac...........',dx_frac
+                 read(100,*) grad
+                 write(*,*) 'scale height......', grad
+                 read(100,*) height_stretch
+                 write(*,*) 'start stretching...', height_stretch
+                 read(100,*) zsf
+                 write(*,*) 'z stretch factor...', zsf
                  read(100,*) nu_init_frac
                  write(*,*) 'nu_init_frac......',nu_init_frac
                  read(100,*) ppc
@@ -102,6 +112,7 @@ module inputs
                  write(*,*) 'output dir........',out_dir
                  
                  close(100)
+                 
                  
             end subroutine readInputs
             
@@ -117,8 +128,8 @@ module inputs
                   
                   omega_p = q*b0_init/mion
                   
-                  lambda_i = (3e8/sqrt((nf_init/1e9)*q*q/(8.85e-12*mion)))/1e3
-                  
+                  lambda_i = (3e8/sqrt((nf_init*amp/1e9)*q*q/(8.85e-12*mion)))/1e3
+                                    
                   dx= lambda_i*dx_frac
                   dy=lambda_i*dx_frac           !units in km
                   delz = lambda_i*dx_frac       !dz at release coordinates
@@ -152,12 +163,17 @@ module inputs
                   
                   alpha = (mu0/1.0e3)*q*(q/mion)  !mH...determines particle scaling
                   
+                  nrgrd = nint(grad*height_stretch)
+                  
             end subroutine initparameters
             
             
             subroutine check_inputs()
                   use mult_proc, only: my_rank
+                  use grid, only: dz_grid
+                  use var_arrays, only: np
                   implicit none
+                  integer:: i,j,k
                   
                   real*8:: ak, btot, a1, a2, womega, phi, deltat, va, cwpi
                   
@@ -167,20 +183,29 @@ module inputs
                         write(*,*) mu0,q,ion_amu,mion
                         write(*,*) 'alpha...', alpha
                         write(*,*) 'c/wpi...', lambda_i,dx,dy,delz
-                        write(*,*) 'dt......', dt, dtsub_init
+                        write(*,*) 'dt......', dt
+                        write(*,*) 'dt_sub...', dtsub_init
                         
-                        ak = 2.0/dx
+                        do i=1,nx
+                        do j=1,ny
+                        do k=1,nz
+                        
+                        ak = 2.0/dz_grid(k)
                         btot = b0_init*q/mion
-                        a1 = ak**2*btot/(alpha*nf_init)
-                        a2 = (ak*btot)**2/(alpha*nf_init)
+                        a1 = ak**2*btot/(alpha*np(i,j,k))
+                        a2 = (ak*btot)**2/(alpha*np(i,j,k))
                         womega = 0.5*(a1+ sqrt(a1**2 + 4.0*a2))
                         phi = womega/ak
-                        deltat = dx/phi
+                        deltat = dz_grid(k)/phi
                         
-                        if (deltat/dtsub_init .le. 1) then
-                              write(*,*) 'Field time stp too long...'
+                        if (deltat/dtsub_init .le. 2.0) then
+                              write(*,*) 'deltat/dtsub....', deltat/dtsub_init
+                              write(*,*) 'Field time stp too long...', i,j,k
                               stop
                         endif
+                        enddo
+                        enddo
+                        enddo
                         
                         write(*,*) 'Courant check (>1)...', deltat/dtsub_init
                         
@@ -215,6 +240,7 @@ module inputs
                         
                         
                   endif
+                  
                   
             end subroutine check_inputs
             
