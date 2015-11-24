@@ -94,7 +94,7 @@ module chem_rates
             use misc
             use gutsp
             use mult_proc, only: procnum, my_rank
-            use grid, only: qx,qy,qz,dz_grid
+            use grid, only: qx,qy,qz,dx_grid,dy_grid,dz_grid
             use inputs, only: PI,dt,mion,nf_init,mu0,b0_init,dx,dy,beta_pu,m_pu,ion_amu,km_to_m, load_rate
             use var_arrays, only: input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,np,vp,vp1,xp
             implicit none
@@ -144,23 +144,39 @@ module chem_rates
 !                        vp(l,2) = 0
 !                        vp(l,3) = 0
                         theta2 = pad_ranf()*2*PI
-                        vp(l,1) = -57.0*cos(theta2)
+                        vp(l,1) = 0.0!-57.0*cos(theta2)
                         vp(l,2) = 0.0!57.0*sin(theta2)
                         vp(l,3) = 0.0
                         
                         
                         xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
                         xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))
-                        xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
+!                        xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
                        
                         flg=0
                         do while (flg .eq. 0)
-                              xp(l,3) = qz(nz/2-20) + (1.0-pad_ranf())*(qz(nz/2+20)-qz(nz/2-20))
+                              xp(l,3) = qz(nz/2-100) + (1.0-pad_ranf())*(qz(nz/2+100)-qz(nz/2-100))
                               rand1=pad_ranf()
-                              if (exp(-(xp(l,3)-qz(nz/2))**2/(25*dz_grid(nz/2)**2)) .gt. rand1) then
+                              if (exp(-(xp(l,3)-qz(nz/2))**2/(35*dz_grid(nz/2)**2)) .gt. rand1) then
                                     flg = 1
                               endif
                         enddo
+                        flg=0
+!                        do while (flg .eq. 0)
+!                              xp(l,1) = qx(1) + (1.0-pad_ranf())*(qx(40)-qx(1))
+!                              rand1=pad_ranf()
+!                              if (exp(-(xp(l,1)-qx(10))**2/(25*dx_grid(nx/2)**2)) .gt. rand1) then
+!                                    flg = 1
+!                              endif
+!                        enddo
+                        
+!                        do while (flg .eq. 0)
+!                              xp(l,2) = qy(1) + (1.0-pad_ranf())*(qy(ny/2+20)-qy(ny/2-20))
+!                              rand1=pad_ranf()
+!                              if (exp(-(xp(l,2)-qy(ny/2))**2/(25*dy_grid(ny/2)**2)) .gt. rand1) then
+!                                    flg = 1
+!                              endif
+!                        enddo
                         
                         call get_pindex(i,j,k,l)
                      
