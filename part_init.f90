@@ -80,7 +80,7 @@ module part_init
       subroutine load_Maxwellian(vth,Ni_tot_1,mass,mratio)
             use dimensions
             use misc
-            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad
+            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init
             use grid, only: qx,qy,qz,dz_grid
             use gutsp
             use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p
@@ -105,9 +105,9 @@ module part_init
                   m_arr(l) = mass
                   mrat(l) = mratio
 
-!                  beta_p(l) = 1.0/(beta_particle+amp*exp(-((xp(l,3)-qz(nz/2-disp))/ &
-!                        (grad*dz_grid(nz/2-disp)))**2))
-                  beta_p(l) = beta_particle
+                  beta_p(l) = 1.0/(beta_particle+beta_particle*amp*exp(-((xp(l,3)-qz(nz/2-disp))/ &
+                        (grad*dz_grid(nz/2-disp)))**2))
+!                  beta_p(l) = beta_particle
 !!!!!!!!!!!!!Get P-index!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !                  i=1
 !                  do 
@@ -140,7 +140,7 @@ module part_init
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) = vx+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(20*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
+                  vp(l,1) = vx+57.0!*exp(-(xp(l,3)-qz(nz/2))**2/(20*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
                   vp(l,2) = vy 
                   vp(l,3) = vz 
                   
@@ -165,7 +165,7 @@ module part_init
 !            write(*,*) 'boltzman............', kboltz
 !            write(*,*) 'temperature(analytic)..', Temp
             call get_temperature()
-            Tempcalc = sum(temp_p(2,2,:))/1e6/nz !in kg km^2/s^2
+            Tempcalc = sum(temp_p(2,2,1:(nz-1)))/1e6/(nz-1) !in kg km^2/s^2
 !            write(*,*) 'temperature (2,2,100)..', temp_p(2,2,2:10)/1.6e-19
 !            stop
             
@@ -178,13 +178,22 @@ module part_init
 !                  grav(i,j,k) = -2*Tempcalc/(mion*(grad*dz_grid(nz/2-disp))**2 &
 !                        *(beta_particle+amp*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2))) &
 !                        *amp*(qz(k)-qz(nz/2-disp))*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)
+                        
+                       
+                        
+                  grav(i,j,k) = -2.0*Tempcalc/(mion*(grad*dz_grid(nz/2-disp))**2 &
+                        *(1.0+amp*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2))) &
+                        *amp*(qz(k)-qz(nz/2-disp))*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)   
                  
-                 grav(i,j,k) = 0.0
+       
+!                 grav(i,j,k) = 0.0
                   
-!                  write(*,*) 'gravity.....', grav(i,j,k), i,j,k
+                  
             enddo
             enddo
             enddo
+            write(*,*) grav(2,2,nz/2+50), grav(2,2,nz/2-50)
+           ! stop
 
             
       end subroutine load_Maxwellian

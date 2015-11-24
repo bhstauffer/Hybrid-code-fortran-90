@@ -24,7 +24,7 @@ program hybrid
       character(1):: mstart
       integer:: ierr,t1,t2,cnt_rt,m,mstart_n,ndiag,seed
       real(8):: time
-      logical:: restart = .false.
+      logical:: restart = .true.
       integer(4):: Ni_tot_sw,Ni_tot_sys
       integer:: i,j,k,n,ntf !looping indicies
       real (real64) :: dp
@@ -59,7 +59,7 @@ program hybrid
             write(*,*) ' '
       endif
       
-      mstart_n = 0 !number of times restarted
+      mstart_n = 3 !number of times restarted
       write(mstart, '(I1)') mstart_n
       
       ndiag = 0
@@ -118,23 +118,29 @@ program hybrid
 
       write(*,*) 'restart status...', restart
       if ((restart) .and. (mstart_n .gt. 0)) then
-            if (my_rank .eq. 0) then
+!            if (my_rank .eq. 0) then
             write(*,*) 'opening restar vars....'
             open(210,file=trim(out_dir)//'restart.vars',status='unknown',form='unformatted')
             write(*,*) 'reading restart vars......'
-            read(210) b1,b12,b1p2,bt,btmf,btc,np,np3,vp,vp1,vplus,vminus, &
-                  up,xp,aj,nu,Ep,E,temp_p,mnp,beta,beta_p,Evp,Euf, &
-                  EB1,EB1x,EB1y,EB1z,EE,EeP,input_E,Ni_tot, &
-                  ijkp,input_p,input_EeP,input_Eb,prev_Etot,bndry_Eflux,grav, &
-                  input_chex,input_bill,mrat,m_arr
+!            read(210) b1,b12,b1p2,bt,btmf,btc,np,np3,vp,vp1,vplus,vminus, &
+!                  up,xp,aj,nu,Ep,E,temp_p,mnp,beta,beta_p,Evp,Euf, &
+!                  EB1,EB1x,EB1y,EB1z,EE,EeP,input_E,Ni_tot, &
+!                  ijkp,input_p,input_EeP,input_Eb,prev_Etot,bndry_Eflux,grav, &
+!                  input_chex,input_bill,mrat,m_arr
+                  
+            read(210) b1,b12,b1p2,bt,btmf,btc,np,np3, &
+                        up,aj,nu,E,temp_p,mnp,beta,Evp,Euf, &
+                        EB1,EB1x,EB1y,EB1z,EE,EeP, &
+                        input_EeP,input_Eb,prev_Etot,bndry_Eflux,grav, &
+                        input_chex,input_bill
             write(*,*) 'restarting hybrid ....'
             
-            endif
+!            endif
             
-            if (my_rank .gt. 0) then
+!            if (my_rank .gt. 0) then
                   open(211,file=trim(out_dir)//'restart.part'//trim(filenum),status='unknown',form='unformatted')
                   read(211) vp,vp1,vplus,vminus,xp,Ep,input_E,Ni_tot,ijkp,input_p,mrat,m_arr,beta_p
-            endif
+!            endif
             close(210)
             close(211)
       endif
@@ -241,7 +247,7 @@ program hybrid
             endif
             if (m .lt. 300) then
                   !Call ionizing subroutine  (adds ions to the domain)
-                  !call Mass_load_Io(m)
+                 ! call Mass_load_Io(m)
             endif
             call get_interp_weights()
             call update_np()                  !np at n+1/2
@@ -384,21 +390,24 @@ program hybrid
             if (restart) then
                   if (my_rank .eq. 0) then
                         write(*,*) 'Writing restart file...'
+                        
+                        !Write grid data
+                        
                         open(220,file=trim(out_dir)//'restart.vars',status='unknown',form='unformatted')
-                        write(220) b1,b12,b1p2,bt,btmf,btc,np,np3,vp,vp1,vplus,vminus, &
-                        up,xp,aj,nu,Ep,E,temp_p,mnp,beta,beta_p,Evp,Euf, &
-                        EB1,EB1x,EB1y,EB1z,EE,EeP,input_E,Ni_tot, &
-                        ijkp,input_p,input_EeP,input_Eb,prev_Etot,bndry_Eflux,grav, &
-                        input_chex,input_bill,mrat,m_arr
+                        write(220) b1,b12,b1p2,bt,btmf,btc,np,np3, &
+                        up,aj,nu,E,temp_p,mnp,beta,Evp,Euf, &
+                        EB1,EB1x,EB1y,EB1z,EE,EeP, &
+                        input_EeP,input_Eb,prev_Etot,bndry_Eflux,grav, &
+                        input_chex,input_bill
                   endif
                               
                               
-                  if (my_rank .gt. 0) then
-                        open(211,file=trim(out_dir)//'restart.part'//trim(filenum),status='unknown',form='unformatted')
-                        write(211) vp,vp1,vplus,vminus,xp,Ep,input_E,Ni_tot,ijkp,input_p,mrat,m_arr,beta_p
-                  endif
+                  !write individual processor data
+                  open(212,file=trim(out_dir)//'restart.part'//trim(filenum),status='unknown',form='unformatted')
+                  write(212) vp,vp1,vplus,vminus,xp,Ep,input_E,Ni_tot,ijkp,input_p,mrat,m_arr,beta_p
+                  
                   close(220)
-                  close(211)
+                  close(212)
             endif
 !      endif
       
