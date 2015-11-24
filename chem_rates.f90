@@ -171,9 +171,9 @@ module chem_rates
 !                        enddo
                         
 !                        do while (flg .eq. 0)
-!                              xp(l,2) = qy(1) + (1.0-pad_ranf())*(qy(ny/2+20)-qy(ny/2-20))
+!                              xp(l,2) = qy(1) + (1.0-pad_ranf())*(qy(1)-qy(ny))
 !                              rand1=pad_ranf()
-!                              if (exp(-(xp(l,2)-qy(ny/2))**2/(25*dy_grid(ny/2)**2)) .gt. rand1) then
+!                              if (exp(-(xp(l,2)-qy(ny/2))**2/(35*dy_grid(ny/2)**2)) .gt. rand1) then
 !                                    flg = 1
 !                              endif
 !                        enddo
