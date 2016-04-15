@@ -140,7 +140,7 @@ module part_init
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) = vx+57.0!*exp(-(xp(l,3)-qz(nz/2))**2/(20*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
+                  vp(l,1) = vx+57.0!*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
                   vp(l,2) = vy 
                   vp(l,3) = vz 
                   
@@ -175,9 +175,7 @@ module part_init
                   ! Gravity is based on the analytical expression for the density profile (look at beta_p)
                   ! np = const/(beta*beta_p), and grav = const * (dn/dx) / n
                   
-!                  grav(i,j,k) = -2*Tempcalc/(mion*(grad*dz_grid(nz/2-disp))**2 &
-!                        *(beta_particle+amp*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2))) &
-!                        *amp*(qz(k)-qz(nz/2-disp))*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)
+
                         
                        
                         
@@ -192,7 +190,7 @@ module part_init
             enddo
             enddo
             enddo
-            write(*,*) grav(2,2,nz/2+50), grav(2,2,nz/2-50)
+           ! write(*,*) 'gravity...', grav(2,2,nz/2+50), grav(2,2,nz/2-50)
            ! stop
 
             
