@@ -93,7 +93,6 @@ program hybrid
 !      call grid_gaussian()
       call grd6_setup(b0,bt,b12,b1,b1p2,nu,input_Eb)
       call get_beta(Ni_tot_sys,beta)
-      
       input_E = 0.0
       bndry_Eflux = 0.0
       
@@ -101,7 +100,15 @@ program hybrid
      
       
       !Initialize particles: use load Maxwellian, or sw_part_setup, etc.
-      call load_Maxwellian(vth,1,mion,1.0)
+!      call load_Maxwellian(vth,1,mion,1.0)
+      call load_RT(vth,1,mion,1.0)
+!      call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+!      if (my_rank .eq. 0) then
+!            write(*,*) np(nx/2,2,:)    
+!      endif
+!      call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+!      stop
+      
       if (my_rank .eq. 0) then
             call check_inputs()     
       endif
