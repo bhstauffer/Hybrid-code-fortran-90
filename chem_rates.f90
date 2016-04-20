@@ -26,7 +26,7 @@ module chem_rates
 ! Ionizeds the neutral cloud with a 28s time constant and fill particle arrays, np, vp, up.
             use dimensions
             use MPI
-            use misc
+            use boundary
             use gutsp
             use grid, only: qx,qy,qz
             use inputs, only: PI,nf_init,omega_p,beta_pu,dx,dy,delz,dt,vsw,mion,km_to_m
@@ -91,7 +91,7 @@ module chem_rates
 ! Mass load Io with ions witha a specific weight interp
             use dimensions
             use MPI
-            use misc
+            use boundary
             use gutsp
             use mult_proc, only: procnum, my_rank
             use grid, only: qx,qy,qz,dx_grid,dy_grid,dz_grid
@@ -208,6 +208,7 @@ module chem_rates
       subroutine res_chex()
             use dimensions
             use misc
+            use boundary
             use inputs, only: dt,m_pu
             use var_arrays, only: Ni_tot,m_arr,mrat,vp
             implicit none

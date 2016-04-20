@@ -40,8 +40,10 @@ module gutsf
             real:: ax,ay,az,bx,by,bz
             integer:: i,j,k,im,jm,km,ip,jp,kp
             
-            call periodic(aa)
-            call periodic(btc)
+            call boundary_vector(aa)
+            call boundary_vector(btc)
+!            call periodic(aa)
+!            call periodic(btc)
             
             do i=2,nx-1
                   do j=2,ny-1
@@ -67,7 +69,8 @@ module gutsf
                   enddo
             enddo
             
-            call periodic(ct)
+            call boundary_vector(ct)
+!            call periodic(ct)
             
 ! Extrapolate back to the main cell contravariant positions.
 ! Just average across cells since cell edges are centered about the grid points
@@ -86,7 +89,8 @@ module gutsf
                   enddo
             enddo
             
-            call periodic(cc)
+            call boundary_vector(cc)
+!            call periodic(cc)
             
       end subroutine crossf2
     
@@ -107,7 +111,8 @@ module gutsf
             real:: curl_B(3), ntot(3)
             integer:: i,j,k,m,ip,jp,kp
             
-            call periodic(b1)
+            call boundary_vector(b1)
+!            call periodic(b1)
 !            call fix_normal_b(b1)
             do i=2,nx-1
                   do j=2,ny-1
@@ -157,7 +162,8 @@ module gutsf
             real:: curl_B(3), ntot(3)
             integer:: i,j,k,m,ip,jp,kp
             
-            call periodic(b1)
+            call boundary_vector(b1)
+!            call periodic(b1)
             
             do i=2,nx-1
                   do j=2,ny-1
@@ -227,13 +233,13 @@ module gutsf
             use dimensions
             use boundary
             use grid_interp
-            use var_arrays, only: grav
+            use var_arrays, only: grav, gradP
             use inputs, only: mion
             implicit none
             real, intent(in):: aj(nx,ny,nz,3), up(nx,ny,nz,3), nu(nx,ny,nz)
             real, intent(inout):: bt(nx,ny,nz,3)
             real, intent(out):: E(nx,ny,nz,3)
-            real:: a(nx,ny,nz,3), c(nx,ny,nz,3), aa(nx,ny,nz,3), btc(nx,ny,nz,3), gravc(nx,ny,nz)
+            real:: a(nx,ny,nz,3), c(nx,ny,nz,3), aa(nx,ny,nz,3), btc(nx,ny,nz,3), gravc(nx,ny,nz), gradPmf(3)
             integer:: i,j,k,m
             
             do i=2,nx-1
@@ -251,20 +257,26 @@ module gutsf
             call crossf2(aa,btc,c)
             call grav_to_center(grav,gravc)
             
+            
+            
             do i=2,nx-1
                   do j=2,ny-1
                         do k=2,nz-1
+                              gradPmf(1) = 0.5*(gradP(i,j,k,1) + gradP(i+1,j,k,1))
+                              gradPmf(2) = 0.5*(gradP(i,j,k,2) + gradP(i,j+1,k,2))
+                              gradPmf(3) = 0.5*(gradP(i,j,k,3) + gradP(i,j,k+1,3))
                               do m =1,2
-                                    E(i,j,k,m) = c(i,j,k,m) + nu(i,j,k)*aj(i,j,k,m)
+                                    E(i,j,k,m) = c(i,j,k,m) + nu(i,j,k)*aj(i,j,k,m) - gradPmf(m)        ! Add in electron pressure
                               enddo
-                                    E(i,j,k,3) = c(i,j,k,3) + nu(i,j,k)*aj(i,j,k,3) + gravc(i,j,k)  ! Add in gravity term
+                                    E(i,j,k,3) = c(i,j,k,3) + nu(i,j,k)*aj(i,j,k,3) + gravc(i,j,k) - gradPmf(3) ! Add in gravity term and electron pressure
 !                                    write(*,*) 'Electric field.................', c(i,j,k,3) + nu(i,j,k)*aj(i,j,k,3)
 !                                    write(*,*) 'Gravity field..................', gravc(i,j,k)
                         enddo
                   enddo
             enddo
             
-            call periodic(E)
+            call boundary_vector(E)
+!            call periodic(E)
       
       end subroutine get_E
       
@@ -293,7 +305,8 @@ module gutsf
                   enddo
             enddo
             
-            call periodic(b1p2)
+            call boundary_vector(b1p2)
+!            call periodic(b1p2)
             
       end subroutine predict_B
       
@@ -306,7 +319,7 @@ module gutsf
             use dimensions
             use grid_interp
             use boundary
-            use var_arrays, only: grav
+            use var_arrays, only: grav, gradP
             use inputs, only: mion
             implicit none
             real, intent(in):: b1(nx,ny,nz,3), b1p2(nx,ny,nz,3), up(nx,ny,nz,3), nu(nx,ny,nz), &
@@ -315,7 +328,7 @@ module gutsf
             real:: b1p1(nx,ny,nz,3), &          !b1 at time level m+1/2
                    btp1(nx,ny,nz,3), &          !bt at time level m+1/2
                    btp1mf(nx,ny,nz,3), &        !btp1 at contravariant position
-                   btc(nx,ny,nz,3), a(nx,ny,nz,3), aa(nx,ny,nz,3), c(nx,ny,nz,3), gravc(nx,ny,nz)
+                   btc(nx,ny,nz,3), a(nx,ny,nz,3), aa(nx,ny,nz,3), c(nx,ny,nz,3), gravc(nx,ny,nz), gradPmf(3)
             integer:: i,j,k,m
             
             do i=1,nx
@@ -353,17 +366,21 @@ module gutsf
             do i=2,nx-1
                   do j=2,ny-1
                         do k=2,nz-1
+                              gradPmf(1) = 0.5*(gradP(i,j,k,1) + gradP(i+1,j,k,1))
+                              gradPmf(2) = 0.5*(gradP(i,j,k,2) + gradP(i,j+1,k,2))
+                              gradPmf(3) = 0.5*(gradP(i,j,k,3) + gradP(i,j,k+1,3))
                               do m=1,2
-                                    E(i,j,k,m) = c(i,j,k,m) + nu(i,j,k)*aj(i,j,k,m)
+                                    E(i,j,k,m) = c(i,j,k,m) + nu(i,j,k)*aj(i,j,k,m) - gradPmf(m)
                               enddo
-                                    E(i,j,k,3) = c(i,j,k,3) + nu(i,j,k)*aj(i,j,k,3) + gravc(i,j,k) ! Add in gravity term
+                                    E(i,j,k,3) = c(i,j,k,3) + nu(i,j,k)*aj(i,j,k,3) + gravc(i,j,k) - gradPmf(3)! Add in gravity term and electron pressure
 !                                    write(*,*) 'Electric field.................', c(i,j,k,3) + nu(i,j,k)*aj(i,j,k,3)
 !                                    write(*,*) 'Gravity field..................', gravc(i,j,k)
                         enddo
                   enddo
             enddo
             
-            call periodic(E)
+            call boundary_vector(E)
+!            call periodic(E)
             
       end subroutine get_Ep1
       
@@ -401,7 +418,8 @@ module gutsf
                   enddo
             enddo
             
-            call periodic(b1p2)
+            call boundary_vector(b1p2)
+!            call periodic(b1p2)
             
       end subroutine correct_B
       
