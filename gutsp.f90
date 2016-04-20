@@ -1787,14 +1787,14 @@ module gutsp
             do i=1,nx
                   do j=1,ny
                         do k=1,nz
-!                              temp_p(i,j,k) = (1./3.)*1e6*mion*(sqrt((up2(i,j,k,1) &
-!                                    - up_ave(i,j,k,1)**2)**2 + &
-!                                    (up2(i,j,k,2) - up_ave(i,j,k,2)**2)**2 + & 
-!                                    (up2(i,j,k,3) - up_ave(i,j,k,3)**2)**2))  
-                              temp_p(i,j,k) = (1./3.)*1e6*mion*( &
-                                    up2(i,j,k,1) - up_ave(i,j,k,1)**2 + &
-                                    up2(i,j,k,2) - up_ave(i,j,k,2)**2 + & 
-                                    up2(i,j,k,3) - up_ave(i,j,k,3)**2)
+                              temp_p(i,j,k) = (1./3.)*1e6*mion*(sqrt((up2(i,j,k,1) &
+                                    - up_ave(i,j,k,1)**2)**2 + &
+                                    (up2(i,j,k,2) - up_ave(i,j,k,2)**2)**2 + & 
+                                    (up2(i,j,k,3) - up_ave(i,j,k,3)**2)**2))  
+!                              temp_p(i,j,k) = (1./3.)*1e6*mion*( &
+!                                    up2(i,j,k,1) - up_ave(i,j,k,1)**2 + &
+!                                    up2(i,j,k,2) - up_ave(i,j,k,2)**2 + & 
+!                                    up2(i,j,k,3) - up_ave(i,j,k,3)**2)
                         enddo
                   enddo
             enddo
@@ -1840,29 +1840,53 @@ module gutsp
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine get_pindex(i,j,k,l)
-!            use dimensions
+            use dimensions
             use inputs, only: dx,dy
             use grid, only: qx,qy,qz
             use var_arrays, only: ijkp,xp
             implicit none
             integer, intent(in):: l
             integer, intent(out):: i,j,k
+            integer:: hi,mid
+!            i=1               
+!            do while (xp(l,1) .gt. qx(i))
+!                  i=i+1
+!            enddo
+!            i=i-1
             i=1
-
-            do while (xp(l,1) .gt. qx(i))
-                  i=i+1
+            hi = nx
+            do
+                  mid = (i+hi)/2
+                  if (xp(l,1) .lt. qx(mid)) then
+                        hi=mid
+                  else
+                        i=mid
+                  endif
+                  if (i+1 .ge. hi) exit
             enddo
 
-            i=i-1
             ijkp(l,1)=i
             j = floor(xp(l,2)/dy)
             ijkp(l,2) = j
+!            k=1
+!            do while (xp(l,3) .gt. qz(k))
+!                  k=k+1
+!            enddo
+!            k=k-1
             k=1
-            do while (xp(l,3) .gt. qz(k))
-                  k=k+1
+            hi = nz
+            do
+                  mid = (k+hi)/2
+                  if (xp(l,3) .lt. qz(mid)) then
+                        hi=mid
+                  else
+                        k=mid
+                  endif
+                  if (k+1 .ge. hi) exit
             enddo
-            k=k-1
             ijkp(l,3) = k
+
+
             
       end subroutine get_pindex
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!            
