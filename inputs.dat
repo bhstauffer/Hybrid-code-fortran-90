@@ -18,5 +18,5 @@
 2020                   !Location of fft analysis (integer)
 10.0                   !mass load rate scalar (default = 1.0)
 0                !electron temperature (eV)  
-1                     ! Boundary condition (1: fully periodic   2: Periodic on xy, zero derivative on z)  
+2                     ! Boundary condition (1: fully periodic   2: Periodic on xy, zero derivative on z)  
 './tmp1/'             !output directory 

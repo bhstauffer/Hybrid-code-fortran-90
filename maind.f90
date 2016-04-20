@@ -89,8 +89,8 @@ program hybrid
       
 
       
-!      call grd7()
-      call grid_gaussian()
+      call grd7()
+!      call grid_gaussian()
       call grd6_setup(b0,bt,b12,b1,b1p2,nu,input_Eb)
       call get_beta(Ni_tot_sys,beta)
       
@@ -247,7 +247,7 @@ program hybrid
             endif
           !  if (m .lt. 600) then
                   !Call ionizing subroutine  (adds ions to the domain)
-                  call Mass_load_Io(m)
+!                  call Mass_load_Io(m)
           !  endif
             call get_interp_weights()
             call update_np()                  !np at n+1/2
