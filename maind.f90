@@ -24,7 +24,7 @@ program hybrid
       character(1):: mstart
       integer:: ierr,t1,t2,cnt_rt,m,mstart_n,ndiag,seed
       real(8):: time
-      logical:: restart = .true.
+      logical:: restart = .false.
       integer(4):: Ni_tot_sw,Ni_tot_sys
       integer:: i,j,k,n,ntf !looping indicies
       real (real64) :: dp
@@ -93,7 +93,7 @@ program hybrid
       call grid_gaussian()
       call grd6_setup(b0,bt,b12,b1,b1p2,nu,input_Eb)
       call get_beta(Ni_tot_sys,beta)
-  
+      
       input_E = 0.0
       bndry_Eflux = 0.0
       
@@ -103,13 +103,13 @@ program hybrid
       !Initialize particles: use load Maxwellian, or sw_part_setup, etc.
       call load_Maxwellian(vth,1,mion,1.0)
       if (my_rank .eq. 0) then
-            call check_inputs()
+            call check_inputs()     
       endif
 !      call load_ring_beam(57.0,40000,mion,1.0)
       
       Ni_tot_sys = Ni_tot*procnum
       write(*,*) Ni_tot_sys, Ni_tot, procnum
-      write(*,*) 'Particles per cell...', Ni_tot_sys/(nz*ny)
+      write(*,*) 'Particles per cell...', Ni_tot_sys/(nz*nx)
       
       call f_update_tlev(b1,b12,b1p2,bt,b0)
 
@@ -245,10 +245,10 @@ program hybrid
             if (my_rank .eq. 0) then
                   write(*,*) 'time...', m, m*dt,my_rank
             endif
-            if (m .lt. 300) then
+          !  if (m .lt. 600) then
                   !Call ionizing subroutine  (adds ions to the domain)
-                 ! call Mass_load_Io(m)
-            endif
+                  call Mass_load_Io(m)
+          !  endif
             call get_interp_weights()
             call update_np()                  !np at n+1/2
             call update_up(vp)            !up at n+1/2
@@ -257,6 +257,7 @@ program hybrid
             call get_bndry_Eflux(b1,E,bndry_Eflux)
 
             call Energy_diag(Evp,Euf,EB1,EB1x,EB1y,EB1z,EE,EeP)
+            call get_gradP()
  
             call curlB(bt,np,aj)
             call edge_to_center(bt,btc)
@@ -279,6 +280,8 @@ program hybrid
             call update_np()                  !np at n+1/2
 
             call update_up(vp)            !up at n+1/2
+            
+            call get_gradP()
       
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -31,7 +31,8 @@ module Var_Arrays
                   up_b(nx,nz,nz,3), &
                   input_p(3), &
                   input_E, input_Eb, bndry_Eflux, prev_Etot, &
-                  grav(nx,ny,nz)            !gravity term
+                  grav(nx,ny,nz), &            !gravity term
+                  gradP(nz,ny,nz,3)            !electron pressure gradient
       
       integer(4):: Ni_tot
       

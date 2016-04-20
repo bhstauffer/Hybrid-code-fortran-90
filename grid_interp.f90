@@ -12,7 +12,8 @@ module grid_interp
             real:: b1,b2
             integer:: i,j,k,im,jm,km
             
-            call periodic(bt)
+            call boundary_vector(bt)
+!            call periodic(bt)
             
             do i=2,nx-1
                   do j=2,ny-1
@@ -40,7 +41,8 @@ module grid_interp
                   enddo
             enddo
             
-            call periodic(btc)
+            call boundary_vector(btc)
+!            call periodic(btc)
             
       end subroutine edge_to_center
       
@@ -55,7 +57,8 @@ module grid_interp
             real:: btc(nx,ny,nz,3),b1,b2
             integer:: i,j,k,im,jm,km
             
-            call periodic(bt)
+            call boundary_vector(bt)
+!            call periodic(bt)
             
             do i=2,nx
                   do j =2,ny
@@ -83,7 +86,8 @@ module grid_interp
                   enddo
             enddo
             
-            call periodic(btc)
+            call boundary_vector(btc)
+!            call periodic(btc)
             
             do i=2,nx-1
                   do j=2,ny-1
@@ -94,7 +98,7 @@ module grid_interp
                         enddo
                   enddo
             enddo
-            
+!            call boundary_vector(btmf)            
 !            call periodic(btmf)
             
       end subroutine edge_to_face
@@ -109,7 +113,8 @@ module grid_interp
             real, intent(out):: vc(nx,ny,nz,3)
             integer:: i,j,k,im,jm,km
             
-            call periodic(v)
+            call boundary_vector(v)
+!            call periodic(v)
             
             do i=2,nx
                   do j=2,ny
@@ -126,7 +131,8 @@ module grid_interp
                   enddo
             enddo
             
-            call periodic(vc)
+            call boundary_vector(vc)
+!            call periodic(vc)
             
       end subroutine face_to_center
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -139,7 +145,8 @@ module grid_interp
             real, intent(out):: gravc(nx,ny,nz)
             integer:: i,j,k,km
             
-            call periodic_scalar(grav)
+            call boundary_scalar(grav)
+!            call periodic_scalar(grav)
             do i=2,nx
                   do j=2,ny
                         do k=2,nz
@@ -150,7 +157,9 @@ module grid_interp
                         enddo
                   enddo
             enddo
-            call periodic_scalar(gravc)
+            
+            call boundary_scalar(gravc)
+!            call periodic_scalar(gravc)
             
       end subroutine grav_to_center
       

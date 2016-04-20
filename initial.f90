@@ -72,9 +72,9 @@ module initial
       subroutine grd7()
             use grid
             use mult_proc, only: my_rank
-            use inputs, only: dx,dy,delz,out_dir,zsf,nrgrd
+            use inputs, only: dx,dy,delz,out_dir,zsf!,nrgrd
             implicit none
-!            integer, parameter:: nrgrd = 20
+            integer, parameter:: nrgrd = 20
             integer:: i,j,k,ind
             real:: xsf,zplus,zminus,xplus,xminus,yplus,yminus
             
@@ -128,7 +128,7 @@ module initial
             
             
 !!!!!!!Stretch Z direction!!!!!!!!!!!!!!!!!!!!!!!!!!!!!            
-            zsf = 0.0   !z stretch factor
+!            zsf = 0.0   !z stretch factor
             !up from center
             
             do k = rk, rk + nrgrd
