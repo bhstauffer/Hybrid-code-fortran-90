@@ -102,12 +102,6 @@ program hybrid
       !Initialize particles: use load Maxwellian, or sw_part_setup, etc.
 !      call load_Maxwellian(vth,1,mion,1.0)
       call load_RT(vth,1,mion,1.0)
-!      call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-!      if (my_rank .eq. 0) then
-!            write(*,*) np(nx/2,2,:)    
-!      endif
-!      call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-!      stop
       
       if (my_rank .eq. 0) then
             call check_inputs()     
@@ -160,7 +154,7 @@ program hybrid
                         status='unknown',form='unformatted')
          
                   write(109) nx,ny,nz,dx,dy,delz
-                  write(109) nt,dtsub_init,ntsub,dt,nout,mion
+                  write(109) nt,dtsub_init,ntsub,dt,nout,grav,mion
                   write(109) out_dir
                   write(109) vtop,vbottom
                   write(109) Ni_max
@@ -336,14 +330,14 @@ program hybrid
             if (ndiag .eq. nout) then
                   call get_temperature()
                   call update_rho()
-!                  call update_mixed(mixed,mix_cnt,Ni_tot,ijkp,mix_ind)
+                  call update_mixed()
                   if (my_rank .eq. 0) then
                         write(110) m
                         write(110) np
                         write(115) m
                         write(115) np_b
-!                        write(120) m
-!                        write(120) mixed
+                        write(120) m
+                        write(120) mixed
                         write(130) m
                         write(130) bt
                         write(140) m

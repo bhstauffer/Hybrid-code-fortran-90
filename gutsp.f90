@@ -1028,13 +1028,13 @@ module gutsp
       end subroutine update_rho
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      subroutine update_mixed(mixed,mix_cnt)
+      subroutine update_mixed()
 ! Weight density to eight nearest grid points
             use dimensions
             use MPI
-            use var_arrays, only: Ni_tot,ijkp,mix_ind
+            use mult_proc
+            use var_arrays, only: Ni_tot,ijkp,mix_ind,mixed,mix_cnt
             implicit none
-            real, intent(out):: mixed(nx,ny,nz), mix_cnt(nx,ny,nz)
             real:: recvbuf(nx*ny*nz)
             integer:: i,j,k,l,count,ierr
             
@@ -1044,11 +1044,17 @@ module gutsp
                   do j=1,ny
                         do k=1,nz
                               mixed(i,j,k) = 0.0
+                        enddo
+                  enddo
+            enddo
+            do i=1,nx
+                  do j=1,ny
+                        do k=1,nz
                               mix_cnt(i,j,k) = 0.0
                         enddo
                   enddo
             enddo
-            
+
             do l = 1, Ni_tot
                   i=ijkp(l,1)
                   j=ijkp(l,2)
@@ -1056,9 +1062,11 @@ module gutsp
                   
                   mixed(i,j,k) = mixed(i,j,k) + mix_ind(l)
                   mix_cnt(i,j,k) = mix_cnt(i,j,k) + 1
-                  
+            !      write(*,*) mix_cnt(i,j,k)
             enddo
-            
+!            write(*,*) mix_cnt(nx/2,1,:)
+!            write(*,*) 'Ni_tot.....', Ni_tot
+!            stop
             call MPI_BARRIER(MPI_COMM_WORLD,ierr)
             call MPI_ALLREDUCE(mixed(:,:,:),recvbuf,count,MPI_REAL,MPI_SUM,MPI_COMM_WORLD,ierr)
             
@@ -1069,7 +1077,23 @@ module gutsp
             
             mix_cnt(:,:,:) = reshape(recvbuf,(/nx,ny,nz/))
             
+            mix_cnt(nx-1,:,:) = mix_cnt(nx-1,:,:) + mix_cnt(1,:,:)
+            mix_cnt(:,ny-1,:) = mix_cnt(:,ny-1,:) + mix_cnt(:,1,:)
+            
             mixed(:,:,:) = mixed(:,:,:)/mix_cnt(:,:,:)
+!            if (my_rank .eq. 0) then
+!            write(*,*) mixed(nx/2,1,:)
+!            endif
+!            write(*,*) mix_cnt(nx/2,1,:)
+!            call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+!            stop
+!            do i=1,nx
+!                  do j=1,ny
+!                        do k=1,nz
+!                              mixed(i,j,k) =  mixed(i,j,k)/real(mix_cnt(i,j,k))
+!                        enddo
+!                  enddo
+!            enddo
             
       end subroutine update_mixed
       

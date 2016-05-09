@@ -108,6 +108,8 @@ module part_init
                   beta_p(l) = 1.0/(beta_particle+beta_particle*amp*exp(-((xp(l,3)-qz(nz/2-disp))/ &
                         (grad*dz_grid(nz/2-disp)))**2))
 !                  beta_p(l) = beta_particle
+
+                  call get_pindex(i,j,k,l)
 !!!!!!!!!!!!!Get P-index!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !                  i=1
 !                  do 
@@ -128,7 +130,6 @@ module part_init
                   
 !                  ijkp(l,3) = k
 !!!!!!!!!!!!!End get P-index!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-                  call get_pindex(i,j,k,l)
 !                  vth2=sqrt(vth*vth*beta_p(l)) !thermal speed dependent on np to set up pressure balance for density gradient
                   
                   vx = vth*sqrt(-log(pad_ranf()))*cos(2*PI*pad_ranf()) !remember to add in vsw to get the flow velocity
@@ -197,6 +198,77 @@ module part_init
       end subroutine load_Maxwellian
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine load_RT(vth,Ni_tot_1,mass,mratio)
+            use dimensions
+            use mult_proc
+            use MPI
+            use boundary
+            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, delz, Lo, nf_init
+            use grid, only: qx,qy,qz,dz_grid
+            use gutsp
+            use var_arrays, only: vp,vp1,xp,input_p,Ni_tot,input_E,m_arr,mrat,beta,beta_p,grav,mix_ind,mixed,mix_cnt
+            implicit none
+            integer(4), intent(in):: Ni_tot_1 
+            real, intent(in):: mratio, mass, vth
+                                  
+            integer:: disp
+            real:: vth2, vx, vy, vz, grav0, rho(nz),vbal(nz)
+            integer:: l,m,i,j,k
+
+            grav0= .1*vth**2/Lo
+            do i=1,nx
+            do j=1,ny
+                  grav(i,j,:)=-grav0*(tanh((qz(:)-qz(nz/2) - 180*delz)/(15*delz))-tanh((qz(:)-qz(nz/2)+180*delz)/(15*delz)))
+            enddo
+            enddo
+            
+            rho = (amp-1)/2*tanh((qz(:)-qz(nz/2))/Lo)+(amp+1)/2
+
+            do k=1,nz
+                  vbal(k) = sqrt(3*sum(rho(k:nz)*grav(nx/2,2,k:nz)*dz_grid(k:nz))/rho(k))
+            enddo
+            
+            
+            do l = Ni_tot_1,Ni_tot
+                  xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
+                  xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))
+                  xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz)-qz(1))
+                  m_arr(l) = mass
+                  mrat(l) = mratio
+                  ! density = nbot ( tanh(x-Lx/2 / Lo) + 1 ) amp/2
+
+                  beta_p(l) = 1.0/(beta_particle*(tanh((xp(l,3)-qz(nz/2))/Lo)*(amp-1)/2+(amp+1)/2))
+!                  beta_p(l) = beta_particle
+                  call get_pindex(i,j,k,l)
+
+                  if (xp(l,3) .gt. qz(nz/2)) mix_ind(l) = 1
+                  if (xp(l,3) .le. qz(nz/2)) mix_ind(l) = 0
+                  
+                  
+                  vp(l,1) = (vbal(k)+vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vp(l,2) = (vbal(k)+vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vp(l,3) = (vbal(k)+vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  
+                  do m=1,3
+                        vp1(l,m) = vp(l,m)
+                        input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2/(beta * beta_p(l))
+                        input_p(m) = input_p(m) + m_arr(l) * vp(l,m) / (beta * beta_p(l))
+                  enddo
+            enddo
+            !convert gravity into non-normalized units (km/s)
+            grav = -grav
+            
+!            call MPI_BARRIER(MPI_COMM_WORLD,m)
+!            call update_mixed()
+!            if (my_rank .eq. 0) then
+!            endif
+!            stop
+            call get_interp_weights()
+            call update_np()    
+            call update_up(vp)
+                  
+      end subroutine load_RT
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
       subroutine load_ring_beam(vring,dNi,mass,mratio)
             use dimensions
             use boundary

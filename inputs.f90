@@ -203,6 +203,7 @@ module inputs
                         phi = womega/ak
                         deltat = dz_grid(k)/phi
                         if (deltat/dtsub_init .le. 2.0) then
+                              write(*,*) 'deltat..........', deltat
                               write(*,*) 'deltat/dtsub....', deltat/dtsub_init
                               write(*,*) 'Field time stp too long...', i,j,k
                               stop
