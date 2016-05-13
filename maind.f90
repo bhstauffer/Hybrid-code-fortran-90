@@ -55,7 +55,8 @@ program hybrid
       
       if (my_rank .eq. 0) then
 !            call check_inputs()
-            write(*,*) 'Partilces per cell... ', Ni_tot_sys/nz
+            write(*,*) 'Total particles, PPP, #pc', Ni_tot_sys,Ni_tot,procnum
+            write(*,*) 'Partilces per cell... ', Ni_tot_sys/((nz-2)*(nx-2)*(nz-2))
             write(*,*) ' '
       endif
       
@@ -98,18 +99,16 @@ program hybrid
       bndry_Eflux = 0.0
       
       call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-     
-      
+    
       !Initialize particles: use load Maxwellian, or sw_part_setup, etc.
       call load_Maxwellian(vth,1,mion,1.0)
+
       if (my_rank .eq. 0) then
             call check_inputs()     
       endif
-!      call load_ring_beam(57.0,40000,mion,1.0)
+!      call load_ring_beam(57.0,int(Ni_tot*0.1),mion,1.0)
       
-      Ni_tot_sys = Ni_tot*procnum
-      write(*,*) Ni_tot_sys, Ni_tot, procnum
-      write(*,*) 'Particles per cell...', Ni_tot_sys/(nz*nx)
+!      write(*,*) 'Particles per cell... (Ni_tot_sys/(nz-2)', Ni_tot_sys/(nz-2)
       
       call f_update_tlev(b1,b12,b1p2,bt,b0)
 

@@ -330,7 +330,7 @@ module gutsp
       subroutine move_ion_half()
             use dimensions
             use boundary
-            use inputs, only: dt
+            use inputs, only: dt,boundx
             use grid, only: qx,qy,qz
             use var_arrays, only: xp,vp,Ni_tot
             implicit none
@@ -339,6 +339,7 @@ module gutsp
             
             dth = dt/2.0
             
+            if (boundx .eq. 1) then
             do l=1, Ni_tot
                   xp(l,1) = xp(l,1) + dth*vp(l,1)
                   xp(l,2) = xp(l,2) + dth*vp(l,2)
@@ -347,24 +348,32 @@ module gutsp
                   
                 !  Periodic boundary conditions
                   
-                !        if (xp(l,1) .gt. qx(nx-1)) then
-                !              xp(l,1) = qx(1) + (xp(l,1) - qx(nx-1))
-                !        else if (xp(l,1) .le. qx(1)) then
-                !              xp(l,1) = qx(nx-1) -(qx(1)-xp(l,1))
-                !        endif
-                !        if (xp(l,2) .gt. qy(ny-1)) then
-                !              xp(l,2) = qy(1) + (xp(l,2) - qy(ny-1))
-                !        else if (xp(l,2) .le. qy(1)) then
-                !              xp(l,2) = qy(ny-1) -(qy(1)-xp(l,2))
-                !        endif
-                !        if (xp(l,3) .gt. qz(nz-1)) then
-                !              xp(l,3) = qz(1) + (xp(l,3) - qz(nz-1))
-                !        else if (xp(l,3) .le. qz(1)) then
-                !              xp(l,3) = qz(nz-1) -(qz(1)-xp(l,3))
-                !        endif
+                        if (xp(l,1) .gt. qx(nx-1)) then
+                              xp(l,1) = qx(1) + (xp(l,1) - qx(nx-1))
+                        else if (xp(l,1) .le. qx(1)) then
+                              xp(l,1) = qx(nx-1) -(qx(1)-xp(l,1))
+                        endif
+                        if (xp(l,2) .gt. qy(ny-1)) then
+                              xp(l,2) = qy(1) + (xp(l,2) - qy(ny-1))
+                        else if (xp(l,2) .le. qy(1)) then
+                              xp(l,2) = qy(ny-1) -(qy(1)-xp(l,2))
+                        endif
+                        if (xp(l,3) .gt. qz(nz-1)) then
+                              xp(l,3) = qz(1) + (xp(l,3) - qz(nz-1))
+                        else if (xp(l,3) .le. qz(1)) then
+                              xp(l,3) = qz(nz-1) -(qz(1)-xp(l,3))
+                        endif
                   
             enddo
-            call particle_boundary()
+            else
+                  do l=1,Ni_tot
+                        xp(l,1) = xp(l,1) + dth*vp(l,1)
+                        xp(l,2) = xp(l,2) + dth*vp(l,2)
+                        xp(l,3) = xp(l,3) + dth*vp(l,3)
+                  enddo      
+                  
+                  call particle_boundary()
+            endif      
             
       end subroutine move_ion_half
       

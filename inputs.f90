@@ -7,8 +7,8 @@ module inputs
       
       real:: b0_init, nf_init,dt_frac, vsw, vth, Ni_tot_frac, dx_frac, &
             nu_init_frac,lambda_i,m_pu, mO, ppc, nu_init, ion_amu, load_rate, amp, &
-            height_stretch, zsf, etemp0
-      real, parameter:: mion = 3.841e-26
+            height_stretch, zsf, etemp0, mion
+      real, parameter:: amu=1.6605e-27!, mion = 3.841e-26
       integer:: mp, nt, nout, loc, grad, nrgrd, boundx
       integer(4):: Ni_tot_0
 
@@ -127,7 +127,7 @@ module inputs
                   
                   
                   
-!                  mion = 3.841e-26
+                  mion = amu*ion_amu!3.841e-26
                   write(*,*) 'mion...',mion
                   
                   omega_p = q*b0_init/mion
