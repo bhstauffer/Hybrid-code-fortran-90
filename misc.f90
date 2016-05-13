@@ -4,22 +4,61 @@ module misc
      
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine seed_mpi(my_rank)
-            integer, intent(in):: my_rank
-            integer::i, time(8)
-            integer, dimension(2):: seed
-            real:: r
-            
-            call date_and_time(values=time)
-            
-            seed(:) = time(4) * ( 360000*time(5) + 6000*time(6) + 100*time(7) + time(8)) + my_rank*100
-            call random_seed(PUT=seed)
-            
+            use iso_fortran_env, only:int64
+            implicit none
+            integer, intent(IN) :: my_rank
+            integer,  allocatable :: seed(:)
+            integer :: i, n, un, istat, dt(8)
+            integer(int64) :: t
 
-            
-            do i=1,100
-                  call random_number(r)
-            enddo
-            
+            call random_seed(size=n)
+            allocate(seed(n))
+            ! First check to see if OS provides a random number generator
+            open(newunit=un, file="/dev/urandom", access="stream", &
+                  form="unformatted", action="read", status="old", iostat=istat)
+            if(istat ==0) then
+                  read(un) seed
+                  close(un)
+            else ! Fallback to using time and rank.
+                  call system_clock(t)
+                  if(t == 0) then
+                        call date_and_time(values=dt)
+                        t = (dt(1) - 1970) * 365_int64 * 24 * 60 * 60 * 1000 &
+                              + dt(2) * 31_int64 * 24 * 60 * 60 * 1000 &
+                              + dt(3) * 24_int64 * 60 * 60 * 1000 &
+                              + dt(5) * 60 * 60 * 1000 &
+                              + dt(6) * 60 * 1000 + dt(7) * 1000 &
+                              + dt(8)
+                  end if
+
+                  ! Use rank for low bits and time for high bits uless rank has a lot of bits
+                  if(bit_size(my_rank) <= bit_size(t)) then
+                        t = my_rank + ishft(t, bit_size(my_rank))
+                  else
+                        t = ieor(t, int(my_rank,kind(t)))
+                  end if
+
+                  ! Here we're using a crappy RNG to seed the better one.
+                  do i=1,n
+                  seed(i) = lcg(t)
+                  end do
+
+            end if
+            call random_seed(put=seed)
+      contains
+            function lcg(s)
+                  implicit none
+                  integer :: lcg
+                  integer(int64) :: s
+
+                  if(s == 0) then
+                        s = 104729
+                  else
+                        s = mod(s, 4294967296_int64)
+                  end if
+                  s = mod(s*279470273_int64, 4294967291_int64)
+                  lcg = int(mod(s, int(huge(0), int64)), kind(0))
+            end function lcg
       end subroutine seed_mpi
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine get_bndry_Eflux(b1,E,bndry_Eflux)
