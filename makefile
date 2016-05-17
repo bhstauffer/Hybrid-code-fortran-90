@@ -11,15 +11,18 @@ INCLUDE4 = dimensions.o inputs.o grid.o mult_proc.o boundary.o misc.o grid_inter
 OBJECTS = dimensions.o inputs.o grid.o mult_proc.o boundary.o misc.o grid_interp.o gutsp.o gutsf.o initial.o part_init.o chem_rates.o var_arrays.o maind.o
 MODS = dimensions.mod mult_proc.mod var_array.mod inputs.mod grid.mod initial.mod gutsf.mod misc.mod boundary.mod part_init.mod grid_interp.mod gutsp.mod chem_rates.f90
 
-hybrid: $(OBJECTS) dispersion.o
+hybrid: $(OBJECTS) predictor.o
 	$(F90) -o hybrid $(OBJECTS) -O2
-	$(F90) -o disp dispersion.o
+	$(F90) -o pred predictor.o dimensions.o
 
 debug: $(OBJECTS) 
 	$(F90) -o hybrid_d $(OBJECTS) $(DEBUG)
+	
+pred: predictor.o
+	$(F90) -o pred predictor.o $(INCLUDE)
 
 clean:
-	rm *.o hybrid *.out *.mod disp hybrid_d
+	rm *.o hybrid *.out *.mod disp hybrid_d pred
 
 dimensions.o:dimensions.f90;$(F90) -c dimensions.f90
 mult_proc.o:mult_proc.f90;$(F90) -c mult_proc.f90
@@ -35,8 +38,7 @@ part_init.o:part_init.f90 $(INCLUDE3);$(F90) -c part_init.f90
 chem_rates.o:chem_rates.f90 $(INCLUDE3);$(F90) -c chem_rates.f90
 var_arrays.o:var_arrays.f90;$(F90) -c var_arrays.f90
 maind.o:maind.f90 $(INCLUDE4);$(F90) -c maind.f90
-dispersion.o:dispersion.f90;$(F90) -c dispersion.f90
-
+predictor.o:predictor.f90 dimensions.o;$(F90) -c predictor.f90
 
 dimensions.mod:dimensions.f90 $(INCLUDE);$(F90) -c dimensions.f90
 mult_proc.mod:mult_proc.f90 $(INCLUDE);$(F90) -c mult_proc.f90

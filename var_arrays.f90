@@ -34,7 +34,7 @@ module Var_Arrays
                   grav(nx,ny,nz), &            !gravity term
                   gradP(nz,ny,nz,3)            !electron pressure gradient
       
-      integer(4):: Ni_tot
+      integer(4):: Ni_tot, Ni_tot_sys
       
       !Location (indices) of particles in the grid
       

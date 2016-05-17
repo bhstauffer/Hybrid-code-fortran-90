@@ -89,7 +89,7 @@ module part_init
             real, intent(in):: mratio, mass, vth
                                   
             integer:: disp
-            real:: vth2, vx, vy, vz, va, Temp, Tempcalc, pl_beta(nx,ny,nz)
+            real:: vx, vy, vz, va, Temp, Tempcalc
             integer:: l,m,i,j,k
             
             disp = 0 !Displacement of gradient
@@ -97,14 +97,7 @@ module part_init
 !            grad = 100.0 ! density gradient (larger = more gradual
             
 
-            do i=1,nx
-                  do j=1,ny
-                        do k=1,nz
-                              pl_beta(i,j,k) = 2.0 + 1.0*exp(-(real(i-nx/2)**2+real(k-nz/2)**2)/(10**2))
-                        enddo
-                  enddo
-            enddo
-            va = b0_init/sqrt(mu0*mion*nf_init/1e9)/1e3
+!            va = b0_init/sqrt(mu0*mion*nf_init/1e9)/1e3
             
             do l = Ni_tot_1,Ni_tot
                   xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
@@ -116,43 +109,24 @@ module part_init
 !                  beta_p(l) = 1.0/(beta_particle+beta_particle*amp*exp(-((xp(l,3)-qz(nz/2-disp))/ &
 !                        (grad*dz_grid(nz/2-disp)))**2))
                   beta_p(l) = beta_particle
-!!!!!!!!!!!!!Get P-index!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!                  i=1
-!                  do 
-!                        if (xp(l,1) .le. qx(i)) exit
-!                        i = i+1
-!                  enddo
-!                  i=i-1
-                  
-!                  ijkp(l,1) = i
-!                  ijkp(l,2) = floor(xp(l,2)/dy)
-                  
-!                  k=1
-!                  do
-!                        if (xp(l,3) .le. qz(k)) exit
-!                        k=k+1
-!                  enddo
-!                  k=k-1
-                  
-!                  ijkp(l,3) = k
-!!!!!!!!!!!!!End get P-index!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+
                   call get_pindex(i,j,k,l)
 !                  vth2=sqrt(vth*vth*beta_p(l)) !thermal speed dependent on np to set up pressure balance for density gradient
 
-                  vth2=va*sqrt(pl_beta(ijkp(l,1),ijkp(l,2),ijkp(l,3)))
+!                  vth2=va*sqrt(pl_beta(ijkp(l,1),ijkp(l,2),ijkp(l,3)))
 
 
                   
-                  vx = vth2*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
-                  vy = vth2*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
-                  vz = vth2*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vx = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
+                  vy = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vz = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
                   
 !                  ii = ijkp(l,1)
 !                  kk = ijkp(l,3)
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) = vx!+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
+                  vp(l,1) = vx+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
                   vp(l,2) = vy 
                   vp(l,3) = vz 
                   
@@ -295,9 +269,133 @@ module part_init
             call update_np()
             call update_up(vp)
             
-     end subroutine load_ring_beam
+      end subroutine load_ring_beam
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine load_const_ppc(vth,begin,mass,mratio)
+            use mult_proc, only: my_rank, procnum
+            use dimensions
+            use boundary
+            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0,ppc
+            use grid, only: qx,qy,qz,dz_grid,dy_grid,dx_grid
+            use gutsp
+            use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,Ni_tot_sys,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p
+            use misc
+            implicit none
+            integer(4), intent(in):: begin 
+            real, intent(in):: mratio, mass, vth
+                                  
+            integer:: disp,ppcpp
+            integer(4):: Ni_tot_1
+            real:: vx, vy, vz, va, Temp, Tempcalc,vol
+            integer:: l,m,i,j,k
+            
+            disp = 0 !Displacement of gradient
+            
+            ppcpp=int(ppc/procnum)
+            Ni_tot_1 = begin
+            do i=1,nx-2
+            do j=1,ny-2
+            do k=1,nz-2
+            vol = dx_grid(i)*dy_grid(j)*dz_grid(k)  !km^3
+            do l = Ni_tot_1, Ni_tot_1+ppcpp-1
+                  xp(l,1) = qx(i)+(1.0-pad_ranf())*(qx(i+1)-qx(i))
+                  xp(l,2) = qy(j)+(1.0-pad_ranf())*(qy(j+1)-qy(j))
+                  xp(l,3) = qz(k)+(1.0-pad_ranf())*(qz(k+1)-qz(k))
+                  m_arr(l) = mass
+                  mrat(l) = mratio
+
+!                  beta_p(l) = 1.0/(beta_particle+beta_particle*amp*exp(-((xp(l,3)-qz(nz/2-disp))/ &
+!                        (grad*dz_grid(nz/2-disp)))**2))
+
+!                  beta_p(l) = beta_particle
+                  beta_p(l) = ppcpp*procnum/(nf_init+nf_init*(amp-1.0)*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2))/vol
+
+!                  call get_pindex(i,j,k,l)
+!                  vth2=sqrt(vth*vth*beta_p(l)) !thermal speed dependent on np to set up pressure balance for density gradient
+
+!                  vth2=va*sqrt(pl_beta(ijkp(l,1),ijkp(l,2),ijkp(l,3)))
+
+
+                  
+                  vx = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
+                  vy = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vz = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  
+!                  ii = ijkp(l,1)
+!                  kk = ijkp(l,3)
+                  
+!                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
+!               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
+                  vp(l,1) = vx+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
+                  vp(l,2) = vy 
+                  vp(l,3) = vz 
+                  
+                  
+                  
+            enddo
+            
+            Ni_tot_1 = Ni_tot_1+ppcpp
+            Ni_tot=Ni_tot_1-1
+            
+            enddo
+            enddo
+            enddo
+            
+            Ni_tot_sys = Ni_tot*procnum
+            beta=1.0;
+            
+            do l = begin,Ni_tot
+                  call get_pindex(i,j,k,l)
+                  do m=1,3
+                        vp1(l,m) = vp(l,m)
+                        input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2/(beta * beta_p(l))
+                        input_p(m) = input_p(m) + m_arr(l) * vp(l,m) / (beta * beta_p(l))
+                  enddo
+            enddo
+          
+            if (my_rank .eq. 0) then
+                  write(*,*) 'Particles per processor.....', Ni_tot
+                  write(*,*) 'Particles per cell..........', Ni_tot_sys/((nx-2)*(ny-2)*(nz-2)), ppcpp*procnum
+                  write(*,*) 'Total particles.............', Ni_tot_sys
+                  write(*,*) '***************************************************'
+            endif
+            
+            call get_interp_weights()
+            call update_np()
+            call update_up(vp)
+
+            
+            ! Add a centrifugal gravity term to keep the plasma confined to the torus.  Use T * dn/dz = nmg.  
+            ! Depends on the density gradient.  Currently set as a gaussian.
+            
+!            Temp = vth**2/(3*kboltz)*mion*1.48*10-23!8.61738e-5
+!            write(*,*) 'vth.................', vth
+!            write(*,*) 'boltzman............', kboltz
+!            write(*,*) 'temperature(analytic)..', Temp
+            call get_temperature()
+            Tempcalc = sum(temp_p(2,2,1:(nz-1)))/1e6/(nz-1) !in kg km^2/s^2
+!            write(*,*) 'temperature (2,2,100)..', temp_p(2,2,2:10)/1.6e-19
+!            stop
+            
+            do i=1,nx
+            do j=1,ny
+            do k=1,nz
+                  ! Gravity is based on the analytical expression for the density profile (look at beta_p)
+                  ! np = const/(beta*beta_p), and grav = const * (dn/dx) / n.  Units are in km/s^2.
+                  
+            !      grav = (T*dn/dz)/(n*m)  where n = No*(1+(amp-1)*exp(-(z-z0)^2/dz^2))
+                     
+            !     grav(i,j,k) = 0.0
+                 grav(i,j,k) = -2.0*Tempcalc*(amp-1.0)*(qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp))**2*exp(-((qz(k)-qz(nz/2-disp))/ &
+                        (grad*dz_grid(nz/2-disp)))**2)/(mion*(1.0+(amp-1.0)*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)))
+                        
+                  
+            enddo
+            enddo
+            enddo
+            
       
-      
+      end subroutine load_const_ppc
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine load_aniso_Maxwellian(vth,Ni_tot_1)
             use dimensions

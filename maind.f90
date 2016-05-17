@@ -25,7 +25,7 @@ program hybrid
       integer:: ierr,t1,t2,cnt_rt,m,mstart_n,ndiag,seed
       real(8):: time
       logical:: restart = .false.
-      integer(4):: Ni_tot_sw,Ni_tot_sys
+      integer(4):: Ni_tot_sw!,Ni_tot_sys
       integer:: i,j,k,n,ntf !looping indicies
       real (real64) :: dp
       integer, parameter :: dp_kind = kind(dp)
@@ -54,7 +54,7 @@ program hybrid
       Ni_tot_sys = Ni_tot*procnum
       
       if (my_rank .eq. 0) then
-!            call check_inputs()
+            call check_inputs()
             write(*,*) 'Total particles, PPP, #pc', Ni_tot_sys,Ni_tot,procnum
             write(*,*) 'Partilces per cell... ', Ni_tot_sys/((nz-2)*(nx-2)*(nz-2))
             write(*,*) ' '
@@ -90,8 +90,8 @@ program hybrid
       
 
       
-      call grd7()
-!      call grid_gaussian()
+!      call grd7()
+      call grid_gaussian()
       call grd6_setup(b0,bt,b12,b1,b1p2,nu,input_Eb)
       call get_beta(Ni_tot_sys,beta)
       
@@ -101,7 +101,8 @@ program hybrid
       call MPI_BARRIER(MPI_COMM_WORLD,ierr)
     
       !Initialize particles: use load Maxwellian, or sw_part_setup, etc.
-      call load_Maxwellian(vth,1,mion,1.0)
+!      call load_Maxwellian(vth,1,mion,1.0)
+      call load_const_ppc(vth,1,mion,1.0)
 
       if (my_rank .eq. 0) then
             call check_inputs()     
