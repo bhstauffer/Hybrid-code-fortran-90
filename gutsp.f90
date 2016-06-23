@@ -209,8 +209,8 @@ module gutsp
                         Ep(l,m) = cc(m) - gradP3(m) !add in electron pressure term
                         Ep(l,m) = Ep(l,m) * mrat(l)
                   enddo
-                  Ep(l,3) = cc(m) - gradP3(3) !add in electron pressure term
-                  Ep(l,3) = Ep(l,m) * mrat(l) + grav3*mrat(l)  ! Second term is for gravity
+                  Ep(l,3) = cc(3) - gradP3(3) !add in electron pressure term
+                  Ep(l,3) = Ep(l,3) * mrat(l) + grav3*mrat(l)  ! Second term is for gravity
 !                  write(*,*) 'Electric field..............', Ep(l,m)*mrat(l)
 !                  write(*,*) 'Gravity field...............', grav3*mrat(l), gravc(2,2,2), sum(wght(l,:))
 !                  stop
@@ -1811,14 +1811,14 @@ module gutsp
             do i=1,nx
                   do j=1,ny
                         do k=1,nz
-                              temp_p(i,j,k) = (1./3.)*1e6*mion*(sqrt((up2(i,j,k,1) &
-                                    - up_ave(i,j,k,1)**2)**2 + &
-                                    (up2(i,j,k,2) - up_ave(i,j,k,2)**2)**2 + & 
-                                    (up2(i,j,k,3) - up_ave(i,j,k,3)**2)**2))  
-!                              temp_p(i,j,k) = (1./3.)*1e6*mion*( &
-!                                    up2(i,j,k,1) - up_ave(i,j,k,1)**2 + &
-!                                    up2(i,j,k,2) - up_ave(i,j,k,2)**2 + & 
-!                                    up2(i,j,k,3) - up_ave(i,j,k,3)**2)
+!                              temp_p(i,j,k) = (1./3.)*1e6*mion*(sqrt((up2(i,j,k,1) &
+!                                    - up_ave(i,j,k,1)**2)**2 + &
+!                                    (up2(i,j,k,2) - up_ave(i,j,k,2)**2)**2 + & 
+!                                    (up2(i,j,k,3) - up_ave(i,j,k,3)**2)**2))  
+                              temp_p(i,j,k) = (1./3.)*1e6*mion*( &
+                                    up2(i,j,k,1) - up_ave(i,j,k,1)**2 + &
+                                    up2(i,j,k,2) - up_ave(i,j,k,2)**2 + & 
+                                    up2(i,j,k,3) - up_ave(i,j,k,3)**2)
                         enddo
                   enddo
             enddo

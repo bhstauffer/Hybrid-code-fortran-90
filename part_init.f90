@@ -132,9 +132,9 @@ module part_init
 !!!!!!!!!!!!!End get P-index!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 !                  vth2=sqrt(vth*vth*beta_p(l)) !thermal speed dependent on np to set up pressure balance for density gradient
                   
-                  vx = vth*sqrt(-log(pad_ranf()))*cos(2*PI*pad_ranf()) !remember to add in vsw to get the flow velocity
-                  vy = vth*sqrt(-log(pad_ranf()))*cos(2*PI*pad_ranf())
-                  vz = vth*sqrt(-log(pad_ranf()))*cos(2*PI*pad_ranf())
+                  vx = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
+                  vy = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vz = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
                   
 !                  ii = ijkp(l,1)
 !                  kk = ijkp(l,3)
