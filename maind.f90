@@ -165,14 +165,14 @@ program hybrid
                   close(109)
                   
 ! Write fft parameter file
-!                  open(401, file = trim(out_dir)//'fft_520.dat',status='unknown',form='unformatted')
+!                  open(401, file = trim(out_dir)//'fft_8950.dat',status='unknown',form='unformatted')
 !                  write(401) dt,nt,omega_p
                   
-!                  open(402, file = trim(out_dir)//'fft_700.dat',status='unknown',form='unformatted')
+!                  open(402, file = trim(out_dir)//'fft_7010.dat',status='unknown',form='unformatted')
 !                  write(402) dt,nt,omega_p
                   
-!                  open(403, file = trim(out_dir)//'fft_950.dat',status='unknown',form='unformatted')
-!                  write(403) dt,nt,omega_p
+                  open(403, file = trim(out_dir)//'fft_701.dat',status='unknown',form='unformatted')
+                  write(403) dt,nt,omega_p
 
             endif
       
@@ -247,7 +247,7 @@ program hybrid
             endif
           !  if (m .lt. 600) then
                   !Call ionizing subroutine  (adds ions to the domain)
-!                  call Mass_load_Io(m)
+                  call Mass_load_Io(m)
           !  endif
             call get_interp_weights()
             call update_np()                  !np at n+1/2
@@ -319,9 +319,9 @@ program hybrid
                   write(190) pup,puf,peb,input_p
                   
                   !fft output
-!                  write(401) b1(2,2,500,1), b1(2,2,500,2), b1(2,2,500,3)
-!                  write(402) b1(2,2,720,1), b1(2,2,720,2), b1(2,2,720,3)
-!                  write(403) b1(2,2,950,1), b1(2,2,950,2), b1(2,2,950,3)
+!                  write(401) b1(2,2,8950,1), b1(2,2,8950,2), b1(2,2,8950,3)
+!                  write(402) b1(2,2,7010,1), b1(2,2,7010,2), b1(2,2,7010,3)
+                  write(403) b1(2,2,701,1), b1(2,2,701,2), b1(2,2,701,3)
                   
             endif
             
@@ -442,7 +442,7 @@ program hybrid
       close(350)
 !      close(401)
 !      close(402)
-!      close(403)
+      close(403)
       
       call system_clock(t2,cnt_rt)
       time=(real(t2,dp_kind) - real(t1,dp_kind))/real(cnt_rt,dp_kind)

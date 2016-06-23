@@ -179,7 +179,7 @@ module part_init
            ! write(*,*) 'gravity...', grav(2,2,nz/2+50), grav(2,2,nz/2-50)
            ! stop
 
-            
+           call count_ppc() 
       end subroutine load_Maxwellian
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -284,9 +284,9 @@ module part_init
             integer(4), intent(in):: begin 
             real, intent(in):: mratio, mass, vth
                                   
-            integer:: disp,ppcpp
+            integer:: disp,ppcpp,extra_ppc
             integer(4):: Ni_tot_1
-            real:: vx, vy, vz, va, Temp, Tempcalc,vol
+            real:: vx, vy, vz, va, Temp, Tempcalc,vol,new
             integer:: l,m,i,j,k
             
             disp = 0 !Displacement of gradient
@@ -297,7 +297,17 @@ module part_init
             do j=1,ny-2
             do k=1,nz-2
             vol = dx_grid(i)*dy_grid(j)*dz_grid(k)  !km^3
-            do l = Ni_tot_1, Ni_tot_1+ppcpp-1
+            new = 30.0*exp(-((qz(k)-qz(nz/2-disp))/(2*grad*dz_grid(nz/2-disp)))**2)
+            if (new .lt. 1.0) then
+                  if (new .gt. pad_ranf()) then
+                        new = 1.0
+                  else 
+                        new = 0.0
+                  endif
+            endif
+            extra_ppc = 0!nint(new)
+            
+            do l = Ni_tot_1, Ni_tot_1+ppcpp+extra_ppc-1
                   xp(l,1) = qx(i)+(1.0-pad_ranf())*(qx(i+1)-qx(i))
                   xp(l,2) = qy(j)+(1.0-pad_ranf())*(qy(j+1)-qy(j))
                   xp(l,3) = qz(k)+(1.0-pad_ranf())*(qz(k+1)-qz(k))
@@ -308,7 +318,8 @@ module part_init
 !                        (grad*dz_grid(nz/2-disp)))**2))
 
 !                  beta_p(l) = beta_particle
-                  beta_p(l) = ppcpp*procnum/(nf_init+nf_init*(amp-1.0)*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2))/vol
+                  beta_p(l) = (ppcpp+extra_ppc)*procnum/(nf_init+nf_init*(amp-1.0)*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2))/vol
+!                   beta_p(l) = ppcpp*procnum/nf_init/vol
 
 !                  call get_pindex(i,j,k,l)
 !                  vth2=sqrt(vth*vth*beta_p(l)) !thermal speed dependent on np to set up pressure balance for density gradient
@@ -326,7 +337,7 @@ module part_init
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) = vx+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
+                  vp(l,1) = vx+57.0!*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
                   vp(l,2) = vy 
                   vp(l,3) = vz 
                   
@@ -334,7 +345,7 @@ module part_init
                   
             enddo
             
-            Ni_tot_1 = Ni_tot_1+ppcpp
+            Ni_tot_1 = Ni_tot_1+ppcpp+extra_ppc
             Ni_tot=Ni_tot_1-1
             
             enddo
@@ -393,7 +404,7 @@ module part_init
             enddo
             enddo
             enddo
-            
+            call count_ppc()
       
       end subroutine load_const_ppc
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -95,38 +95,40 @@ module chem_rates
             use gutsp
             use mult_proc, only: procnum, my_rank
             use grid, only: qx,qy,qz,dx_grid,dy_grid,dz_grid
-            use inputs, only: PI,dt,mion,nf_init,mu0,b0_init,dx,dy,beta_pu,m_pu,ion_amu,km_to_m, load_rate
-            use var_arrays, only: input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,np,vp,vp1,xp
+            use inputs, only: PI,dt,mion,nf_init,mu0,b0_init,dx,dy,m_pu,ion_amu,km_to_m, load_rate,amu,amp
+            use var_arrays, only: input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,wght,np,vp,vp1,xp,beta_p
             implicit none
             integer, intent(in):: m_tstep
-            real:: ddni, theta2, rand1, mdot, sca1 !scaling parameter
+            real:: ddni, theta2, rand1, mdot,beta_pu, sca1 !scaling parameter
             integer:: i,j,k,l,m,l1,dNi,flg,ierr
             
-     !       if ((m_tstep .gt. 20) .and. (m_tstep .lt. 600)) then
+            if ((m_tstep .gt. 20) .and. (m_tstep .lt. 6000)) then
                   ! default load_rate = 0.1
-                  sca1 = 10.0!*exp(-(dt*m_tstep)**2/load_rate**2)
+                  sca1 = 1.0*exp(-real(m_tstep-3000)**2/2000.0**2)
                   
-                  mdot = sca1*sqrt(mion*nf_init/mu0/1e9)*b0_init*dx*dy*1e6
+                  mdot = sca1*sqrt(mion*nf_init*amp/mu0/1e9)*b0_init*dx*dy*1e6
+                  dNi = 2
+                 if (my_rank .eq. 0) then 
+                 write(*,*) 'mdot (kg/s), dNi...',mdot,dNi
+                 endif
+                 
+                 beta_pu = procnum*real(dNi)*m_pu*amu/(mdot*dt)
                   
-                  
-                 write(*,*) 'mdot...',mdot
-            !     stop
-                  
-                  ddni = dt*mdot*beta*beta_pu/(procnum*1.67e-27*m_pu)
-                  if (my_rank == 0) then
-                  write(*,*) 'ddni......', ddni
-                  endif
+!                  ddni = dt*mdot*beta*beta_pu/(procnum*1.67e-27*m_pu)
+!                  if (my_rank == 0) then
+!                  write(*,*) 'ddni......', ddni
+!                  endif
                   !stop
                   
-                  if (ddni .lt. 1.0) then
-                        if (ddni .gt. pad_ranf()) then
-                              ddni = 1.0
-                        else
-                              ddni = 0.0
-                        endif
-                  endif
+!                  if (ddni .lt. 1.0) then
+!                        if (ddni .gt. pad_ranf()) then
+!                              ddni = 1.0
+!                        else
+!                              ddni = 0.0
+!                        endif
+!                  endif
                   
-                  dNi = nint(ddni)
+!                  dNi = nint(ddni)
                   if (Ni_max - Ni_tot .gt. dNi) then
                   !write(*,*) 'dNi per processor......', dNi
                   !stop
@@ -134,18 +136,16 @@ module chem_rates
                   
                   do l= l1, l1+ dNi-1
                         beta_p(l) = beta_pu
-                        if (mod(m_tstep,2) .eq. 1) then
-                              m_arr(l) = m_pu*1.67e-27
+
+                              m_arr(l) = m_pu*amu
                               mrat(l) = ion_amu/m_pu
-                        else
-                              m_arr(l) = 16*1.67e-27
-                              mrat(l) = ion_amu/16
-                        endif
+
+
 !                        vp(l,1) = 0
 !                        vp(l,2) = 0
 !                        vp(l,3) = 0
-                        theta2 = pad_ranf()*2*PI
-                        vp(l,1) = 0.0!-57.0*cos(theta2)
+                        !theta2 = pad_ranf()*2*PI
+                        vp(l,1) = 0.0!-57.0
                         vp(l,2) = 0.0!57.0*sin(theta2)
                         vp(l,3) = 0.0
                         
@@ -158,7 +158,7 @@ module chem_rates
                         do while (flg .eq. 0)
                               xp(l,3) = qz(nz/2-100) + (1.0-pad_ranf())*(qz(nz/2+100)-qz(nz/2-100))
                               rand1=pad_ranf()
-                              if (exp(-(xp(l,3)-qz(nz/2))**2/(80*dz_grid(nz/2)**2)) .gt. rand1) then !(35)
+                              if (exp(-(xp(l,3)-qz(nz/2))**2/(10*dz_grid(nz/2)**2)) .gt. rand1) then !(35)
                                     flg = 1
                               endif
                         enddo
@@ -200,7 +200,7 @@ module chem_rates
                   
                   endif
                  
-      !      endif
+            endif
             
       end subroutine Mass_load_Io
       

@@ -209,8 +209,8 @@ module gutsp
                         Ep(l,m) = cc(m) - gradP3(m) !add in electron pressure term
                         Ep(l,m) = Ep(l,m) * mrat(l)
                   enddo
-                  Ep(l,3) = cc(m) - gradP3(3) !add in electron pressure term
-                  Ep(l,3) = Ep(l,m) * mrat(l) + grav3*mrat(l)  ! Second term is for gravity
+                  Ep(l,3) = cc(3) - gradP3(3) !add in electron pressure term
+                  Ep(l,3) = Ep(l,3) * mrat(l) + grav3*mrat(l)  ! Second term is for gravity
 !                  write(*,*) 'Electric field..............', Ep(l,m)*mrat(l)
 !                  write(*,*) 'Gravity field...............', grav3*mrat(l), gravc(2,2,2), sum(wght(l,:))
 !                  stop
@@ -1809,7 +1809,41 @@ module gutsp
             enddo
             
       end subroutine get_temperature
-      
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine count_ppc()
+            use dimensions
+            use MPI
+            use mult_proc, only: my_rank
+            use var_arrays, only: Ni_tot,ijkp,xp
+            use inputs, only: out_dir
+            implicit none
+            integer:: i,j,k,l,m,count,ierr
+            real:: ppc(nx,ny,nz),recvbuf(nx*ny*nz)
+            
+            count=nx*ny*nz
+            ppc(:,:,:) = 0.0
+            do l=1,Ni_tot
+                i=ijkp(l,1)
+                j=ijkp(l,2)
+                k=ijkp(l,3)
+                ppc(i,j,k) = ppc(i,j,k) + 1.0
+            enddo
+            
+            call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+            call MPI_ALLREDUCE(ppc(:,:,:),recvbuf,count,MPI_REAL,MPI_SUM,MPI_COMM_WORLD,ierr)
+            
+            ppc(:,:,:) = reshape(recvbuf,(/nx,ny,nz/))
+            
+            
+            m=1
+            if (my_rank .eq. 1) then
+            open(101, file=trim(out_dir)//'c.ppc.dat', &
+                        status='unknown',form='unformatted')
+            write(101) m
+            write(101) ppc
+            close(101)
+            endif
+      end subroutine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine check_index()
             use dimensions
