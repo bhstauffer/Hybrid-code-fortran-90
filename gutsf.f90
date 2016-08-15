@@ -357,8 +357,9 @@ module gutsf
             enddo
             
             call face_to_center(a,aa)
-            call edge_to_face(btp1,btp1mf)
-            call face_to_center(btp1mf,btc)
+!            call edge_to_face(btp1,btp1mf)
+!            call face_to_center(btp1mf,btc)
+            call edge_to_center(btp1,btc)
             call grav_to_center(grav,gravc)
             
             call crossf2(aa,btc,c)

@@ -29,7 +29,8 @@ program hybrid
       integer:: i,j,k,n,ntf !looping indicies
       real (real64) :: dp
       integer, parameter :: dp_kind = kind(dp)
-      
+
+
 !      filenum = (/'1 ','2 ','3 ','4 ','5 ','6 ','7 ','8 ','9 ', &
 !            '10','11','12','13','14','15','16'/)
                  
@@ -56,7 +57,7 @@ program hybrid
       if (my_rank .eq. 0) then
 !            call check_inputs()
             write(*,*) 'Total particles, PPP, #pc', Ni_tot_sys,Ni_tot,procnum
-            write(*,*) 'Partilces per cell... ', Ni_tot_sys/((nz-2)*(nx-2)*(nz-2))
+            write(*,*) 'Partilces per cell... ', Ni_tot_sys/((nx-2)*(ny-2)*(nz-2))
             write(*,*) ' '
       endif
       
@@ -263,7 +264,6 @@ program hybrid
             call extrapol_up()
             call get_Ep()
 
-            
             call get_vplus_vminus()
             call improve_up()
 
@@ -277,8 +277,7 @@ program hybrid
             call get_interp_weights()
 
             call update_np()                  !np at n+1/2
-
-            call update_up(vp)            !up at n+1/2
+            call update_up_fld(vp)            !up at n+1/2
             
             call get_gradP()
       
@@ -288,13 +287,14 @@ program hybrid
 
             dtsub = dtsub_init
             ntf=ntsub
+            
             call check_time_step(bt,np,dtsub,ntf)
             
             do n=1,ntf
                   call curlB(bt,np,aj)
                   
                   call predict_B(b12,b1p2,bt,E,aj,up,nu,dtsub)
-                  
+                 
                   call correct_B(b1,b1p2,E,aj,up,np,nu,dtsub)
                   
                   call f_update_tlev(b1,b12,b1p2,bt,b0)
@@ -304,6 +304,7 @@ program hybrid
  
             call move_ion_half()       !final ion move to n+1
 
+            write(342) xp(1:3,:)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !       diagnositc output

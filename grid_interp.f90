@@ -21,7 +21,7 @@ module grid_interp
                               im=i-1
                               jm=j-1
                               km=k-1
-                              
+ 
                               b2 = bt(i,jm,k,1) + yrat(j)*(bt(i,j,k,1)-bt(i,jm,k,1))
                               b1 = bt(i,jm,km,1)+ yrat(j)*(bt(i,j,km,1)-bt(i,jm,km,1))
                               
@@ -47,6 +47,10 @@ module grid_interp
       end subroutine edge_to_center
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+
       subroutine edge_to_face(bt,btmf)
             use dimensions
             use boundary

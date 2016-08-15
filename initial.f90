@@ -36,8 +36,8 @@ module initial
                   do j=1,ny
                         do k=1,nz
                               b0(i,j,k,1) = 0.0
-                              b0(i,j,k,2) = 0.0
-                              b0(i,j,k,3) = b0_init*eoverm
+                              b0(i,j,k,2) = 0.0*b0_init*eoverm
+                              b0(i,j,k,3) = 1.0*b0_init*eoverm
                         enddo
                   enddo
             enddo
