@@ -73,6 +73,7 @@ module boundary
             real, intent(inout):: b(nx,ny,nz,3)
             integer:: i,j,k,m
             
+
 !       X direction
 
             do j=1,ny
@@ -105,6 +106,8 @@ module boundary
                         enddo
                   enddo
             enddo
+
+
 
       end subroutine periodic
       
@@ -266,7 +269,7 @@ module boundary
                         b(i,ny,k) = b(i,2,k)
                   enddo
             enddo
-            
+
 !       Z surfaces
             do i=1,nx
                   do j=1,ny
@@ -274,6 +277,8 @@ module boundary
                         b(i,j,nz) = b(i,j,2)
                   enddo
             enddo    
+
+            
             
       end subroutine periodic_scalar
       

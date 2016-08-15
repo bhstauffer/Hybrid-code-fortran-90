@@ -55,7 +55,7 @@ module inputs
       real:: omega_p                            !ion gyrofrequency
       
 !       Electron ion collision frequency
-      real, parameter:: lww2 = 1.00             !artificial diffusion for the magnetic field update
+      real, parameter:: lww2 = 1.0             !artificial diffusion for the magnetic field update
       real, parameter:: lww1 = (1-lww2)/6.0     !divide by six for nearest neighbor
       
 !       Density scaling paramter, alpha, and ion particle array dims
@@ -125,21 +125,26 @@ module inputs
             subroutine initparameters()
                   implicit none
                   
-                  
+                
                   
                   mion = amu*ion_amu!3.841e-26
+                  vth = sqrt(vth*B0_init**2/(mu0*mion*nf_init/1e9))/1e3
+
                   write(*,*) 'mion...',mion
                   
                   omega_p = q*b0_init/mion
                   
                   lambda_i = (3e8/sqrt((nf_init*amp/1e9)*q*q/(8.85e-12*mion)))/1e3
                                     
-                  dx= lambda_i*dx_frac
+                  dx= 1.0*lambda_i*dx_frac
                   dy=lambda_i*dx_frac           !units in km
                   delz = lambda_i*dx_frac       !dz at release coordinates
+
                   
                   dt= dt_frac*mion/(q*b0_init)  !main time step
                   dtsub_init = dt/ntsub         !subcycle time step
+                  
+
                   vtop = vsw
                   vbottom = -vsw
                   
