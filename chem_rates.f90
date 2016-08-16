@@ -104,7 +104,7 @@ module chem_rates
             
             if ((m_tstep .gt. 20) .and. (m_tstep .lt. 6000)) then
                   ! default load_rate = 0.1
-                  sca1 = 1.0*exp(-real(m_tstep-3000)**2/2000.0**2)
+                  sca1 = 8.0*exp(-real(m_tstep-3000)**2/2000.0**2)
                   
                   mdot = sca1*sqrt(mion*nf_init*amp/mu0/1e9)*b0_init*dx*dy*1e6
                   dNi = 2

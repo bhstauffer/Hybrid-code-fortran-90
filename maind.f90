@@ -103,7 +103,8 @@ program hybrid
       !Initialize particles: use load Maxwellian, or sw_part_setup, etc.
 !      call load_Maxwellian(vth,1,mion,1.0)
       call load_const_ppc(vth,1,mion,1.0)
-
+      call count_ppc()
+      
       if (my_rank .eq. 0) then
             call check_inputs()     
       endif
@@ -112,6 +113,7 @@ program hybrid
 !      write(*,*) 'Particles per cell... (Ni_tot_sys/(nz-2)', Ni_tot_sys/(nz-2)
       
       call f_update_tlev(b1,b12,b1p2,bt,b0)
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
 !  Check for restart flag
@@ -165,13 +167,13 @@ program hybrid
                   close(109)
                   
 ! Write fft parameter file
-!                  open(401, file = trim(out_dir)//'fft_8950.dat',status='unknown',form='unformatted')
-!                  write(401) dt,nt,omega_p
+                  open(401, file = trim(out_dir)//'fft_11400.dat',status='unknown',form='unformatted')
+                  write(401) dt,nt,omega_p
                   
-!                  open(402, file = trim(out_dir)//'fft_7010.dat',status='unknown',form='unformatted')
-!                  write(402) dt,nt,omega_p
+                  open(402, file = trim(out_dir)//'fft_14000.dat',status='unknown',form='unformatted')
+                  write(402) dt,nt,omega_p
                   
-                  open(403, file = trim(out_dir)//'fft_701.dat',status='unknown',form='unformatted')
+                  open(403, file = trim(out_dir)//'fft_17000.dat',status='unknown',form='unformatted')
                   write(403) dt,nt,omega_p
 
             endif
@@ -200,7 +202,7 @@ program hybrid
             open(317,file=trim(out_dir)//'c.beta_p_0_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
             open(320,file=trim(out_dir)//'c.np_wake_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
             open(330,file=trim(out_dir)//'c.up_t_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
-            open(340,file=trim(out_dir)//'c.up_b_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+!            open(340,file=trim(out_dir)//'c.up_b_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
             open(342,file=trim(out_dir)//'c.test_part_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
             open(350,file=trim(out_dir)//'c.mnp_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
             
@@ -319,9 +321,9 @@ program hybrid
                   write(190) pup,puf,peb,input_p
                   
                   !fft output
-!                  write(401) b1(2,2,8950,1), b1(2,2,8950,2), b1(2,2,8950,3)
-!                  write(402) b1(2,2,7010,1), b1(2,2,7010,2), b1(2,2,7010,3)
-                  write(403) b1(2,2,701,1), b1(2,2,701,2), b1(2,2,701,3)
+                  write(401) b1(2,2,11400,1), b1(2,2,11400,2), b1(2,2,11400,3)
+                  write(402) b1(2,2,14000,1), b1(2,2,14000,2), b1(2,2,14000,3)
+                  write(403) b1(2,2,17000,1), b1(2,2,17000,2), b1(2,2,17000,3)
                   
             endif
             
@@ -357,8 +359,8 @@ program hybrid
 !                        write(317) beta_p
                         write(330) m
                         write(330) up_t
-                        write(340) m
-                        write(340) up_b
+!                        write(340) m
+!                        write(340) up_b
                         write(350) m
                         write(350) mnp
                         
@@ -437,7 +439,7 @@ program hybrid
       close(317)
       close(320)
       close(330)
-      close(340)
+!      close(340)
       close(342)
       close(350)
 !      close(401)

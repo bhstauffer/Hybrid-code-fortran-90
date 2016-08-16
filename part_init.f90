@@ -77,19 +77,19 @@ module part_init
       end subroutine Energy_diag
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      subroutine load_Maxwellian(vth,Ni_tot_1,mass,mratio)
+      subroutine load_Maxwellian(pbeta,Ni_tot_1,mass,mratio)
             use dimensions
             use boundary
-            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0
+            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0, va
             use grid, only: qx,qy,qz,dz_grid
             use gutsp
             use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p
             implicit none
             integer(4), intent(in):: Ni_tot_1 
-            real, intent(in):: mratio, mass, vth
+            real, intent(in):: mratio, mass, pbeta
                                   
             integer:: disp
-            real:: vx, vy, vz, va, Temp, Tempcalc
+            real:: vx, vy, vz, Temp, Tempcalc, vth
             integer:: l,m,i,j,k
             
             disp = 0 !Displacement of gradient
@@ -98,6 +98,7 @@ module part_init
             
 
 !            va = b0_init/sqrt(mu0*mion*nf_init/1e9)/1e3
+            vth = sqrt(pbeta*va**2)
             
             do l = Ni_tot_1,Ni_tot
                   xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
@@ -114,7 +115,7 @@ module part_init
 !                  vth2=sqrt(vth*vth*beta_p(l)) !thermal speed dependent on np to set up pressure balance for density gradient
 
 !                  vth2=va*sqrt(pl_beta(ijkp(l,1),ijkp(l,2),ijkp(l,3)))
-
+                 
 
                   
                   vx = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
@@ -271,33 +272,35 @@ module part_init
             
       end subroutine load_ring_beam
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      subroutine load_const_ppc(vth,begin,mass,mratio)
+      subroutine load_const_ppc(pbeta,begin,mass,mratio)
             use mult_proc, only: my_rank, procnum
             use dimensions
             use boundary
-            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0,ppc
+            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0,ppc,va
             use grid, only: qx,qy,qz,dz_grid,dy_grid,dx_grid
             use gutsp
             use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,Ni_tot_sys,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p
             use misc
             implicit none
             integer(4), intent(in):: begin 
-            real, intent(in):: mratio, mass, vth
+            real, intent(in):: mratio, mass, pbeta
                                   
             integer:: disp,ppcpp,extra_ppc
             integer(4):: Ni_tot_1
-            real:: vx, vy, vz, va, Temp, Tempcalc,vol,new
+            real:: vx, vy, vz, vth, Temp, Tempcalc,vol,new
             integer:: l,m,i,j,k
             
             disp = 0 !Displacement of gradient
             
             ppcpp=int(ppc/procnum)
+            vth=sqrt(pbeta*va**2)
+            
             Ni_tot_1 = begin
             do i=1,nx-2
             do j=1,ny-2
             do k=1,nz-2
             vol = dx_grid(i)*dy_grid(j)*dz_grid(k)  !km^3
-            new = 30.0*exp(-((qz(k)-qz(nz/2-disp))/(2*grad*dz_grid(nz/2-disp)))**2)
+            new = 10.0*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)
             if (new .lt. 1.0) then
                   if (new .gt. pad_ranf()) then
                         new = 1.0
@@ -305,7 +308,7 @@ module part_init
                         new = 0.0
                   endif
             endif
-            extra_ppc = 0!nint(new)
+            extra_ppc = nint(new)
             
             do l = Ni_tot_1, Ni_tot_1+ppcpp+extra_ppc-1
                   xp(l,1) = qx(i)+(1.0-pad_ranf())*(qx(i+1)-qx(i))
@@ -328,16 +331,16 @@ module part_init
 
 
                   
-                  vx = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
-                  vy = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
-                  vz = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vx = 40.0*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
+                  vy = 40.0*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vz = 40.0*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
                   
 !                  ii = ijkp(l,1)
 !                  kk = ijkp(l,3)
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) = vx+57.0!*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
+                  vp(l,1) = vx+57.0!*exp(-(xp(l,3)-qz(nz/2))**2/(30*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
                   vp(l,2) = vy 
                   vp(l,3) = vz 
                   
