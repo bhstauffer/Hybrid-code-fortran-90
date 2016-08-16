@@ -89,7 +89,7 @@ module inputs
                  read(100,*) vsw
                  write(*,*) 'vsw...............',vsw
                  read(100,*) vth
-                 write(*,*) 'vth...............',vth
+                 write(*,*) 'vth...............',vth !plasma beta
                  read(100,*) Ni_tot_frac
                  write(*,*) 'Ni_tot_frac.......',Ni_tot_frac
                  read(100,*) dx_frac
@@ -125,11 +125,14 @@ module inputs
             subroutine initparameters()
                   implicit none
                   
-                  
-                  
+                                  
                   mion = amu*ion_amu!3.841e-26
                   write(*,*) 'mion...',mion
                   
+                  !vth is input as the plasma beta
+                  vth = sqrt(vth*B0_init**2/(mu0*mion*nf_init/1e9))/1e3
+                  write(*,*) 'vth...',vth
+
                   omega_p = q*b0_init/mion
                   
                   lambda_i = (3e8/sqrt((nf_init*amp/1e9)*q*q/(8.85e-12*mion)))/1e3
