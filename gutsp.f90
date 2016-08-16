@@ -1832,6 +1832,8 @@ module gutsp
                         enddo
                   enddo
             enddo
+
+            call boundary_scalar(temp_p)
             
       end subroutine get_temperature
       
