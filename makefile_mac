@@ -1,4 +1,4 @@
-F90 = mpif90 -i4 -real-size 32 -mcmodel=medium -O2
+F90 = mpif90 -i4 -real-size 32 -O2 -mmacosx-version-min=10.6
 Fone = ifort -i4 -real-size 32 -O2 -mcmodel=medium -openmp
 
 FILES = dimensions.f90 mult_proc.f90 grid.f90 var_arrays.f90 inputs.f90 misc.f90 boundary.f90 grid_interp.f90 gutsf.f90 gutsp.f90 initial.f90 part_init.f90 chem_rates.f90 maind.f90
@@ -11,9 +11,8 @@ INCLUDE4 = dimensions.o inputs.o grid.o mult_proc.o boundary.o misc.o grid_inter
 OBJECTS = dimensions.o inputs.o grid.o mult_proc.o boundary.o misc.o grid_interp.o gutsp.o gutsf.o initial.o part_init.o chem_rates.o var_arrays.o maind.o
 MODS = dimensions.mod mult_proc.mod var_array.mod inputs.mod grid.mod initial.mod gutsf.mod misc.mod boundary.mod part_init.mod grid_interp.mod gutsp.mod chem_rates.f90
 
-hybrid: $(OBJECTS) dispersion.o
-	$(F90) -o hybrid $(OBJECTS) -O2
-	$(F90) -o disp dispersion.o
+hybrid: $(OBJECTS) 
+	$(F90) -o hybrid $(OBJECTS) 
 
 debug: $(OBJECTS) 
 	$(F90) -o hybrid_d $(OBJECTS) $(DEBUG)
@@ -35,8 +34,6 @@ part_init.o:part_init.f90 $(INCLUDE3);$(F90) -c part_init.f90
 chem_rates.o:chem_rates.f90 $(INCLUDE3);$(F90) -c chem_rates.f90
 var_arrays.o:var_arrays.f90;$(F90) -c var_arrays.f90
 maind.o:maind.f90 $(INCLUDE4);$(F90) -c maind.f90
-dispersion.o:dispersion.f90;$(F90) -c dispersion.f90
-
 
 dimensions.mod:dimensions.f90 $(INCLUDE);$(F90) -c dimensions.f90
 mult_proc.mod:mult_proc.f90 $(INCLUDE);$(F90) -c mult_proc.f90
