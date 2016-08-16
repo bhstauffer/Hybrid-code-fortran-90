@@ -90,7 +90,7 @@ module part_init
                                   
             integer:: disp
             real:: vth2, vx, vy, vz, va, Temp, Tempcalc, pl_beta(nx,ny,nz)
-            integer:: l,m,i,j,k
+            integer:: l,m,i,j,k,ii,kk
             
             disp = 0 !Displacement of gradient
 !            amp = 100.0
@@ -100,7 +100,7 @@ module part_init
             do i=1,nx
                   do j=1,ny
                         do k=1,nz
-                              pl_beta(i,j,k) = 2.0 + 1.0*exp(-(real(i-nx/2)**2+real(k-nz/2)**2)/(10**2))
+                              pl_beta(i,j,k) = 1.0 !2.0 + 1.0*exp(-(real(i-nx/2)**2+real(k-nz/2)**2)/(10**2))
                         enddo
                   enddo
             enddo
@@ -139,21 +139,24 @@ module part_init
                   call get_pindex(i,j,k,l)
 !                  vth2=sqrt(vth*vth*beta_p(l)) !thermal speed dependent on np to set up pressure balance for density gradient
 
-                  vth2=va*sqrt(pl_beta(ijkp(l,1),ijkp(l,2),ijkp(l,3)))
+!                  vth2=va*sqrt(pl_beta(ijkp(l,1),ijkp(l,2),ijkp(l,3)))
 
+                  vth2 = vth
 
                   
                   vx = vth2*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
                   vy = vth2*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
                   vz = vth2*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
                   
-!                  ii = ijkp(l,1)
-!                  kk = ijkp(l,3)
+                  ii = ijkp(l,1)
+                  kk = ijkp(l,3)
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
                   vp(l,1) = vx!+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
-                  vp(l,2) = vy 
+                  vp(l,2) = vy +57.0*(1+0.5*cos(8*pi*qx(ii)/qx(nx-1)))* &
+                       (1+0.5*cos(8*pi*qz(kk)/qz(nz)))* &
+                       exp(-((qx(ii)-qx(nx/2))**2 + (qz(kk)-qz(nz/2))**2)/(10*dx)**2)
                   vp(l,3) = vz 
                   
                   do m=1,3
