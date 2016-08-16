@@ -7,7 +7,7 @@ module inputs
       
       real:: b0_init, nf_init,dt_frac, vsw, vth, Ni_tot_frac, dx_frac, &
             nu_init_frac,lambda_i,m_pu, mO, ppc, nu_init, ion_amu, load_rate, amp, &
-            height_stretch, zsf, etemp0, mion
+            height_stretch, zsf, etemp0, mion, va
       real, parameter:: amu=1.6605e-27!, mion = 3.841e-26
       integer:: mp, nt, nout, loc, grad, nrgrd, boundx
       integer(4):: Ni_tot_0
@@ -179,7 +179,7 @@ module inputs
                   implicit none
                   integer:: i,j,k
                   
-                  real*8:: ak, btot, a1, a2, womega, phi, deltat, va, cwpi
+                  real*8:: ak, btot, a1, a2, womega, phi, deltat, cwpi
                   
       ! Check input paramters
       
@@ -205,7 +205,7 @@ module inputs
                         if (deltat/dtsub_init .le. 2.0) then
                               write(*,*) 'deltat/dtsub....', deltat/dtsub_init
                               write(*,*) 'Field time stp too long...', i,j,k
-                              stop
+!                              stop
                         endif
                         enddo
                         enddo
