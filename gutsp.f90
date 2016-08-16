@@ -1252,8 +1252,10 @@ module gutsp
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine up_fld_mv()
             use dimensions
+            use boundary
             use var_arrays, only: up
             real:: up_temp(nx,ny,nz,3)
+            integer:: i,j,k
             up_temp=up
             do i=1,nx-1                 !interpolate back to contravarient positions.
                   do j=1,ny-1
