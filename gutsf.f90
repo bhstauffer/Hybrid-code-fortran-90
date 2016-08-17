@@ -48,9 +48,9 @@ module gutsf
             do i=2,nx-1
                   do j=2,ny-1
                         do k=2,nz-1
-                              im = i-1
-                              jm = j-1
-                              km = k-1
+                              !im = i-1
+                              !jm = j-1
+                              !km = k-1
                               
                               ax = aa(i,j,k,1)
                               bx = btc(i,j,k,1)
@@ -89,6 +89,7 @@ module gutsf
                   enddo
             enddo
             
+
             call boundary_vector(cc)
 !            call periodic(cc)
             
@@ -236,25 +237,28 @@ module gutsf
             use var_arrays, only: grav, gradP
             use inputs, only: mion
             implicit none
-            real, intent(in):: aj(nx,ny,nz,3), up(nx,ny,nz,3), nu(nx,ny,nz)
+            real, intent(in):: up(nx,ny,nz,3), nu(nx,ny,nz)
+            real:: aj(nx,ny,nz,3)
             real, intent(inout):: bt(nx,ny,nz,3)
             real, intent(out):: E(nx,ny,nz,3)
             real:: a(nx,ny,nz,3), c(nx,ny,nz,3), aa(nx,ny,nz,3), btc(nx,ny,nz,3), gravc(nx,ny,nz), gradPmf(3)
             integer:: i,j,k,m
             
+            call face_to_center(aj,aa)
+            
             do i=2,nx-1
                   do j=2,ny-1
                         do k=2,nz-1
                               do m = 1,3
-                                    a(i,j,k,m) = aj(i,j,k,m) - up(i,j,k,m)
+                                    a(i,j,k,m) = aa(i,j,k,m) - up(i,j,k,m)
                               enddo
                         enddo
                   enddo
             enddo
             
-            call face_to_center(a,aa)
+!            call face_to_center(a,aa)
             call edge_to_center(bt,btc)
-            call crossf2(aa,btc,c)
+            call crossf2(a,btc,c)
             call grav_to_center(grav,gravc)
             
             
@@ -324,44 +328,48 @@ module gutsf
             implicit none
             real, intent(in):: b1(nx,ny,nz,3), b1p2(nx,ny,nz,3), up(nx,ny,nz,3), nu(nx,ny,nz), &
                                np(nx,ny,nz)
-            real, intent(out):: E(nx,ny,nz,3), aj(nx,ny,nz,3)
+!            real, intent(out):: E(nx,ny,nz,3), aj(nx,ny,nz,3)
+            real:: E(nx,ny,nz,3), aj(nx,ny,nz,3)
             real:: b1p1(nx,ny,nz,3), &          !b1 at time level m+1/2
-                   btp1(nx,ny,nz,3), &          !bt at time level m+1/2
-                   btp1mf(nx,ny,nz,3), &        !btp1 at contravariant position
+!                   btp1(nx,ny,nz,3), &          !bt at time level m+1/2
+!                   btp1mf(nx,ny,nz,3), &        !btp1 at contravariant position
                    btc(nx,ny,nz,3), a(nx,ny,nz,3), aa(nx,ny,nz,3), c(nx,ny,nz,3), gravc(nx,ny,nz), gradPmf(3)
             integer:: i,j,k,m
             
             do i=1,nx
                   do j=1,ny
                         do k=1,nz
-                              btp1(i,j,k,1) = 0.5*(b1p2(i,j,k,1) + b1(i,j,k,1))
+!                              btp1(i,j,k,1) = 0.5*(b1p2(i,j,k,1) + b1(i,j,k,1))
                               b1p1(i,j,k,1) = 0.5*(b1p2(i,j,k,1) + b1(i,j,k,1))
-                              btp1(i,j,k,2) = 0.5*(b1p2(i,j,k,2) + b1(i,j,k,2))
+!                              btp1(i,j,k,2) = 0.5*(b1p2(i,j,k,2) + b1(i,j,k,2))
                               b1p1(i,j,k,2) = 0.5*(b1p2(i,j,k,2) + b1(i,j,k,2))
-                              btp1(i,j,k,3) = 0.5*(b1p2(i,j,k,3) + b1(i,j,k,3))
+!                              btp1(i,j,k,3) = 0.5*(b1p2(i,j,k,3) + b1(i,j,k,3))
                               b1p1(i,j,k,3) = 0.5*(b1p2(i,j,k,3) + b1(i,j,k,3))
                         enddo
                   enddo
             enddo
             
-            call curlB(btp1,np,aj)
+            call curlB(b1p1,np,aj)
+
+            call face_to_center(aj,aa)
 
              do m=1,3
                   do k=2,nz-1
                         do j=2,ny-1
                               do i=2,nx-1
-                                    a(i,j,k,m) = aj(i,j,k,m) - up(i,j,k,m)
+                                    a(i,j,k,m) = aa(i,j,k,m) - up(i,j,k,m)
                               enddo
                         enddo
                   enddo
             enddo
             
-            call face_to_center(a,aa)
-            call edge_to_face(btp1,btp1mf)
-            call face_to_center(btp1mf,btc)
+!            call face_to_center(a,aa)
+!            call edge_to_face(btp1,btp1mf)
+!            call face_to_center(btp1mf,btc)
+            call edge_to_center(b1p1,btc)
             call grav_to_center(grav,gravc)
             
-            call crossf2(aa,btc,c)
+            call crossf2(a,btc,c)
             
             do i=2,nx-1
                   do j=2,ny-1

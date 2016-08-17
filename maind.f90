@@ -279,7 +279,7 @@ program hybrid
             call update_np()                  !np at n+1/2
 
             call update_up(vp)            !up at n+1/2
-            call up_fld_mv()
+!            call up_fld_mv()
             
             call get_gradP()
       
@@ -305,6 +305,7 @@ program hybrid
  
             call move_ion_half()       !final ion move to n+1
 
+            write(342) xp(1:3,:)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !       diagnositc output
