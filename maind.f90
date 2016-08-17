@@ -279,7 +279,7 @@ program hybrid
             call update_np()                  !np at n+1/2
 
             call update_up(vp)            !up at n+1/2
-            call up_fld_mv()
+!            call up_fld_mv()
             
             call get_gradP()
       
