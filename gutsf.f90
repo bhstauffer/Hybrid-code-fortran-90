@@ -236,11 +236,13 @@ module gutsf
             use var_arrays, only: grav, gradP
             use inputs, only: mion
             implicit none
-            real, intent(in):: aj(nx,ny,nz,3), up(nx,ny,nz,3), nu(nx,ny,nz)
+            real, intent(in):: up(nx,ny,nz,3), nu(nx,ny,nz)
             real, intent(inout):: bt(nx,ny,nz,3)
             real, intent(out):: E(nx,ny,nz,3)
-            real:: a(nx,ny,nz,3), c(nx,ny,nz,3), aa(nx,ny,nz,3), btc(nx,ny,nz,3), gravc(nx,ny,nz), gradPmf(3)
+            real:: aj(nx,ny,nz,3), a(nx,ny,nz,3), c(nx,ny,nz,3), aa(nx,ny,nz,3), btc(nx,ny,nz,3), gravc(nx,ny,nz), gradPmf(3)
             integer:: i,j,k,m
+            
+            call face_to_center(aj,aa)
             
             do i=2,nx-1
                   do j=2,ny-1
