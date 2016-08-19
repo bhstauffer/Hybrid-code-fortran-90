@@ -80,7 +80,7 @@ module part_init
       subroutine load_Maxwellian(vth,Ni_tot_1,mass,mratio)
             use dimensions
             use boundary
-            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0
+            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0,boundx
             use grid, only: qx,qy,qz,dz_grid
             use gutsp
             use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p
@@ -96,7 +96,6 @@ module part_init
 !            amp = 100.0
 !            grad = 100.0 ! density gradient (larger = more gradual
             
-
             do i=1,nx
                   do j=1,ny
                         do k=1,nz
@@ -109,7 +108,12 @@ module part_init
             do l = Ni_tot_1,Ni_tot
                   xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
                   xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))
-                  xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
+                  if (boundx .eq. 1) then
+                     xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
+                  else
+                     xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz)-qz(1))
+                  endif
+                  
                   m_arr(l) = mass
                   mrat(l) = mratio
 
@@ -154,9 +158,9 @@ module part_init
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
                   vp(l,1) = vx!+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
-                  vp(l,2) = vy! +57.0*(1+0.5*cos(8*pi*qx(ii)/qx(nx-1)))* &
-                       !(1+0.5*cos(8*pi*qz(kk)/qz(nz)))* &
-                       !exp(-((qx(ii)-qx(nx/2))**2 + (qz(kk)-qz(nz/2))**2)/(10*dx)**2)
+                  vp(l,2) = vy +57.0*(1+0.5*cos(8*pi*qx(ii)/qx(nx-1)))* &
+                       (1+0.5*cos(8*pi*qz(kk)/qz(nz)))* &
+                       exp(-((qx(ii)-qx(nx/2))**2 + (qz(kk)-qz(nz/2))**2)/(10*dx)**2)
                   vp(l,3) = vz 
                   
                   do m=1,3
