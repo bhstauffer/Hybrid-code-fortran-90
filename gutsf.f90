@@ -38,7 +38,7 @@ module gutsf
             real, intent(out):: cc(nx,ny,nz,3)
             real:: ct(nx,ny,nz,3)
             real:: ax,ay,az,bx,by,bz
-            integer:: i,j,k,im,jm,km,ip,jp,kp
+            integer:: i,j,k,ip,jp,kp
             
             call boundary_vector(aa)
             call boundary_vector(btc)
@@ -48,9 +48,9 @@ module gutsf
             do i=2,nx-1
                   do j=2,ny-1
                         do k=2,nz-1
-                              !im = i-1
-                              !jm = j-1
-                              !km = k-1
+!                              im = i-1
+!                              jm = j-1
+!                              km = k-1
                               
                               ax = aa(i,j,k,1)
                               bx = btc(i,j,k,1)
@@ -89,7 +89,6 @@ module gutsf
                   enddo
             enddo
             
-
             call boundary_vector(cc)
 !            call periodic(cc)
             
@@ -235,13 +234,13 @@ module gutsf
             use boundary
             use grid_interp
             use var_arrays, only: grav, gradP
-            use inputs, only: mion
+            use grid, only: qz
+            use inputs, only: mion,dx, boundx
             implicit none
             real, intent(in):: up(nx,ny,nz,3), nu(nx,ny,nz)
-            real:: aj(nx,ny,nz,3)
             real, intent(inout):: bt(nx,ny,nz,3)
             real, intent(out):: E(nx,ny,nz,3)
-            real:: a(nx,ny,nz,3), c(nx,ny,nz,3), aa(nx,ny,nz,3), btc(nx,ny,nz,3), gravc(nx,ny,nz), gradPmf(3)
+            real:: aj(nx,ny,nz,3), a(nx,ny,nz,3), c(nx,ny,nz,3), aa(nx,ny,nz,3), btc(nx,ny,nz,3), gravc(nx,ny,nz), gradPmf(3)
             integer:: i,j,k,m
             
             call face_to_center(aj,aa)
@@ -271,6 +270,8 @@ module gutsf
                               gradPmf(3) = 0.5*(gradP(i,j,k,3) + gradP(i,j,k+1,3))
                               do m =1,2
                                     E(i,j,k,m) = c(i,j,k,m) + nu(i,j,k)*aj(i,j,k,m) - gradPmf(m)        ! Add in electron pressure
+                                    !E(i,j,k,m) = E(i,j,k,m)*(1.0-exp(-(qz(k)-qz(1))**2/(20*dx)**2))
+                                    !E(i,j,k,m) = E(i,j,k,m)*(1.0-exp(-(qz(k)-qz(nz))**2/(20*dx)**2))
                               enddo
                                     E(i,j,k,3) = c(i,j,k,3) + nu(i,j,k)*aj(i,j,k,3) + gravc(i,j,k) - gradPmf(3) ! Add in gravity term and electron pressure
 !                                    write(*,*) 'Electric field.................', c(i,j,k,3) + nu(i,j,k)*aj(i,j,k,3)
@@ -278,8 +279,18 @@ module gutsf
                         enddo
                   enddo
             enddo
-            
+
             call boundary_vector(E)
+
+            if (boundx .eq. 2) then
+               E(:,:,nz,2) = 0.0
+               E(:,:,nz,1) = 0.0
+               
+               E(:,:,1:2,2) = 0.0
+               E(:,:,1:2,1) = 0.0
+            endif
+
+
 !            call periodic(E)
       
       end subroutine get_E
@@ -324,12 +335,12 @@ module gutsf
             use grid_interp
             use boundary
             use var_arrays, only: grav, gradP
-            use inputs, only: mion
+            use inputs, only: mion,dx,boundx
+            use grid, only: qz
             implicit none
             real, intent(in):: b1(nx,ny,nz,3), b1p2(nx,ny,nz,3), up(nx,ny,nz,3), nu(nx,ny,nz), &
                                np(nx,ny,nz)
-!            real, intent(out):: E(nx,ny,nz,3), aj(nx,ny,nz,3)
-            real:: E(nx,ny,nz,3), aj(nx,ny,nz,3)
+            real, intent(out):: E(nx,ny,nz,3), aj(nx,ny,nz,3)
             real:: b1p1(nx,ny,nz,3), &          !b1 at time level m+1/2
 !                   btp1(nx,ny,nz,3), &          !bt at time level m+1/2
 !                   btp1mf(nx,ny,nz,3), &        !btp1 at contravariant position
@@ -350,7 +361,6 @@ module gutsf
             enddo
             
             call curlB(b1p1,np,aj)
-
             call face_to_center(aj,aa)
 
              do m=1,3
@@ -368,7 +378,7 @@ module gutsf
 !            call face_to_center(btp1mf,btc)
             call edge_to_center(b1p1,btc)
             call grav_to_center(grav,gravc)
-            
+
             call crossf2(a,btc,c)
             
             do i=2,nx-1
@@ -379,6 +389,10 @@ module gutsf
                               gradPmf(3) = 0.5*(gradP(i,j,k,3) + gradP(i,j,k+1,3))
                               do m=1,2
                                     E(i,j,k,m) = c(i,j,k,m) + nu(i,j,k)*aj(i,j,k,m) - gradPmf(m)
+
+                                   ! E(i,j,k,m) = E(i,j,k,m)*(1.0-exp(-(qz(k)-qz(1))**2/(20*dx)**2))
+                                   ! E(i,j,k,m) = E(i,j,k,m)*(1.0-exp(-(qz(k)-qz(nz))**2/(20*dx)**2))
+
                               enddo
                                     E(i,j,k,3) = c(i,j,k,3) + nu(i,j,k)*aj(i,j,k,3) + gravc(i,j,k) - gradPmf(3)! Add in gravity term and electron pressure
 !                                    write(*,*) 'Electric field.................', c(i,j,k,3) + nu(i,j,k)*aj(i,j,k,3)
@@ -388,6 +402,17 @@ module gutsf
             enddo
             
             call boundary_vector(E)
+
+            if (boundx .eq. 2) then
+               E(:,:,nz,2) = 0.0
+               E(:,:,nz,1) = 0.0
+               
+               E(:,:,1:2,2) = 0.0
+               E(:,:,1:2,1) = 0.0
+            endif
+
+
+
 !            call periodic(E)
             
       end subroutine get_Ep1
