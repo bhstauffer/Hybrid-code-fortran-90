@@ -330,14 +330,14 @@ program hybrid
             if (ndiag .eq. nout) then
                   call get_temperature()
                   call update_rho()
-!                  call update_mixed(mixed,mix_cnt,Ni_tot,ijkp,mix_ind)
+                  call update_mixed()
                   if (my_rank .eq. 0) then
                         write(110) m
                         write(110) np
                         write(115) m
                         write(115) np_b
-!                        write(120) m
-!                        write(120) mixed
+                        write(120) m
+                        write(120) mixed
                         write(130) m
                         write(130) bt
                         write(140) m

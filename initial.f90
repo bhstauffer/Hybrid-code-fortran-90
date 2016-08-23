@@ -6,8 +6,8 @@ module initial
       
       
       subroutine grd6_setup(b0,bt,b12,b1,b1p2,nu,input_Eb)
-            use inputs, only: q, mO, PI, b0_top, b0_bottom, b0_init, nu_init, km_to_m, mu0
-            use grid, only: dx_cell, dy_cell, dz_cell
+            use inputs, only: q, mO, PI, b0_top, b0_bottom, b0_init, nu_init, km_to_m, mu0, delz
+            use grid, only: dx_cell, dy_cell, dz_cell, qz
             implicit none
             real, intent(out):: b0(nx,ny,nz,3), &
                                 bt(nx,ny,nz,3), &
@@ -35,7 +35,7 @@ module initial
             do i=1,nx
                   do j=1,ny
                         do k=1,nz
-                              b0(i,j,k,1) = 0.0
+                              b0(i,j,k,1) = 0.0*b0_init*eoverm
                               b0(i,j,k,2) = 1.0*b0_init*eoverm
                               b0(i,j,k,3) = 0.0*b0_init*eoverm
                         enddo
@@ -46,7 +46,10 @@ module initial
             do i=1,nx
                   do j=1,ny
                         do k= 1,nz
-                              nu(i,j,k) = nu_init
+!                           nu(i,j,k) = (0.01*b0_init*eoverm)*&
+!                                (exp(-(qz(nz)-qz(k))**2/(5.0*delz)**2) + &
+!                                exp(-(qz(1)-qz(k))**2/(5.0*delz)**2)) + nu_init
+                           nu(i,j,k) = nu_init
                               do m = 1,3
                                     bt(i,j,k,m) = b0(i,j,k,m)
                                     b12(i,j,k,m) = b0(i,j,k,m)

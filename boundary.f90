@@ -142,7 +142,7 @@ module boundary
                   do j=1,ny
                         do m=1,3
                               b(i,j,nz,m) = b(i,j,nz-1,m)
-                              b(i,j,1,m) = b(i,j,2,m)
+!                              b(i,j,1,m) = b(i,j,2,m)
                         enddo
                   enddo
             enddo
@@ -320,17 +320,17 @@ module boundary
             integer:: i,j,k
             
 !       Normal X components
-            do j=2,ny-1
-                  do k = 2,nz-1
-                        b(2,j,k,1) = dx*(b(2,j+1,k,2) - b(2,j,k,2))/dy + &
-                              dx*(b(2,j,k+1,3) - b(2,j,k,3))/dz_grid(k) + &
-                              b(3,j,k,1)
+!            do j=2,ny-1
+!                  do k = 2,nz-1
+!                        b(2,j,k,1) = dx*(b(2,j+1,k,2) - b(2,j,k,2))/dy + &
+!                              dx*(b(2,j,k+1,3) - b(2,j,k,3))/dz_grid(k) + &
+!                              b(3,j,k,1)
                               
-                        b(nx-1,j,k,1) = b(nx-2,j,k,1) - &
-                              dx*(b(nx-1,j+1,k,2) - b(nx-2,j,k,2))/dy - &
-                              dx*(b(nx-2,j,k+1,3) - b(nx-2,j,k,3))/dz_grid(k)
-                  enddo
-            enddo
+!                        b(nx-1,j,k,1) = b(nx-2,j,k,1) - &
+!                              dx*(b(nx-1,j+1,k,2) - b(nx-2,j,k,2))/dy - &
+!                              dx*(b(nx-2,j,k+1,3) - b(nx-2,j,k,3))/dz_grid(k)
+!                  enddo
+!            enddo
             
 !       normal y components
 !            do i=2,nx-1
@@ -346,18 +346,16 @@ module boundary
 !            enddo
 
 !       normal z components
-!            do i=2,nx-1
-!                  do j=2,ny-1
-!                        b(i,j,2,3) = dz_grid(2)*(b(i+1,j,2,1) - b(i,j,2,1))/dx + &
-!                              dz_grid(2)*(b(i,j+1,2,2) - b(i,j,2,2))/dy + &
-!                              b(i,j,3,3)
-
-!                        b(i,j,nz,3) = b(i,j,nz-1,3) - &
-!                              dz_grid(nz)*(b(i+1,j,nz-1,1) - b(i,j,nz-1,1))/dx + &
-!                              dz_grid(nz)*(b(i,j+1,nz-1,2) - b(i,j,nz-1,2))/dy
-
-!                  enddo
-!            enddo
+            do i=2,nx-1
+                  do j=2,ny-1
+                        b(i,j,1,3) = dz_grid(1)*(b(i+1,j,1,1) - b(i,j,1,1))/dx +&
+                              dz_grid(1)*(b(i,j+1,1,2) - b(i,j,1,2))/dy + &
+                              b(i,j,2,3)
+                        b(i,j,nz,3) = b(i,j,nz-1,3) - &
+                              dz_grid(nz)*(b(i+1,j,nz-1,1) - b(i,j,nz-1,1))/dx +&
+                              dz_grid(nz)*(b(i,j+1,nz-1,2) - b(i,j,nz-1,2))/dy
+                  enddo
+            enddo
       
       end subroutine fix_normal_b
       

@@ -80,10 +80,10 @@ module part_init
       subroutine load_Maxwellian(vth,Ni_tot_1,mass,mratio)
             use dimensions
             use boundary
-            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0,boundx
+            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0,boundx, Lo
             use grid, only: qx,qy,qz,dz_grid
             use gutsp
-            use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p
+            use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p,mix_ind
             implicit none
             integer(4), intent(in):: Ni_tot_1 
             real, intent(in):: mratio, mass, vth
@@ -114,6 +114,9 @@ module part_init
                      xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz)-qz(1))
                   endif
                   
+                  if (xp(l,3) .gt. qz(nz/2)) mix_ind(l) = 1
+                  if (xp(l,3) .le. qz(nz/2)) mix_ind(l) = 0
+            
                   m_arr(l) = mass
                   mrat(l) = mratio
 
@@ -157,10 +160,11 @@ module part_init
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) = vx!+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
-                  vp(l,2) = vy +57.0*(1+0.5*cos(8*pi*qx(ii)/qx(nx-1)))* &
-                       (1+0.5*cos(8*pi*qz(kk)/qz(nz)))* &
-                       exp(-((qx(ii)-qx(nx/2))**2 + (qz(kk)-qz(nz/2))**2)/(10*dx)**2)
+                  vp(l,1) =  vsw + vx !vsw*(tanh((qz(k)-qz(nz/2))/(Lo))) + vx 
+!vx!+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
+                  vp(l,2) = vy! +57.0*(1+0.5*cos(8*pi*qx(ii)/qx(nx-1)))* &
+                       !(1+0.5*cos(8*pi*qz(kk)/qz(nz)))* &
+                       !exp(-((qx(ii)-qx(nx/2))**2 + (qz(kk)-qz(nz/2))**2)/(10*dx)**2)
                   vp(l,3) = vz 
                   
                   do m=1,3
@@ -222,7 +226,7 @@ module part_init
             use inputs, only: PI, vsw, dx, dy, km_to_m, beta_pu, ion_amu,m_pu,beta_particle, amp, grad
             use grid, only: qx,qy,qz,dz_grid
             use gutsp
-            use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght
+            use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,mix_ind
             implicit none
             integer(4), intent(in):: dNi 
             real, intent(in):: vring, mass,mratio

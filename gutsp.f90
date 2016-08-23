@@ -124,8 +124,9 @@ module gutsp
       subroutine get_Ep()
             use dimensions
             use grid_interp
-            use var_arrays, only: Ep,aj,up,btc,Ni_tot,ijkp,mrat,wght,grav, gradP
-            use inputs, only: mion
+            use var_arrays, only: Ep,aj,up,btc,Ni_tot,ijkp,mrat,wght,grav, gradP, xp, vp
+            use inputs, only: mion,dx
+            use grid, only: qz
             implicit none
             real:: ajc(nx,ny,nz,3), &     !aj at cell center
 !                   upc(nx,ny,nz,3), &   !up at cell center
@@ -208,10 +209,16 @@ module gutsp
                   
                   
                   do m=1,2
-                        Ep(l,m) = cc(m) - gradP3(m) !add in electron pressure term
+                        Ep(l,m) = cc(m) - gradP3(m)! - &
+!                             2.0*exp(-(xp(l,3)-qz(nz))**2/(20*dx)**2)*(vp(l,m) - 0.0*up3(m)) - &
+!                             2.0*exp(-(xp(l,3)-qz(1))**2/(20*dx)**2)*(vp(l,m) - 0.0*up3(m)) !add in electron pressure term
                         Ep(l,m) = Ep(l,m) * mrat(l)
+                        !*(1.0-exp(-(xp(l,3)-qz(nz))**2/(20*dx)**2))* &
+                        !     (1.0-exp(-(xp(l,3)-qz(1))**2/(20*dx)**2))
                   enddo
-                  Ep(l,3) = cc(3) - gradP3(3) !add in electron pressure term
+                  Ep(l,3) = cc(3) - gradP3(3)! - &
+!                       2.0*exp(-(xp(l,3)-qz(nz))**2/(20*dx)**2)*(vp(l,3) - 0.0*up3(3)) - &
+!                       2.0*exp(-(xp(l,3)-qz(1))**2/(20*dx)**2)*(vp(l,3) - 0.0*up3(3))  !add in electron pressure term
                   Ep(l,3) = Ep(l,3) * mrat(l) + grav3*mrat(l)  ! Second term is for gravity
 !                  write(*,*) 'Electric field..............', Ep(l,m)*mrat(l)
 !                  write(*,*) 'Gravity field...............', grav3*mrat(l), gravc(2,2,2), sum(wght(l,:))
@@ -1039,15 +1046,17 @@ module gutsp
       end subroutine update_rho
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      subroutine update_mixed(mixed,mix_cnt)
+      subroutine update_mixed()
 ! Weight density to eight nearest grid points
             use dimensions
             use MPI
-            use var_arrays, only: Ni_tot,ijkp,mix_ind
+            use mult_proc
+            use var_arrays, only: Ni_tot,ijkp,mix_ind,mixed
+            use boundary
             implicit none
-            real, intent(out):: mixed(nx,ny,nz), mix_cnt(nx,ny,nz)
             real:: recvbuf(nx*ny*nz)
             integer:: i,j,k,l,count,ierr
+            real:: mix_cnt(nx,ny,nz)
             
             count = nx*ny*nz
             
@@ -1055,21 +1064,26 @@ module gutsp
                   do j=1,ny
                         do k=1,nz
                               mixed(i,j,k) = 0.0
+                        enddo
+                  enddo
+            enddo
+            do i=1,nx
+                  do j=1,ny
+                        do k=1,nz
                               mix_cnt(i,j,k) = 0.0
                         enddo
                   enddo
             enddo
-            
+
             do l = 1, Ni_tot
                   i=ijkp(l,1)
                   j=ijkp(l,2)
                   k=ijkp(l,3)
                   
                   mixed(i,j,k) = mixed(i,j,k) + mix_ind(l)
-                  mix_cnt(i,j,k) = mix_cnt(i,j,k) + 1
-                  
+                  mix_cnt(i,j,k) = mix_cnt(i,j,k) + 1.0
             enddo
-            
+
             call MPI_BARRIER(MPI_COMM_WORLD,ierr)
             call MPI_ALLREDUCE(mixed(:,:,:),recvbuf,count,MPI_REAL,MPI_SUM,MPI_COMM_WORLD,ierr)
             
@@ -1080,7 +1094,13 @@ module gutsp
             
             mix_cnt(:,:,:) = reshape(recvbuf,(/nx,ny,nz/))
             
-            mixed(:,:,:) = mixed(:,:,:)/mix_cnt(:,:,:)
+            where(mix_cnt(:,:,:) .gt. 0.0)
+               mixed(:,:,:) = mixed(:,:,:)/mix_cnt(:,:,:)
+            endwhere
+
+            call add_boundary_scalar(mixed)
+            
+            call boundary_scalar(mixed)            
             
       end subroutine update_mixed
       
@@ -1246,7 +1266,9 @@ module gutsp
 !                  enddo
 !            enddo
             call boundary_vector(up)      
-!            call periodic(up)
+            !            call periodic(up)
+            
+            up(:,:,1,:) = up(:,:,2,:)
             
       end subroutine update_up
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
