@@ -1265,6 +1265,7 @@ module gutsp
 !                        enddo
 !                  enddo
 !            enddo
+
             call boundary_vector(up)      
             !            call periodic(up)
             

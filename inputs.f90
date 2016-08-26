@@ -164,7 +164,7 @@ module inputs
                   vth_max = 3*vth
                   m_top = mion
                   m_bottom = mion
-                  Lo = 4.0*dx           !gradient scale length of boundary
+                  Lo = 2.0*dx           !gradient scale length of boundary
                   
                   nu_init = nu_init_frac*omega_p
                   

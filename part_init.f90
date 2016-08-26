@@ -87,6 +87,7 @@ module part_init
             implicit none
             integer(4), intent(in):: Ni_tot_1 
             real, intent(in):: mratio, mass, vth
+            real:: Lo_y
                                   
             integer:: disp
             real:: vth2, vx, vy, vz, va, Temp, Tempcalc, pl_beta(nx,ny,nz)
@@ -157,10 +158,12 @@ module part_init
                   
                   ii = ijkp(l,1)
                   kk = ijkp(l,3)
+
+!                  Lo_y = 2*Lo*(1.0-exp(-(xp(l,2)-qy(ny/2))**2/(5*dy)**2)) + Lo
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) =  vsw + vx !vsw*(tanh((qz(k)-qz(nz/2))/(Lo))) + vx 
+                  vp(l,1) =  vsw*(tanh((qz(k)-qz(nz/2))/(Lo))) + vx 
 !vx!+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
                   vp(l,2) = vy! +57.0*(1+0.5*cos(8*pi*qx(ii)/qx(nx-1)))* &
                        !(1+0.5*cos(8*pi*qz(kk)/qz(nz)))* &

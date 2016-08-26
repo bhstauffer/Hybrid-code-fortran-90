@@ -250,6 +250,7 @@ module gutsf
                         do k=1,nz-1
                               do m = 1,3
                                     a(i,j,k,m) = aa(i,j,k,m) - up(i,j,k,m)
+!                                    a(i,j,k,m) = aj(i,j,k,m) - up(i,j,k,m)
                               enddo
                         enddo
                   enddo
@@ -258,6 +259,7 @@ module gutsf
 !            call face_to_center(a,aa)
             call edge_to_center(bt,btc)
             call crossf2(a,btc,c)
+!            call crossf2(aa,btc,c)
             call grav_to_center(grav,gravc)
             
             
@@ -379,6 +381,7 @@ module gutsf
                         do j=2,ny-1
                               do i=2,nx-1
                                     a(i,j,k,m) = aa(i,j,k,m) - up(i,j,k,m)
+!                                    a(i,j,k,m) = aj(i,j,k,m) - up(i,j,k,m)
                               enddo
                         enddo
                   enddo
@@ -391,6 +394,7 @@ module gutsf
             call grav_to_center(grav,gravc)
 
             call crossf2(a,btc,c)
+!            call crossf2(aa,btc,c)
             
             do i=2,nx-1
                   do j=2,ny-1
