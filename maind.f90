@@ -103,7 +103,7 @@ program hybrid
       !Initialize particles: use load Maxwellian, or sw_part_setup, etc.
 !      call load_Maxwellian(vth,1,mion,1.0)
       call load_const_ppc(vth,1,mion,1.0)
-      call count_ppc()
+!      call count_ppc()
       
       if (my_rank .eq. 0) then
             call check_inputs()     
@@ -363,6 +363,9 @@ program hybrid
 !                        write(340) up_b
                         write(350) m
                         write(350) mnp
+                        
+                        write(342) m
+                        write(342) vp(299985:Ni_max,:)
                         
                         ndiag = 0
                    endif

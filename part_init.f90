@@ -80,7 +80,7 @@ module part_init
       subroutine load_Maxwellian(pbeta,Ni_tot_1,mass,mratio)
             use dimensions
             use boundary
-            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0, va
+            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0
             use grid, only: qx,qy,qz,dz_grid
             use gutsp
             use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p
@@ -98,7 +98,7 @@ module part_init
             
 
 !            va = b0_init/sqrt(mu0*mion*nf_init/1e9)/1e3
-            vth = sqrt(pbeta*va**2)
+      !      vth = sqrt(pbeta*va**2)
             
             do l = Ni_tot_1,Ni_tot
                   xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
@@ -180,7 +180,7 @@ module part_init
            ! write(*,*) 'gravity...', grav(2,2,nz/2+50), grav(2,2,nz/2-50)
            ! stop
 
-           call count_ppc() 
+!           call count_ppc() 
       end subroutine load_Maxwellian
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -276,7 +276,7 @@ module part_init
             use mult_proc, only: my_rank, procnum
             use dimensions
             use boundary
-            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0,ppc,va
+            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0,ppc
             use grid, only: qx,qy,qz,dz_grid,dy_grid,dx_grid
             use gutsp
             use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,Ni_tot_sys,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p
@@ -293,7 +293,7 @@ module part_init
             disp = 0 !Displacement of gradient
             
             ppcpp=int(ppc/procnum)
-            vth=sqrt(pbeta*va**2)
+        !    vth=sqrt(pbeta*va**2)
             
             Ni_tot_1 = begin
             do i=1,nx-2
@@ -407,7 +407,7 @@ module part_init
             enddo
             enddo
             enddo
-            call count_ppc()
+!            call count_ppc()
       
       end subroutine load_const_ppc
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

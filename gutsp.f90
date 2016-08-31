@@ -128,14 +128,16 @@ module gutsp
             use inputs, only: mion
             implicit none
             real:: ajc(nx,ny,nz,3), &     !aj at cell center
-                   upc(nx,ny,nz,3), &   !up at cell center
+!                   upc(nx,ny,nz,3), &   !up at cell center
                    gravc(nx,ny,nz), & !gravity at cell center
                    aa(3),bb(3),cc(3),aj3(3),up3(3),btc3(3), grav3, gradP3(3)    !dummy variables
             integer:: l,i,j,k,m,ip,jp,kp
             
             
             call face_to_center(aj,ajc)
-            call face_to_center(up,upc)
+!            call face_to_center(up,upc)
+
+
             ! grav term
             call grav_to_center(grav,gravc)
             
@@ -154,10 +156,10 @@ module gutsp
                               + ajc(i,jp,k,m)*wght(l,5) + ajc(ip,jp,k,m)*wght(l,6) &
                               + ajc(i,jp,kp,m)*wght(l,7) + ajc(ip,jp,kp,m)*wght(l,8)
 
-                        up3(m) = upc(i,j,k,m)*wght(l,1) + upc(ip,j,k,m)*wght(l,2) &
-                              + upc(i,j,kp,m)*wght(l,3) + upc(ip,j,kp,m)*wght(l,4) &
-                              + upc(i,jp,k,m)*wght(l,5) + upc(ip,jp,k,m)*wght(l,6) &
-                              + upc(i,jp,kp,m)*wght(l,7) + upc(ip,jp,kp,m)*wght(l,8)
+                        up3(m) = up(i,j,k,m)*wght(l,1) + up(ip,j,k,m)*wght(l,2) &
+                              + up(i,j,kp,m)*wght(l,3) + up(ip,j,kp,m)*wght(l,4) &
+                              + up(i,jp,k,m)*wght(l,5) + up(ip,jp,k,m)*wght(l,6) &
+                              + up(i,jp,kp,m)*wght(l,7) + up(ip,jp,kp,m)*wght(l,8)
 
 !                        uf3(m) = ufc(i,j,k,m)*wght(l,1) + ufc(ip,j,k,m)*wght(l,2) 
 !                              + ufc(i,j,kp,m)*wght(l,3) + ufc(ip,j,kp,m)*wght(l,4) &
@@ -1232,20 +1234,43 @@ module gutsp
             call MPI_ALLREDUCE(ct(:,:,:,:),recvbuf,count,MPI_REAL,MPI_SUM,MPI_COMM_WORLD,ierr)
             
             ct(:,:,:,:) = reshape(recvbuf,(/nx,ny,nz,3/))
-            
-            do i=1,nx-1                 !interpolate back to contravarient positions
-                  do j=1,ny-1
-                        do k=1,nz-1
-                              up(i,j,k,1) = 0.5*(ct(i,j,k,1)+ct(i+1,j,k,1))
-                              up(i,j,k,2) = 0.5*(ct(i,j,k,2)+ct(i,j+1,k,2))
-                              up(i,j,k,3) = 0.5*(ct(i,j,k,3)+ct(i,j,k+1,3))
-                        enddo
-                  enddo
-            enddo
+            up=ct
+             
+!            do i=1,nx-1                 !interpolate back to contravarient positions  (now in separate routine)
+!                  do j=1,ny-1
+!                        do k=1,nz-1
+!                              up(i,j,k,1) = 0.5*(ct(i,j,k,1)+ct(i+1,j,k,1))
+!                              up(i,j,k,2) = 0.5*(ct(i,j,k,2)+ct(i,j+1,k,2))
+!                              up(i,j,k,3) = 0.5*(ct(i,j,k,3)+ct(i,j,k+1,3))
+!                        enddo
+!                  enddo
+!            enddo
             call boundary_vector(up)      
 !            call periodic(up)
             
       end subroutine update_up
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine up_fld_mv()
+            use dimensions
+            use boundary
+            use var_arrays, only: up
+            real:: up_temp(nx,ny,nz,3)
+            integer:: i,j,k
+            up_temp=up
+            do i=1,nx-1                 !interpolate back to contravarient positions.
+                  do j=1,ny-1
+                        do k=1,nz-1
+                              up(i,j,k,1) = 0.5*(up_temp(i,j,k,1)+up_temp(i+1,j,k,1))
+                              up(i,j,k,2) = 0.5*(up_temp(i,j,k,2)+up_temp(i,j+1,k,2))
+                              up(i,j,k,3) = 0.5*(up_temp(i,j,k,3)+up_temp(i,j,k+1,3))
+                        enddo
+                  enddo
+            enddo
+            
+            call boundary_vector(up)
+            
+      end subroutine up_fld_mv
+            
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine update_up_2()
@@ -1807,43 +1832,11 @@ module gutsp
                         enddo
                   enddo
             enddo
+
+            call boundary_scalar(temp_p)
             
       end subroutine get_temperature
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      subroutine count_ppc()
-            use dimensions
-            use MPI
-            use mult_proc, only: my_rank
-            use var_arrays, only: Ni_tot,ijkp,xp
-            use inputs, only: out_dir
-            implicit none
-            integer:: i,j,k,l,m,count,ierr
-            real:: ppc(nx,ny,nz),recvbuf(nx*ny*nz)
-            
-            count=nx*ny*nz
-            ppc(:,:,:) = 0.0
-            do l=1,Ni_tot
-                i=ijkp(l,1)
-                j=ijkp(l,2)
-                k=ijkp(l,3)
-                ppc(i,j,k) = ppc(i,j,k) + 1.0
-            enddo
-            
-            call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE(ppc(:,:,:),recvbuf,count,MPI_REAL,MPI_SUM,MPI_COMM_WORLD,ierr)
-            
-            ppc(:,:,:) = reshape(recvbuf,(/nx,ny,nz/))
-            
-            
-            m=1
-            if (my_rank .eq. 1) then
-            open(101, file=trim(out_dir)//'c.ppc.dat', &
-                        status='unknown',form='unformatted')
-            write(101) m
-            write(101) ppc
-            close(101)
-            endif
-      end subroutine
+      
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine check_index()
             use dimensions
