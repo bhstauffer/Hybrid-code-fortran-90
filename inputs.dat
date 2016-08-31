@@ -5,7 +5,7 @@
 1.0                   !maximum density (scaled by minimum density) (50)
 0.1                   !particle time step (fraction of omega_i) (0.08 is the default)
 2000                   !number of time steps (10000)
-100                     !diagnostic output interval (100)
+200                     !diagnostic output interval (100)
 150.0                   !flow speed (km/s) 
 0.1                  !plasma beta !was thermal speed for Maxwellian (40 km/s)
 0.1                   !Ni_tot initial (fraction of Ni_max)
@@ -13,8 +13,8 @@
 1000                   !density scale height (multiple of dx) (3000 for full torus)
 1.0                   !scale height to start stretching
 0.0                   !dz stretching scale
-0.001 		      !nu_init_frac, fraction of gyrofrequency for nu_init (0.002)
-100                   !number of particles per cell per species
+0.0001 		      !nu_init_frac, fraction of gyrofrequency for nu_init (0.002)
+50                   !number of particles per cell per species
 2020                   !Location of fft analysis (integer)
 10.0                   !mass load rate scalar (default = 1.0)
 0                !electron temperature (eV)  

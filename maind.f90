@@ -54,11 +54,13 @@ program hybrid
       Ni_tot_sys = Ni_tot*procnum
       
       if (my_rank .eq. 0) then
-!            call check_inputs()
+            call check_inputs()
             write(*,*) 'Total particles, PPP, #pc', Ni_tot_sys,Ni_tot,procnum
             write(*,*) 'Partilces per cell... ', Ni_tot_sys/((nz-2)*(nx-2)*(nz-2))
             write(*,*) ' '
       endif
+
+!      stop
       
       mstart_n = 3 !number of times restarted
       write(mstart, '(I1)') mstart_n

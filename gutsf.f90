@@ -191,6 +191,7 @@ module gutsf
                                     
                               do m = 1,3
                                     aj(i,j,k,m) = curl_B(m)/(ntot(m)*alpha)
+!                                    aj(i,j,k,m) = curl_B(m)/(alpha)
                               enddo
                         enddo
                   enddo
@@ -233,7 +234,7 @@ module gutsf
             use dimensions
             use boundary
             use grid_interp
-            use var_arrays, only: grav, gradP
+            use var_arrays, only: grav, gradP, np
             use grid, only: qz
             use inputs, only: mion,dx, boundx
             implicit none
@@ -242,6 +243,7 @@ module gutsf
             real, intent(out):: E(nx,ny,nz,3)
             real:: aj(nx,ny,nz,3), a(nx,ny,nz,3), c(nx,ny,nz,3), aa(nx,ny,nz,3), btc(nx,ny,nz,3), gravc(nx,ny,nz), gradPmf(3)
             integer:: i,j,k,m
+            real:: npface(3)
             
             call face_to_center(aj,aa)
             
@@ -249,8 +251,8 @@ module gutsf
                   do j=2,ny-1
                         do k=1,nz-1
                               do m = 1,3
+!                                    a(i,j,k,m) = aa(i,j,k,m)/np(i,j,k) - up(i,j,k,m)
                                     a(i,j,k,m) = aa(i,j,k,m) - up(i,j,k,m)
-!                                    a(i,j,k,m) = aj(i,j,k,m) - up(i,j,k,m)
                               enddo
                         enddo
                   enddo
@@ -270,6 +272,9 @@ module gutsf
                               gradPmf(1) = 0.5*(gradP(i,j,k,1) + gradP(i+1,j,k,1))
                               gradPmf(2) = 0.5*(gradP(i,j,k,2) + gradP(i,j+1,k,2))
                               gradPmf(3) = 0.5*(gradP(i,j,k,3) + gradP(i,j,k+1,3))
+!                              npface(1) = 0.5*(np(i,j,k)+np(i+1,j,k))
+!                              npface(2) = 0.5*(np(i,j,k)+np(i,j+1,k))
+!                              npface(3) = 0.5*(np(i,j,k)+np(i,j,k+1))
                               do m =1,2
                                     E(i,j,k,m) = c(i,j,k,m) + nu(i,j,k)*aj(i,j,k,m) - gradPmf(m)        ! Add in electron pressure
                                     !E(i,j,k,m) = E(i,j,k,m)*(1.0-exp(-(qz(k)-qz(1))**2/(20*dx)**2))
@@ -347,7 +352,7 @@ module gutsf
             use dimensions
             use grid_interp
             use boundary
-            use var_arrays, only: grav, gradP
+            use var_arrays, only: grav, gradP, np
             use inputs, only: mion,dx,boundx
             use grid, only: qz
             implicit none
@@ -359,6 +364,7 @@ module gutsf
 !                   btp1mf(nx,ny,nz,3), &        !btp1 at contravariant position
                    btc(nx,ny,nz,3), a(nx,ny,nz,3), aa(nx,ny,nz,3), c(nx,ny,nz,3), gravc(nx,ny,nz), gradPmf(3)
             integer:: i,j,k,m
+            real:: npface(3)
             
             do i=1,nx
                   do j=1,ny
@@ -380,8 +386,8 @@ module gutsf
                   do k=1,nz-1
                         do j=2,ny-1
                               do i=2,nx-1
+!                                    a(i,j,k,m) = aa(i,j,k,m)/np(i,j,k) - up(i,j,k,m)
                                     a(i,j,k,m) = aa(i,j,k,m) - up(i,j,k,m)
-!                                    a(i,j,k,m) = aj(i,j,k,m) - up(i,j,k,m)
                               enddo
                         enddo
                   enddo
@@ -402,6 +408,9 @@ module gutsf
                               gradPmf(1) = 0.5*(gradP(i,j,k,1) + gradP(i+1,j,k,1))
                               gradPmf(2) = 0.5*(gradP(i,j,k,2) + gradP(i,j+1,k,2))
                               gradPmf(3) = 0.5*(gradP(i,j,k,3) + gradP(i,j,k+1,3))
+!                              npface(1) = 0.5*(np(i,j,k)+np(i+1,j,k))
+!                              npface(2) = 0.5*(np(i,j,k)+np(i,j+1,k))
+!                              npface(3) = 0.5*(np(i,j,k)+np(i,j,k+1))
                               do m=1,2
                                     E(i,j,k,m) = c(i,j,k,m) + nu(i,j,k)*aj(i,j,k,m) - gradPmf(m)
 

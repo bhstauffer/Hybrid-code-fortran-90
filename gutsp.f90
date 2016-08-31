@@ -124,7 +124,7 @@ module gutsp
       subroutine get_Ep()
             use dimensions
             use grid_interp
-            use var_arrays, only: Ep,aj,up,btc,Ni_tot,ijkp,mrat,wght,grav, gradP, xp, vp
+            use var_arrays, only: Ep,aj,up,btc,Ni_tot,ijkp,mrat,wght,grav, gradP, xp, vp,np
             use inputs, only: mion,dx
             use grid, only: qz
             implicit none
@@ -136,6 +136,9 @@ module gutsp
             
             
             call face_to_center(aj,ajc)
+!            ajc(:,:,:,1) = ajc(:,:,:,1)/np(:,:,:)
+!            ajc(:,:,:,2) = ajc(:,:,:,2)/np(:,:,:)
+!            ajc(:,:,:,3) = ajc(:,:,:,3)/np(:,:,:)
 !            call face_to_center(up,upc)
 
 
