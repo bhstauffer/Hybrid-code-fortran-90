@@ -35,7 +35,7 @@ module initial
             do i=1,nx
                   do j=1,ny
                         do k=1,nz
-                              b0(i,j,k,1) = 0.1*b0_init*eoverm
+                              b0(i,j,k,1) = 0.0*b0_init*eoverm
                               b0(i,j,k,2) = 1.0*b0_init*eoverm
                               b0(i,j,k,3) = 0.0*b0_init*eoverm
                         enddo
@@ -49,9 +49,9 @@ module initial
                            nu(i,j,k) = nu_init*&
                                 (exp(-(qz(nz)-qz(k))**2/(5.0*delz)**2) + &
                                 exp(-(qz(1)-qz(k))**2/(5.0*delz)**2)) + nu_init
-!                           nu(i,j,k) = b0_init*eoverm*&
-!                                (exp(-(qy(ny)-qy(j))**2/(10.0*dy)**2) + &
-!                                exp(-(qy(1)-qy(j))**2/(10.0*dy)**2)) + nu_init
+                           nu(i,j,k) = b0_init*eoverm*&
+                                (exp(-(qy(ny)-qy(j))**2/(40.0*dy)**2) + &
+                                exp(-(qy(1)-qy(j))**2/(40.0*dy)**2)) + nu_init
 
 !                           nu(i,j,k) = nu_init
                               do m = 1,3

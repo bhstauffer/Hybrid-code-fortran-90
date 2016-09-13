@@ -56,7 +56,7 @@ program hybrid
       if (my_rank .eq. 0) then
             call check_inputs()
             write(*,*) 'Total particles, PPP, #pc', Ni_tot_sys,Ni_tot,procnum
-            write(*,*) 'Partilces per cell... ', Ni_tot_sys/((nz-2)*(nx-2)*(nz-2))
+            write(*,*) 'Particles per cell... ', Ni_tot_sys/((nx-2)*(ny-2)*(nz-2))
             write(*,*) ' '
       endif
 
