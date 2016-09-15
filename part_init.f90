@@ -100,7 +100,7 @@ module part_init
             do i=1,nx
                   do j=1,ny
                         do k=1,nz
-                              pl_beta(i,j,k) = 2.0 + 1.0*exp(-(real(i-nx/2)**2+real(k-nz/2)**2)/(10**2))
+                        !      pl_beta(i,j,k) = 2.0 + 1.0*exp(-(real(i-nx/2)**2+real(k-nz/2)**2)/(10**2))
                         enddo
                   enddo
             enddo
@@ -139,7 +139,7 @@ module part_init
                   call get_pindex(i,j,k,l)
 !                  vth2=sqrt(vth*vth*beta_p(l)) !thermal speed dependent on np to set up pressure balance for density gradient
 
-                  vth2=va*sqrt(pl_beta(ijkp(l,1),ijkp(l,2),ijkp(l,3)))
+                  vth2=40.0!va*sqrt(pl_beta(ijkp(l,1),ijkp(l,2),ijkp(l,3)))
 
 
                   
@@ -152,8 +152,8 @@ module part_init
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) = vx!+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
-                  vp(l,2) = vy 
+                  vp(l,1) = vx
+                  vp(l,2) = vy +57.0*exp(-(xp(l,3)-qz(nz/2))**2/(20*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
                   vp(l,3) = vz 
                   
                   do m=1,3
@@ -268,18 +268,18 @@ module part_init
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
 
             !   Ring beam velocity initializtion
-!                  theta2 = pad_ranf()*2*PI
-!                  vp(l,1) = vring*cos(theta2)
-!                  vp(l,2) = vring*sin(theta2)
-!                  vp(l,3) = 0.0
+                  theta2 = pad_ranf()*2*PI
+                  vp(l,1) = vring*cos(theta2)
+                  vp(l,2) = vring*sin(theta2)
+                  vp(l,3) = 0.0
                   
             !   Maxwellian thermal distribution 
             
                   vth2=100.0;
                   
-                  vx = vth2*sqrt(-log(pad_ranf()))*cos(2*PI*pad_ranf()) !remember to add in vsw to get the flow velocity
-                  vy = vth2*sqrt(-log(pad_ranf()))*cos(2*PI*pad_ranf())
-                  vz = vth2*sqrt(-log(pad_ranf()))*cos(2*PI*pad_ranf())
+    !              vx = vth2*sqrt(-log(pad_ranf()))*cos(2*PI*pad_ranf()) !remember to add in vsw to get the flow velocity
+    !              vy = vth2*sqrt(-log(pad_ranf()))*cos(2*PI*pad_ranf())
+    !              vz = vth2*sqrt(-log(pad_ranf()))*cos(2*PI*pad_ranf())
                   
                   
                   do m=1,3

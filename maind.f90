@@ -102,6 +102,7 @@ program hybrid
     
       !Initialize particles: use load Maxwellian, or sw_part_setup, etc.
       call load_Maxwellian(vth,1,mion,1.0)
+  !    call load_ring_beam(50.0,100,mion*2,2.0)
 
       if (my_rank .eq. 0) then
             call check_inputs()     
