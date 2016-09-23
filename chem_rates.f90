@@ -95,12 +95,15 @@ module chem_rates
             use gutsp
             use mult_proc, only: procnum, my_rank
             use grid, only: qx,qy,qz,dx_grid,dy_grid,dz_grid
-            use inputs, only: PI,dt,mion,nf_init,mu0,b0_init,dx,dy,m_pu,ion_amu,km_to_m, load_rate,amu,amp
+            use inputs, only: PI,dt,mion,nf_init,mu0,b0_init,dx,dy,ion_amu,km_to_m, load_rate,amu,amp
             use var_arrays, only: input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,wght,np,vp,vp1,xp,beta_p
             implicit none
             integer, intent(in):: m_tstep
-            real:: ddni, theta2, rand1, mdot,beta_pu, sca1 !scaling parameter
+            real:: ddni, theta2, rand1, mdot,beta_pu_over_m, m_pu1, m_pu2, sca1 !scaling parameter
             integer:: i,j,k,l,m,l1,dNi,flg,ierr
+            
+            m_pu1=64.0
+            m_pu2=32.0
             
             if ((m_tstep .gt. 20) .and. (m_tstep .lt. 6000)) then
                   ! default load_rate = 0.1
@@ -112,7 +115,7 @@ module chem_rates
                  write(*,*) 'mdot (kg/s), dNi...',mdot,dNi
                  endif
                  
-                 beta_pu = procnum*real(dNi)*m_pu*amu/(mdot*dt)
+                 beta_pu_over_m = procnum*real(dNi)*amu/(mdot*dt)
                   
 !                  ddni = dt*mdot*beta*beta_pu/(procnum*1.67e-27*m_pu)
 !                  if (my_rank == 0) then
@@ -135,10 +138,16 @@ module chem_rates
                   l1 = Ni_tot + 1
                   
                   do l= l1, l1+ dNi-1
-                        beta_p(l) = beta_pu
-
-                              m_arr(l) = m_pu*amu
-                              mrat(l) = ion_amu/m_pu
+                        
+                        if (mod(l,2) .eq. 1) then
+                              beta_p(l) = beta_pu_over_m*m_pu1
+                              m_arr(l) = m_pu1*amu
+                              mrat(l) = ion_amu/m_pu1
+                        else   
+                              beta_p(l) = beta_pu_over_m*m_pu2
+                              m_arr(l) = m_pu2*amu
+                              mrat(l) = ion_amu/m_pu2
+                        endif
 
 
 !                        vp(l,1) = 0

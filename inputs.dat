@@ -1,8 +1,8 @@
 1700e-9               !magnetic field (Tesla)
 23                    !atomic mass for reference species
 64                    !mass of pickup ion species
-20e15                 !minimum density (km^-3) (40)
-100.0                   !maximum density (scaled by minimum density) (50)
+5e15                 !minimum density (km^-3) (40)
+400.0                   !maximum density (scaled by minimum density) (50)
 0.08                   !particle time step (fraction of omega_i) (0.08 is the default)
 100000                   !number of time steps (10000)
 200                     !diagnostic output interval (100)
