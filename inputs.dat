@@ -4,8 +4,8 @@
 5e15                 !minimum density (km^-3) (40)
 400.0                   !maximum density (scaled by minimum density) (50)
 0.08                   !particle time step (fraction of omega_i) (0.08 is the default)
-100000                   !number of time steps (10000)
-200                     !diagnostic output interval (100)
+50                   !number of time steps (10000)
+10                     !diagnostic output interval (100)
 0.0                   !flow speed (km/s) 
 0.0011                  !Plasma beta-------------thermal speed for Maxwellian (40 km/s)
 0.1                   !Ni_tot initial (fraction of Ni_max)
@@ -14,7 +14,7 @@
 0.9                   !scale height to start stretching
 1.0                   !dz stretching scale as a fraction of lambda_i
 0.001 		      !nu_init_frac, fraction of gyrofrequency for nu_init (0.002)
-350                   !number of particles per cell per species (integer division causes the acutall ppc to be a little lower than this parameter)
+300                   !number of particles per cell per species (integer division causes the acutall ppc to be a little lower than this parameter)
 2020                   !Location of fft analysis (integer)
 10.0                   !mass load rate (kg/s)
 0                !electron temperature (eV)  

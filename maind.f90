@@ -24,7 +24,7 @@ program hybrid
       character(1):: mstart
       integer:: ierr,t1,t2,cnt_rt,m,mstart_n,ndiag,seed
       real(8):: time
-      logical:: restart = .false.
+      logical:: restart = .true.
       integer(4):: Ni_tot_sw!,Ni_tot_sys
       integer:: i,j,k,n,ntf !looping indicies
       real (real64) :: dp
@@ -56,11 +56,11 @@ program hybrid
       if (my_rank .eq. 0) then
             call check_inputs()
             write(*,*) 'Total particles, PPP, #pc', Ni_tot_sys,Ni_tot,procnum
-            write(*,*) 'Partilces per cell... ', Ni_tot_sys/((nz-2)*(nx-2)*(nz-2))
+            write(*,*) 'Partilces per cell... ', Ni_tot_sys/((nz-2)*(ny-2)*(nx-2))
             write(*,*) ' '
       endif
       
-      mstart_n = 3 !number of times restarted
+      mstart_n = 0 !number of times restarted
       write(mstart, '(I1)') mstart_n
       
       ndiag = 0
@@ -94,7 +94,7 @@ program hybrid
       call grid_gaussian()
       call grd6_setup(b0,bt,b12,b1,b1p2,nu,input_Eb)
       call get_beta(Ni_tot_sys,beta)
-      
+   
       input_E = 0.0
       bndry_Eflux = 0.0
       
@@ -103,8 +103,10 @@ program hybrid
       !Initialize particles: use load Maxwellian, or sw_part_setup, etc.
 !      call load_Maxwellian(vth,1,mion,1.0)
       call load_const_ppc(vth,1,mion,1.0)
+  
+!      call load_den_grad(1,mion,1.0)
 !      call count_ppc()
-      
+  
       if (my_rank .eq. 0) then
             call check_inputs()     
       endif
@@ -215,6 +217,10 @@ program hybrid
             open(140,file=trim(out_dir)//'c.aj.dat',status='unknown',form='unformatted')
             open(150,file=trim(out_dir)//'c.E.dat',status='unknown',form='unformatted')
             open(160,file=trim(out_dir)//'c.energy.dat',status='unknown',form='unformatted')
+            open(170,file=trim(out_dir)//'c.vdist_init.dat',status='unknown',form='unformatted')
+            open(175,file=trim(out_dir)//'c.vdist_add.dat',status='unknown',form='unformatted')
+            open(176,file=trim(out_dir)//'c.vpp_init.dat',status='unknown',form='unformatted')
+            open(177,file=trim(out_dir)//'c.vpp_add.dat',status='unknown',form='unformatted')
             
             !diagnostics chex,bill,satnp
             
@@ -331,6 +337,7 @@ program hybrid
             if (ndiag .eq. nout) then
                   call get_temperature()
                   call update_rho()
+                  call get_v_dist()
 !                  call update_mixed(mixed,mix_cnt,Ni_tot,ijkp,mix_ind)
                   if (my_rank .eq. 0) then
                         write(110) m
@@ -364,8 +371,17 @@ program hybrid
                         write(350) m
                         write(350) mnp
                         
-                        write(342) m
-                        write(342) vp(299985:Ni_max,:)
+                        write(170) m
+                        write(170) vdist_init
+                        write(175) m
+                        write(175) vdist_add
+                        write(176) m
+                        write(176) vpp_init
+                        write(177) m
+                        write(177) vpp_add
+                        
+!                        write(342) m
+!                        write(342) vp(299985:Ni_max,:)
                         
                         ndiag = 0
                    endif
@@ -429,6 +445,8 @@ program hybrid
       close(170)
       close(172)
       close(175)
+      close(176)
+      close(177)
       close(180)
       close(190)
       close(192)
