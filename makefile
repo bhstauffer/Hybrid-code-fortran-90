@@ -5,28 +5,31 @@ FILES = dimensions.f90 mult_proc.f90 grid.f90 var_arrays.f90 inputs.f90 misc.f90
 DEBUG = -check all -g -warn
 FILESO = dimensions.f90 boundary.f90 grid_interp.f90 mult_proc.f90 var_arrays.f90 inputs.f90 grid.f90 initial.f90 gutsf.f90 misc.f90 part_init.f90 gutsp.f90 chem_rates.f90 maind.f90
 INCLUDE = dimensions.o inputs.o grid.o mult_proc.o var_arrays.o
-INCLUDE2 = dimensions.o inputs.o grid.o mult_proc.o boundary.o misc.o var_arrays.o
+INCLUDE2 = dimensions.o inputs.o grid.o mult_proc.o boundary.o var_arrays.o
 INCLUDE3 = dimensions.o inputs.o grid.o mult_proc.o boundary.o misc.o grid_interp.o gutsp.o gutsf.o var_arrays.o
 INCLUDE4 = dimensions.o inputs.o grid.o mult_proc.o boundary.o misc.o grid_interp.o gutsp.o gutsf.o initial.o part_init.o chem_rates.o var_arrays.o
 OBJECTS = dimensions.o inputs.o grid.o mult_proc.o boundary.o misc.o grid_interp.o gutsp.o gutsf.o initial.o part_init.o chem_rates.o var_arrays.o maind.o
 MODS = dimensions.mod mult_proc.mod var_array.mod inputs.mod grid.mod initial.mod gutsf.mod misc.mod boundary.mod part_init.mod grid_interp.mod gutsp.mod chem_rates.f90
 
-hybrid: $(OBJECTS) dispersion.o
+hybrid: $(OBJECTS) predictor.o
 	$(F90) -o hybrid $(OBJECTS) -O2
-	$(F90) -o disp dispersion.o
+	$(F90) -o pred predictor.o dimensions.o
 
 debug: $(OBJECTS) 
 	$(F90) -o hybrid_d $(OBJECTS) $(DEBUG)
+	
+pred: predictor.o
+	$(F90) -o pred predictor.o $(INCLUDE)
 
 clean:
-	rm *.o hybrid *.out *.mod disp hybrid_d
+	rm *.o hybrid *.out *.mod disp hybrid_d pred
 
 dimensions.o:dimensions.f90;$(F90) -c dimensions.f90
 mult_proc.o:mult_proc.f90;$(F90) -c mult_proc.f90
 grid.o:grid.f90;$(F90) -c grid.f90
 inputs.o:inputs.f90 dimensions.o mult_proc.o grid.o var_arrays.o;$(F90) -c inputs.f90
 boundary.o:boundary.f90 $(INCLUDE);$(F90) -c boundary.f90
-misc.o:misc.f90 $(INCLUDE) boundary.o;$(F90) -c misc.f90
+misc.o:misc.f90 $(INCLUDE) boundary.o grid_interp.o;$(F90) -c misc.f90
 grid_interp.o:grid_interp.f90 $(INCLUDE2);$(F90) -c grid_interp.f90
 gutsf.o:gutsf.f90 $(INCLUDE2) grid_interp.o;$(F90) -c gutsf.f90
 gutsp.o:gutsp.f90 $(INCLUDE2) grid_interp.o;$(F90) -c gutsp.f90
@@ -35,8 +38,7 @@ part_init.o:part_init.f90 $(INCLUDE3);$(F90) -c part_init.f90
 chem_rates.o:chem_rates.f90 $(INCLUDE3);$(F90) -c chem_rates.f90
 var_arrays.o:var_arrays.f90;$(F90) -c var_arrays.f90
 maind.o:maind.f90 $(INCLUDE4);$(F90) -c maind.f90
-dispersion.o:dispersion.f90;$(F90) -c dispersion.f90
-
+predictor.o:predictor.f90 dimensions.o;$(F90) -c predictor.f90
 
 dimensions.mod:dimensions.f90 $(INCLUDE);$(F90) -c dimensions.f90
 mult_proc.mod:mult_proc.f90 $(INCLUDE);$(F90) -c mult_proc.f90

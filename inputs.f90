@@ -7,9 +7,9 @@ module inputs
       
       real:: b0_init, nf_init,dt_frac, vsw, vth, Ni_tot_frac, dx_frac, &
             nu_init_frac,lambda_i,m_pu, mO, ppc, nu_init, ion_amu, load_rate, amp, &
-            height_stretch, zsf
-      real, parameter:: mion = 3.841e-26
-      integer:: mp, nt, nout, loc, grad, nrgrd
+            height_stretch, zsf, etemp0, mion
+      real, parameter:: amu=1.6605e-27!, mion = 3.841e-26
+      integer:: mp, nt, nout, loc, grad, nrgrd, boundx
       integer(4):: Ni_tot_0
 
       real, parameter:: q=1.6e-19         !electron charge
@@ -108,12 +108,16 @@ module inputs
                  write(*,*) 'location of transform...',loc
                  read(100,*) load_rate
                  write(*,*) 'mass loading rate.....', load_rate
+                 read(100,*) etemp0
+                 write(*,*) 'electon temperature (eV)...', etemp0
+                 read(100,*) boundx
+                 write(*,*) 'boundary condition......', boundx
                  read(100,*) out_dir
                  write(*,*) 'output dir........',out_dir
                  
                  close(100)
                  
-                 
+                
             end subroutine readInputs
             
             
@@ -123,7 +127,7 @@ module inputs
                   
                   
                   
-!                  mion = 3.841e-26
+                  mion = amu*ion_amu!3.841e-26
                   write(*,*) 'mion...',mion
                   
                   omega_p = q*b0_init/mion
@@ -186,6 +190,7 @@ module inputs
                         write(*,*) 'dt......', dt
                         write(*,*) 'dt_sub...', dtsub_init
                         
+                        
                         do i=1,nx
                         do j=1,ny
                         do k=1,nz
@@ -197,7 +202,6 @@ module inputs
                         womega = 0.5*(a1+ sqrt(a1**2 + 4.0*a2))
                         phi = womega/ak
                         deltat = dz_grid(k)/phi
-                        
                         if (deltat/dtsub_init .le. 2.0) then
                               write(*,*) 'deltat/dtsub....', deltat/dtsub_init
                               write(*,*) 'Field time stp too long...', i,j,k
@@ -208,6 +212,8 @@ module inputs
                         enddo
                         
                         write(*,*) 'Courant check (>1)...', deltat/dtsub_init
+                       ! write(*,*) 'deltat, dtsub_init...', deltat, dtsub_init
+                      
                         
                         write(*,*) '  '
                         write(*,*) 'Bottom paramters...'

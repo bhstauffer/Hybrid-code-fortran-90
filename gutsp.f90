@@ -41,7 +41,7 @@ module gutsp
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine check_min_den()
             use dimensions
-            use misc
+            use boundary
             use grid, only: dz_grid,qx,qy,qz
             use inputs, only: dx,dy,mion,beta_particle
             use var_arrays, only: np,xp,vp,up,Ni_tot,ijkp,beta,beta_p,m_arr,mrat
@@ -124,18 +124,20 @@ module gutsp
       subroutine get_Ep()
             use dimensions
             use grid_interp
-            use var_arrays, only: Ep,aj,up,btc,Ni_tot,ijkp,mrat,wght,grav
+            use var_arrays, only: Ep,aj,up,btc,Ni_tot,ijkp,mrat,wght,grav, gradP
             use inputs, only: mion
             implicit none
             real:: ajc(nx,ny,nz,3), &     !aj at cell center
-                   upc(nx,ny,nz,3), &   !up at cell center
+!                   upc(nx,ny,nz,3), &   !up at cell center
                    gravc(nx,ny,nz), & !gravity at cell center
-                   aa(3),bb(3),cc(3),aj3(3),up3(3),btc3(3), grav3    !dummy variables
+                   aa(3),bb(3),cc(3),aj3(3),up3(3),btc3(3), grav3, gradP3(3)    !dummy variables
             integer:: l,i,j,k,m,ip,jp,kp
             
             
             call face_to_center(aj,ajc)
-            call face_to_center(up,upc)
+!            call face_to_center(up,upc)
+
+
             ! grav term
             call grav_to_center(grav,gravc)
             
@@ -154,10 +156,10 @@ module gutsp
                               + ajc(i,jp,k,m)*wght(l,5) + ajc(ip,jp,k,m)*wght(l,6) &
                               + ajc(i,jp,kp,m)*wght(l,7) + ajc(ip,jp,kp,m)*wght(l,8)
 
-                        up3(m) = upc(i,j,k,m)*wght(l,1) + upc(ip,j,k,m)*wght(l,2) &
-                              + upc(i,j,kp,m)*wght(l,3) + upc(ip,j,kp,m)*wght(l,4) &
-                              + upc(i,jp,k,m)*wght(l,5) + upc(ip,jp,k,m)*wght(l,6) &
-                              + upc(i,jp,kp,m)*wght(l,7) + upc(ip,jp,kp,m)*wght(l,8)
+                        up3(m) = up(i,j,k,m)*wght(l,1) + up(ip,j,k,m)*wght(l,2) &
+                              + up(i,j,kp,m)*wght(l,3) + up(ip,j,kp,m)*wght(l,4) &
+                              + up(i,jp,k,m)*wght(l,5) + up(ip,jp,k,m)*wght(l,6) &
+                              + up(i,jp,kp,m)*wght(l,7) + up(ip,jp,kp,m)*wght(l,8)
 
 !                        uf3(m) = ufc(i,j,k,m)*wght(l,1) + ufc(ip,j,k,m)*wght(l,2) 
 !                              + ufc(i,j,kp,m)*wght(l,3) + ufc(ip,j,kp,m)*wght(l,4) &
@@ -173,15 +175,16 @@ module gutsp
                               + btc(i,jp,kp,m)*wght(l,7) &
                               + btc(ip,jp,kp,m)*wght(l,8)
                                
-
-!                       gradP3(m) = gradPc(i,j,k,m)*wght(l,1) &
-!                               + gradPc(ip,j,k,m)*wght(l,2) &
-!                               + gradPc(i,j,kp,m)*wght(l,3) &
-!                               + gradPc(ip,j,kp,m)*wght(l,4) &
-!                               + gradPc(i,jp,k,m)*wght(l,5) &
-!                               + gradPc(ip,jp,k,m)*wght(l,6) &
-!                               + gradPc(i,jp,kp,m)*wght(l,7) &
-!                               + gradPc(ip,jp,kp,m)*wght(l,8) &
+                               
+                       !electron pressure term
+                       gradP3(m) = gradP(i,j,k,m)*wght(l,1) &
+                               + gradP(ip,j,k,m)*wght(l,2) &
+                               + gradP(i,j,kp,m)*wght(l,3) &
+                               + gradP(ip,j,kp,m)*wght(l,4) &
+                               + gradP(i,jp,k,m)*wght(l,5) &
+                               + gradP(ip,jp,k,m)*wght(l,6) &
+                               + gradP(i,jp,kp,m)*wght(l,7) &
+                               + gradP(ip,jp,kp,m)*wght(l,8) 
                    
                   enddo 
                   do m=1,3 
@@ -205,10 +208,14 @@ module gutsp
                   
                   
                   do m=1,2
-                        Ep(l,m) = cc(m)
+                        Ep(l,m) = cc(m) - gradP3(m) !add in electron pressure term
                         Ep(l,m) = Ep(l,m) * mrat(l)
                   enddo
+<<<<<<< HEAD
                   Ep(l,3) = cc(3)
+=======
+                  Ep(l,3) = cc(3) - gradP3(3) !add in electron pressure term
+>>>>>>> 1d-density
                   Ep(l,3) = Ep(l,3) * mrat(l) + grav3*mrat(l)  ! Second term is for gravity
 !                  write(*,*) 'Electric field..............', Ep(l,m)*mrat(l)
 !                  write(*,*) 'Gravity field...............', grav3*mrat(l), gravc(2,2,2), sum(wght(l,:))
@@ -328,7 +335,8 @@ module gutsp
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine move_ion_half()
             use dimensions
-            use inputs, only: dt
+            use boundary
+            use inputs, only: dt,boundx
             use grid, only: qx,qy,qz
             use var_arrays, only: xp,vp,Ni_tot
             implicit none
@@ -337,28 +345,42 @@ module gutsp
             
             dth = dt/2.0
             
+            if (boundx .eq. 1) then
             do l=1, Ni_tot
                   xp(l,1) = xp(l,1) + dth*vp(l,1)
                   xp(l,2) = xp(l,2) + dth*vp(l,2)
                   xp(l,3) = xp(l,3) + dth*vp(l,3)
                   
-                  if (xp(l,1) .gt. qx(nx-1)) then
-                        xp(l,1) = qx(1) + (xp(l,1) - qx(nx-1))
-                  else if (xp(l,1) .le. qx(1)) then
-                        xp(l,1) = qx(nx-1) -(qx(1)-xp(l,1))
-                  endif
-                  if (xp(l,2) .gt. qy(ny-1)) then
-                        xp(l,2) = qy(1) + (xp(l,2) - qy(ny-1))
-                  else if (xp(l,2) .le. qy(1)) then
-                        xp(l,2) = qy(ny-1) -(qy(1)-xp(l,2))
-                  endif
-                  if (xp(l,3) .gt. qz(nz-1)) then
-                        xp(l,3) = qz(1) + (xp(l,3) - qz(nz-1))
-                  else if (xp(l,3) .le. qz(1)) then
-                        xp(l,3) = qz(nz-1) -(qz(1)-xp(l,3))
-                  endif
+                  
+                !  Periodic boundary conditions
+                  
+                        if (xp(l,1) .gt. qx(nx-1)) then
+                              xp(l,1) = qx(1) + (xp(l,1) - qx(nx-1))
+                        else if (xp(l,1) .le. qx(1)) then
+                              xp(l,1) = qx(nx-1) -(qx(1)-xp(l,1))
+                        endif
+                        if (xp(l,2) .gt. qy(ny-1)) then
+                              xp(l,2) = qy(1) + (xp(l,2) - qy(ny-1))
+                        else if (xp(l,2) .le. qy(1)) then
+                              xp(l,2) = qy(ny-1) -(qy(1)-xp(l,2))
+                        endif
+                        if (xp(l,3) .gt. qz(nz-1)) then
+                              xp(l,3) = qz(1) + (xp(l,3) - qz(nz-1))
+                        else if (xp(l,3) .le. qz(1)) then
+                              xp(l,3) = qz(nz-1) -(qz(1)-xp(l,3))
+                        endif
                   
             enddo
+            else
+                  do l=1,Ni_tot
+                        xp(l,1) = xp(l,1) + dth*vp(l,1)
+                        xp(l,2) = xp(l,2) + dth*vp(l,2)
+                        xp(l,3) = xp(l,3) + dth*vp(l,3)
+                  enddo      
+                  
+                  call particle_boundary()
+            endif      
+            
       end subroutine move_ion_half
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -368,7 +390,7 @@ module gutsp
             use mult_proc, only: my_rank, procnum
             use inputs, only: dx,np_top,vth_max,vsw,dx,dy,mion,m_top,km_to_m,Lo,vth_top,np_bottom,beta_particle
             use var_arrays, only: np,xp,vp,Ni_tot,input_E,ijkp,beta,beta_p,m_arr,mrat
-            use misc
+            use boundary
             implicit none
             real:: den_part, minden,v,f,rnd,vx,vy,vz
             integer:: i,j,k,l,m,kk,flg,npart,ipart,ii,jj
@@ -542,7 +564,7 @@ module gutsp
             use grid, only: qx,qy,qz,dz_grid
             use mult_proc, only: my_rank, procnum
             use inputs, only: dx,np_top,vth_max,vsw,dx,dy,mion,m_top,km_to_m,Lo,vth_top,np_bottom,vth,beta_particle
-            use misc
+            use boundary
             use var_arrays, only: np,xp,vp,Ni_tot,input_E,ijkp,beta,beta_p,m_arr,mrat
             implicit none
             real:: den_part, minden,v,f,rnd,vx,vy,vz
@@ -904,6 +926,7 @@ module gutsp
             integer:: i,j,k,l,ip,jp,kp,ierr,count
             
             count = nx*ny*nz
+            
             do i=1,nx
                   do j=1,ny
                         do k=1,nz
@@ -936,10 +959,12 @@ module gutsp
             enddo
                   
             !Used for periodic boundary conditions
-                  
-            np(nx-1,:,:) = np(nx-1,:,:) + np(1,:,:)
-            np(:,ny-1,:) = np(:,ny-1,:) + np(:,1,:)
-            np(:,:,nz-1) = np(:,:,nz-1) + np(:,:,1)
+            call add_boundary_scalar(np)
+            
+!            np(nx-1,:,:) = np(nx-1,:,:) + np(1,:,:)
+!            np(:,ny-1,:) = np(:,ny-1,:) + np(:,1,:)
+!            np(:,:,nz-1) = np(:,:,nz-1) + np(:,:,1)
+            
             
             
             call MPI_BARRIER(MPI_COMM_WORLD,ierr)
@@ -947,7 +972,8 @@ module gutsp
             
             np(:,:,:) = reshape(recvbuf,(/nx,ny,nz/))
             
-            call periodic_scalar(np)
+            call boundary_scalar(np)
+!            call periodic_scalar(np)
             
       end subroutine update_np
       
@@ -999,16 +1025,20 @@ module gutsp
             mnp(:,:,:) = mion*mnp(:,:,:) !mass density
             
             !Used for periodic boundary conditions
-            mnp(nx-1,:,:) = mnp(nx-1,:,:)+mnp(1,:,:)
-            mnp(:,ny-1,:) = mnp(:,ny-1,:)+mnp(:,1,:)
-            mnp(:,:,nz-1) = mnp(:,:,nz-1)+mnp(:,:,1)
+            call add_boundary_scalar(mnp)
+            
+!            mnp(nx-1,:,:) = mnp(nx-1,:,:)+mnp(1,:,:)
+!            mnp(:,ny-1,:) = mnp(:,ny-1,:)+mnp(:,1,:)
+!            mnp(:,:,nz-1) = mnp(:,:,nz-1)+mnp(:,:,1)
+            
+          
             
             call MPI_BARRIER(MPI_COMM_WORLD,ierr)
             call MPI_ALLREDUCE(mnp(:,:,:),recvbuf,count,MPI_REAL,MPI_SUM,MPI_COMM_WORLD,ierr)
             
             mnp(:,:,:) = reshape(recvbuf,(/nx,ny,nz/))
-            
-            call periodic_scalar(mnp)
+            call boundary_scalar(mnp)
+!            call periodic_scalar(mnp)
             
       end subroutine update_rho
       
@@ -1194,30 +1224,57 @@ module gutsp
             enddo
             
             !Used for periodic boundary conditions
-            ct(nx-1,:,:,:) = ct(nx-1,:,:,:)+ct(1,:,:,:)
-            ct(:,ny-1,:,:) = ct(:,ny-1,:,:)+ct(:,1,:,:)
-            ct(:,:,nz-1,:) = ct(:,:,nz-1,:)+ct(:,:,1,:)
+            call add_boundary_vector(ct)
             
-            call periodic(ct)
+!            ct(nx-1,:,:,:) = ct(nx-1,:,:,:)+ct(1,:,:,:)
+!            ct(:,ny-1,:,:) = ct(:,ny-1,:,:)+ct(:,1,:,:)
+!            ct(:,:,nz-1,:) = ct(:,:,nz-1,:)+ct(:,:,1,:)
+            
+           
+            call boundary_vector(ct)
+            !call periodic(ct)
             
             call MPI_BARRIER(MPI_COMM_WORLD,ierr)
             call MPI_ALLREDUCE(ct(:,:,:,:),recvbuf,count,MPI_REAL,MPI_SUM,MPI_COMM_WORLD,ierr)
             
             ct(:,:,:,:) = reshape(recvbuf,(/nx,ny,nz,3/))
+            up=ct
+             
+!            do i=1,nx-1                 !interpolate back to contravarient positions  (now in separate routine)
+!                  do j=1,ny-1
+!                        do k=1,nz-1
+!                              up(i,j,k,1) = 0.5*(ct(i,j,k,1)+ct(i+1,j,k,1))
+!                              up(i,j,k,2) = 0.5*(ct(i,j,k,2)+ct(i,j+1,k,2))
+!                              up(i,j,k,3) = 0.5*(ct(i,j,k,3)+ct(i,j,k+1,3))
+!                        enddo
+!                  enddo
+!            enddo
+            call boundary_vector(up)      
+!            call periodic(up)
             
-            do i=1,nx-1                 !interpolate back to contravarient positions
+      end subroutine update_up
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine up_fld_mv()
+            use dimensions
+            use boundary
+            use var_arrays, only: up
+            real:: up_temp(nx,ny,nz,3)
+            integer:: i,j,k
+            up_temp=up
+            do i=1,nx-1                 !interpolate back to contravarient positions.
                   do j=1,ny-1
                         do k=1,nz-1
-                              up(i,j,k,1) = 0.5*(ct(i,j,k,1)+ct(i+1,j,k,1))
-                              up(i,j,k,2) = 0.5*(ct(i,j,k,2)+ct(i,j+1,k,2))
-                              up(i,j,k,3) = 0.5*(ct(i,j,k,3)+ct(i,j,k+1,3))
+                              up(i,j,k,1) = 0.5*(up_temp(i,j,k,1)+up_temp(i+1,j,k,1))
+                              up(i,j,k,2) = 0.5*(up_temp(i,j,k,2)+up_temp(i,j+1,k,2))
+                              up(i,j,k,3) = 0.5*(up_temp(i,j,k,3)+up_temp(i,j,k+1,3))
                         enddo
                   enddo
             enddo
             
-            call periodic(up)
+            call boundary_vector(up)
             
-      end subroutine update_up
+      end subroutine up_fld_mv
+            
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine update_up_2()
@@ -1321,14 +1378,17 @@ module gutsp
             enddo
             
             !Used for periodic boundary conditions
-            ct(nx-1,:,:,:) = ct(nx-1,:,:,:)+ct(1,:,:,:)
-            cnt(nx-1,:,:) = cnt(nx-1,:,:)+cnt(1,:,:)
+            call add_boundary_vector(ct)
+            call add_boundary_scalar(cnt)
+            
+!            ct(nx-1,:,:,:) = ct(nx-1,:,:,:)+ct(1,:,:,:)
+!            cnt(nx-1,:,:) = cnt(nx-1,:,:)+cnt(1,:,:)
 
-            ct(:,ny-1,:,:) = ct(:,ny-1,:,:)+ct(:,1,:,:)
-            cnt(:,ny-1,:) = cnt(:,ny-1,:)+cnt(:,1,:)
+!            ct(:,ny-1,:,:) = ct(:,ny-1,:,:)+ct(:,1,:,:)
+!            cnt(:,ny-1,:) = cnt(:,ny-1,:)+cnt(:,1,:)
 
-            ct(:,:,nz-1,:) = ct(:,:,nz-1,:)+ct(:,:,1,:)
-            cnt(:,:,nz-1) = cnt(:,:,nz-1)+cnt(:,:,1)
+!            ct(:,:,nz-1,:) = ct(:,:,nz-1,:)+ct(:,:,1,:)
+!            cnt(:,:,nz-1) = cnt(:,:,nz-1)+cnt(:,:,1)
             
             call MPI_BARRIER(MPI_COMM_WORLD,ierr)
             
@@ -1344,7 +1404,8 @@ module gutsp
             
             ct(:,:,:,:) = reshape(recvbuf,(/nx,ny,nz,3/))
             
-            call periodic(ct)
+            call boundary_vector(ct)
+!            call periodic(ct)
             
             do i=1,nx-1
                   do j=1,ny-1
@@ -1356,7 +1417,8 @@ module gutsp
                   enddo
             enddo
             
-            call periodic(up)
+            call boundary_vector(up)
+!            call periodic(up)
             
             call MPI_BARRIER(MPI_COMM_WORLD,ierr)
             
@@ -1413,11 +1475,14 @@ module gutsp
             np(:,:,:) = reshape(recvbuf,(/nx,ny,nz/))
             
             !use for periodic boundary conditions
-            np(nx-1,:,:) = np(nx-1,:,:)+np(1,:,:)
-            np(:,ny-1,:) = np(:,ny-1,:)+np(:,1,:)
-            np(:,:,nz-1) = np(:,:,nz-1)+np(:,:,1)
+            call add_boundary_scalar(np)
             
-            call periodic_scalar(np)
+!            np(nx-1,:,:) = np(nx-1,:,:)+np(1,:,:)
+!            np(:,ny-1,:) = np(:,ny-1,:)+np(:,1,:)
+!            np(:,:,nz-1) = np(:,:,nz-1)+np(:,:,1)
+            
+            call boundary_scalar(np)
+!            call periodic_scalar(np)
             
       end subroutine separate_np
       
@@ -1515,11 +1580,14 @@ module gutsp
             enddo
             
             !Used for periodic boundary conditions
-            ct(nx-1,:,:,:) = ct(nx-1,:,:,:)+ct(1,:,:,:)
-            ct(:,ny-1,:,:) = ct(:,ny-1,:,:)+ct(:,1,:,:)
-            ct(:,:,nz-1,:) = ct(:,:,nz-1,:)+ct(:,:,1,:)
+            call add_boundary_vector(ct)
             
-            call periodic(ct)
+!            ct(nx-1,:,:,:) = ct(nx-1,:,:,:)+ct(1,:,:,:)
+!            ct(:,ny-1,:,:) = ct(:,ny-1,:,:)+ct(:,1,:,:)
+!            ct(:,:,nz-1,:) = ct(:,:,nz-1,:)+ct(:,:,1,:)
+            
+            call boundary_vector(ct)
+!            call periodic(ct)
             
             call MPI_BARRIER(MPI_COMM_WORLD,ierr)
             call MPI_ALLREDUCE(ct(:,:,:,:),recvbuf,count,MPI_REAL,MPI_SUM,MPI_COMM_WORLD,ierr)
@@ -1536,7 +1604,8 @@ module gutsp
                   enddo
             enddo
             
-            call periodic(up)
+            call boundary_scalar(up)
+!            call periodic(up)
             
       end subroutine separate_up
       
@@ -1632,11 +1701,14 @@ module gutsp
             enddo
             
             !Used for periodic boundary conditions
-            ct(nx-1,:,:,:) = ct(nx-1,:,:,:)+ct(1,:,:,:)
-            ct(:,ny-1,:,:) = ct(:,ny-1,:,:)+ct(:,1,:,:)
-            ct(:,:,nz-1,:) = ct(:,:,nz-1,:)+ct(:,:,1,:)
+            call add_boundary_vector(ct)
+!            ct(nx-1,:,:,:) = ct(nx-1,:,:,:)+ct(1,:,:,:)
+!            ct(:,ny-1,:,:) = ct(:,ny-1,:,:)+ct(:,1,:,:)
+!            ct(:,:,nz-1,:) = ct(:,:,nz-1,:)+ct(:,:,1,:)
             
-            call periodic(ct)
+            call boundary_vector(ct)
+            
+!            call periodic(ct)
             
             call MPI_BARRIER(MPI_COMM_WORLD,ierr)
             call MPI_ALLREDUCE(ct(:,:,:,:),recvbuf,count,MPI_REAL,MPI_SUM,MPI_COMM_WORLD,ierr)
@@ -1653,7 +1725,8 @@ module gutsp
                   enddo
             enddo
             
-            call periodic(up2)
+            call boundary_vector(up2)
+!            call periodic(up2)
             
             ct(:,:,:,:) = 0.0
             
@@ -1726,11 +1799,13 @@ module gutsp
          
             enddo
             !Used for periodic boundary conditions
-            ct(nx-1,:,:,:) = ct(nx-1,:,:,:)+ct(1,:,:,:)
-            ct(:,ny-1,:,:) = ct(:,ny-1,:,:)+ct(:,1,:,:)
-            ct(:,:,nz-1,:) = ct(:,:,nz-1,:)+ct(:,:,1,:)
+            call add_boundary_vector(ct)
+!            ct(nx-1,:,:,:) = ct(nx-1,:,:,:)+ct(1,:,:,:)
+!            ct(:,ny-1,:,:) = ct(:,ny-1,:,:)+ct(:,1,:,:)
+!            ct(:,:,nz-1,:) = ct(:,:,nz-1,:)+ct(:,:,1,:)
             
-            call periodic(ct)
+            call boundary_vector(ct)
+!            call periodic(ct)
             
             call MPI_BARRIER(MPI_COMM_WORLD,ierr)
             call MPI_ALLREDUCE(ct(:,:,:,:),recvbuf,count,MPI_REAL,MPI_SUM,MPI_COMM_WORLD,ierr)
@@ -1761,6 +1836,8 @@ module gutsp
                         enddo
                   enddo
             enddo
+
+            call boundary_scalar(temp_p)
             
       end subroutine get_temperature
       
@@ -1803,31 +1880,102 @@ module gutsp
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine get_pindex(i,j,k,l)
-!            use dimensions
+            use dimensions
             use inputs, only: dx,dy
             use grid, only: qx,qy,qz
             use var_arrays, only: ijkp,xp
             implicit none
             integer, intent(in):: l
             integer, intent(out):: i,j,k
+            integer:: hi,mid
+!            i=1               
+!            do while (xp(l,1) .gt. qx(i))
+!                  i=i+1
+!            enddo
+!            i=i-1
             i=1
-
-            do while (xp(l,1) .gt. qx(i))
-                  i=i+1
+            hi = nx
+            do
+                  mid = (i+hi)/2
+                  if (xp(l,1) .lt. qx(mid)) then
+                        hi=mid
+                  else
+                        i=mid
+                  endif
+                  if (i+1 .ge. hi) exit
             enddo
 
-            i=i-1
             ijkp(l,1)=i
             j = floor(xp(l,2)/dy)
             ijkp(l,2) = j
+!            k=1
+!            do while (xp(l,3) .gt. qz(k))
+!                  k=k+1
+!            enddo
+!            k=k-1
             k=1
-            do while (xp(l,3) .gt. qz(k))
-                  k=k+1
+            hi = nz
+            do
+                  mid = (k+hi)/2
+                  if (xp(l,3) .lt. qz(mid)) then
+                        hi=mid
+                  else
+                        k=mid
+                  endif
+                  if (k+1 .ge. hi) exit
             enddo
-            k=k-1
             ijkp(l,3) = k
+
+
             
       end subroutine get_pindex
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!            
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      
+      subroutine count_ppc()
+! Count the number of particles in each cell
+            use dimensions
+            use MPI
+            use mult_proc, only: my_rank
+            use grid, only: dx_grid,dy_grid,dz_grid
+            use boundary
+            use var_arrays, only: Ni_tot,ijkp
+            use inputs, only: out_dir
+            implicit none
+            real:: volb,ppcpp_count(nx,ny,nz),recvbuf(nx*ny*nz)
+            integer:: i,j,k,l,ierr,count
+            
+            count = nx*ny*nz
+            
+            do i=1,nx
+                  do j=1,ny
+                        do k=1,nz
+                              ppcpp_count(i,j,k)=0.0
+                        enddo
+                  enddo
+            enddo
+            
+            do l=1, Ni_tot
+                  i=ijkp(l,1)
+                  j=ijkp(l,2)
+                  k=ijkp(l,3)
                   
+                  ppcpp_count(i,j,k) = ppcpp_count(i,j,k) + 1.0
+                  
+                  
+            enddo
+            
+            call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+            call MPI_ALLREDUCE(ppcpp_count(:,:,:),recvbuf,count,MPI_REAL,MPI_SUM,MPI_COMM_WORLD,ierr)
+            
+            ppcpp_count(:,:,:) = reshape(recvbuf,(/nx,ny,nz/))
+            
+            if (my_rank .eq. 0) then
+                  open(411,file=trim(out_dir)//'c.ppc.dat',status='unknown',form='unformatted')
+                  write(411) j
+                  write(411) ppcpp_count
+                  close(411)
+            endif
+            
+      end subroutine count_ppc
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
 end module gutsp

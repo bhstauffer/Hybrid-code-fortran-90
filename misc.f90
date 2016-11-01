@@ -1,167 +1,64 @@
 module misc
       implicit none
       contains
-      
-!!!!!!!!!RANDOM NUMBER GENERATOR!!!!!!!!!!!!!!
-
-      real function pad_ranf()
-            implicit none
-            call random_number(pad_ranf)
-      end function pad_ranf
-      
-      
-      subroutine random_initialize(seed_input)
-!**********************************************************************
-!
-!! RANDOM_INITIALIZE initializes the FORTRAN90 random number seed.
-!
-!  Discussion:
-!    If you don't initialize the FORTRAN90 random number generator
-!    routine RANDOM_NUMBER, which is used by calls like
-!
-!      call random_number ( harvest = x )
-!
-!    then its behavior is not specified.  That may be OK for you.  But
-!    you may want to be able to force the same sequence to be generated
-!    each time, or to force a different sequence.
-!
-!    To control the sequence of random numbers, you need to set the seed.
-!    In FORTRAN90, this is done by calling the RANDOM+SEED routine.
-!    You can call it with no arguments, in fact.  But if you call
-!    it with no arguments:
-!
-!      call random_seed ( )
-!
-!    then its behavior (or more particularly, the behavior of RANDOM_NUMBER)
-!    is still not specified.  You might hope that the system will go out
-!    and pick a nice random seed for you, but there's no guarantee.
-!
-!
-!    For example, on the DEC ALPHA, if you compile a program that calls
-!    RANDOM_NUMBER, then every time you run it, you get the same sequence
-!    of "random" values.  If you compile a program that calls RANDOM_SEED
-!    with no arguments, and then calls RANDOM_NUMBER, you still get the
-!    same sequence each time you run the program.
-!
-!    In order to actually try to scramble up the random number generator
-!    a bit, this routine goes through the tedious process of getting the
-!    size of the random number seed, making up values based on the current
-!    time, and setting the random number seed.
-!
-!    Unfortunately, the RANDOM_SEED routine has a very elastic definition.
-!    It does not use a single scalar integer SEED.  Instead, it communicates
-!    with the user through an integer vector whose size is not specified.
-!    You actually have to "ask" the routine to tell you the size of this
-!    vector.  Then you can fill up the vector with values to be used to
-!    influence the seeding of the random number routine.  The details of
-!    how the seed affects the sequence are also unspecified, but the only
-!    thing we are reasonably confident about is that specifying the same
-!    seed should result in the same sequence, and specifying different
-!    seeds should result in different sequences!
-!
-!    I assume this is far more than you wanted to know.  (It's certainly
-!    more than I wanted to know!)
-!
-!    The argument SEED is an input quantity only, so it is legal
-!    to type
-!
-!      call random_initialize ( 0 )
-!
-!    or
-!
-!      call random_initialize ( 18867 )
-!
-!  Licensing:
-!
-!    This code is distributed under the GNU LGPL license.
-!
-!  Modified:
-!
-!    21 February 2006
-!
-!  Author:
-!
-!    John Burkardt
-!
-!  Parameters:
-!
-!     Input, integer ( kind = 4 ) SEED_INPUT, the user's "suggestion" for a seed
-!     However, if the input value is 0, the routine will come up with
-!     its own "suggestion", based on the system clock.   
-
-            implicit none
-            integer, intent(in):: seed_input
-            integer:: seed, count, count_max, count_rate, seed_size
-            integer, allocatable:: seed_vector(:)
-            logical, parameter:: debug = .false.
-            real:: t
-            integer, parameter:: warm_up = 100
-            integer:: i
-            
-            seed = seed_input
-            
-            !initialize the random seed routine
-            call random_seed()
-            !Determine the size of the random number seed vector
-            call random_seed(size = seed_size)
-            !Allocate a vector of the right size to be used as a random seed
-            allocate (seed_vector(seed_size))
-            !If user supplied a SEED value, use that
-            
-            !Otherwise, use the system clock value to make up a value that is likely to change based on when the routine is called.
-            
-            if (seed /= 0 ) then
-                  if (debug) then
-                        write(*,*) ' '
-                        write(*,*) 'RANDOM_INTITIALIZE'
-                        write(*,*) 'Initialize RANDOM_NUMBER, user SEED = ', seed
-                  endif
-            else
-                  call system_clock(count,count_rate,count_max)
-                  
-                  seed = count
-                  
-                  if (debug) then
-                        write(*,*) ' '
-                        write(*,*) 'RANDOM_INITIALIZE'
-                        write(*,*) 'Initialize RANDOM_NUMBER, arbitrary SEED = ',seed
-                  endif
-            endif
-            
-            !Set the seed vector.  Set all entries to seed
-            
-            seed_vector(1:seed_size) = seed
-            
-            !Free up the seed space
-            
-            deallocate(seed_vector)
-            
-            !Call the random number routine a bunch of time to "warm up"
-            
-            do i = 1, warm_up
-                  call random_number(harvest = t)
-            enddo
-            
-      end subroutine
-           
+     
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine seed_mpi(my_rank)
-            integer, intent(in):: my_rank
-            integer::i, time(8)
-            integer, dimension(2):: seed
-            real:: r
-            
-            call date_and_time(values=time)
-            
-            seed(:) = time(4) * ( 360000*time(5) + 6000*time(6) + 100*time(7) + time(8)) + my_rank*100
-            call random_seed(PUT=seed)
-            
+            use iso_fortran_env, only:int64
+            implicit none
+            integer, intent(IN) :: my_rank
+            integer,  allocatable :: seed(:)
+            integer :: i, n, un, istat, dt(8)
+            integer(int64) :: t
 
-            
-            do i=1,100
-                  call random_number(r)
-            enddo
-            
+            call random_seed(size=n)
+            allocate(seed(n))
+            ! First check to see if OS provides a random number generator
+            open(newunit=un, file="/dev/urandom", access="stream", &
+                  form="unformatted", action="read", status="old", iostat=istat)
+            if(istat ==0) then
+                  read(un) seed
+                  close(un)
+            else ! Fallback to using time and rank.
+                  call system_clock(t)
+                  if(t == 0) then
+                        call date_and_time(values=dt)
+                        t = (dt(1) - 1970) * 365_int64 * 24 * 60 * 60 * 1000 &
+                              + dt(2) * 31_int64 * 24 * 60 * 60 * 1000 &
+                              + dt(3) * 24_int64 * 60 * 60 * 1000 &
+                              + dt(5) * 60 * 60 * 1000 &
+                              + dt(6) * 60 * 1000 + dt(7) * 1000 &
+                              + dt(8)
+                  end if
+
+                  ! Use rank for low bits and time for high bits uless rank has a lot of bits
+                  if(bit_size(my_rank) <= bit_size(t)) then
+                        t = my_rank + ishft(t, bit_size(my_rank))
+                  else
+                        t = ieor(t, int(my_rank,kind(t)))
+                  end if
+
+                  ! Here we're using a crappy RNG to seed the better one.
+                  do i=1,n
+                  seed(i) = lcg(t)
+                  end do
+
+            end if
+            call random_seed(put=seed)
+      contains
+            function lcg(s)
+                  implicit none
+                  integer :: lcg
+                  integer(int64) :: s
+
+                  if(s == 0) then
+                        s = 104729
+                  else
+                        s = mod(s, 4294967296_int64)
+                  end if
+                  s = mod(s*279470273_int64, 4294967291_int64)
+                  lcg = int(mod(s, int(huge(0), int64)), kind(0))
+            end function lcg
       end subroutine seed_mpi
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine get_bndry_Eflux(b1,E,bndry_Eflux)
@@ -221,27 +118,160 @@ module misc
       end subroutine get_beta
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      subroutine get_np3(nfp,np3)
+      subroutine get_gradP()
             use dimensions
-            use boundary
+            use grid_interp
+            use var_arrays, only: np, gradP
+            use grid, only: dx_grid, dy_grid, dz_grid
+            use inputs, only: etemp0, mion, kboltz
             implicit none
-            real, intent(in):: nfp(nx,ny,nz)
-            real, intent(out):: np3(nx,ny,nz,3)
+            real:: np1,gdnp,a0,etemp,gnpf(nx,ny,nz,3)
             integer:: i,j,k
             
-            do i = 2, nx-1
-                  do j= 2, ny-1
-                        do k = 2, nz-1
-                              np3(i,j,k,1) = 0.5*(nfp(i,j,k)+nfp(i+1,j,k))
-                              np3(i,j,k,2) = 0.5*(nfp(i,j,k)+nfp(i,j+1,k))
-                              np3(i,j,k,3) = 0.5*(nfp(i,j,k)+nfp(i,j,k+1))
+            etemp = etemp0*11604.505  !eV to Kelvin
+            do i=2,nx-1
+                  do j=2,ny-1
+                        do k=2,nz-1
+                              np1 =  0.5*(np(i+1,j,k)+np(i,j,k))
+                              gdnp = (np(i+1,j,k)-np(i,j,k))/dx_grid(i)
+                              a0 = kboltz*etemp/(mion*np1)
+!                             a(i,j,k,1) = a0*gdnp
+                              gnpf(i,j,k,1) = a0*gdnp
+
+                              np1 =  0.5*(np(i,j+1,k)+np(i,j,k))
+                              gdnp = (np(i,j+1,k)-np(i,j,k))/dy_grid(j)
+                              a0 = kboltz*etemp/(mion*np1)
+!                              a(i,j,k,2) = a0*gdnp
+                              gnpf(i,j,k,2) = a0*gdnp
+
+                              np1 =  0.5*(np(i,j,k+1)+np(i,j,k))
+                              gdnp = (np(i,j,k+1)-np(i,j,k))/dz_grid(k)
+                              a0 = kboltz*etemp/(mion*np1)
+!                              a(i,j,k,3) = a0*gdnp
+                              gnpf(i,j,k,3) = a0*gdnp
                         enddo
                   enddo
             enddo
             
-            call periodic(np3)
+            call face_to_center(gnpf,gradP)
+            !gradP(:,:,:,:) = 0
             
-      end subroutine get_np3
+      end subroutine get_gradP
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine get_v_dist()
+            use MPI
+            use dimensions
+            use var_arrays, only: vdist_init,vdist_add, vpp_init,vpp_add,Ni_init, Ni_tot,vp
+            implicit none
+            integer:: i,j,k,m,l,vxb,vxe,vyb,vye,vzb,vze,ierr,count
+            integer, allocatable:: recvbuf(:)
+            
+!            integer:: vdist_init(-80:80),vdist_add(-80:80), Ni_init, Ni_tot
+!            Ni_init=10
+!            Ni_tot = 100
+            
+            vxb=-80
+            vxe=80
+            vyb=-80
+            vye=80
+            vzb=-80
+            vze=80
+            count = (-vxb+vxe+1)*(-vyb+vye+1)
+            allocate(recvbuf(count))
+            
+            vdist_init(:,:) = 0
+            vdist_add(:,:) = 0
+            vpp_init(:,:) = 0
+            vpp_add(:,:) = 0
+            
+            do l=1,Ni_init
+                  i=floor(vp(l,1)-57.0)
+                  j=floor(vp(l,2))
+                  if ( (i .lt. vxb) .or. (i .gt. vxe) ) then
+                        cycle
+                  endif
+                  if ( (j .lt. vyb) .or. (j .gt. vye) ) then
+                        cycle
+                  endif
+                  vdist_init(i,j) = vdist_init(i,j) + 1
+            enddo
+            do l= Ni_init+1, Ni_tot
+                  i=floor(vp(l,1)-57.0)
+                  j=floor(vp(l,2))
+                  if ( (i .lt. vxb) .or. (i .gt. vxe) ) then
+                        cycle
+                  endif
+                  if ( (j .lt. vyb) .or. (j .gt. vye) ) then
+                        cycle
+                  endif
+                  vdist_add(i,j) = vdist_add(i,j) + 1
+            enddo
+            do l= 1, Ni_init
+                  m=floor(sqrt((vp(l,1)-57.0)**2+vp(l,2)**2))
+                  k=floor(vp(l,3))
+                  if ( (m .lt. vxb) .or. (i .gt. vxe) ) then
+                        cycle
+                  endif
+                  if ( (k .lt. vyb) .or. (j .gt. vye) ) then
+                        cycle
+                  endif
+                  vpp_init(m,k) = vpp_init(m,k) + 1
+            enddo
+            do l= Ni_init+1, Ni_tot
+                  m=floor(sqrt((vp(l,1)-57.0)**2+vp(l,2)**2))
+                  k=floor(vp(l,3))
+                  if ( (m .lt. vxb) .or. (i .gt. vxe) ) then
+                        cycle
+                  endif
+                  if ( (k .lt. vyb) .or. (j .gt. vye) ) then
+                        cycle
+                  endif
+                  vpp_add(m,k) = vpp_add(m,k) + 1
+            enddo
+            
+            call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+            call MPI_ALLREDUCE(vdist_init(:,:),recvbuf,count,MPI_INTEGER,MPI_SUM,MPI_COMM_WORLD,ierr)
+            vdist_init(:,:) = reshape(recvbuf,(/(-vxb+vxe+1),(-vyb+vye+1)/))
+            
+            call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+            call MPI_ALLREDUCE(vdist_add(:,:),recvbuf,count,MPI_INTEGER,MPI_SUM,MPI_COMM_WORLD,ierr)
+            vdist_add(:,:) = reshape(recvbuf,(/(-vxb+vxe+1),(-vyb+vye+1)/))
+            
+            call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+            call MPI_ALLREDUCE(vpp_init(:,:),recvbuf,count,MPI_INTEGER,MPI_SUM,MPI_COMM_WORLD,ierr)
+            vpp_init(:,:) = reshape(recvbuf,(/(-vxb+vxe+1),(-vyb+vye+1)/))
+            
+            call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+            call MPI_ALLREDUCE(vpp_add(:,:),recvbuf,count,MPI_INTEGER,MPI_SUM,MPI_COMM_WORLD,ierr)
+            vpp_add(:,:) = reshape(recvbuf,(/(-vxb+vxe+1),(-vyb+vye+1)/))
+            deallocate(recvbuf)
+            
+      end subroutine get_v_dist
+            
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!      subroutine get_np3(nfp,np3)
+!            use dimensions
+!            use boundary
+!            implicit none
+!            real, intent(in):: nfp(nx,ny,nz)
+!            real, intent(out):: np3(nx,ny,nz,3)
+!            integer:: i,j,k
+            
+!            do i = 2, nx-1
+!                  do j= 2, ny-1
+!                        do k = 2, nz-1
+!                              np3(i,j,k,1) = 0.5*(nfp(i,j,k)+nfp(i+1,j,k))
+!                              np3(i,j,k,2) = 0.5*(nfp(i,j,k)+nfp(i,j+1,k))
+!                              np3(i,j,k,3) = 0.5*(nfp(i,j,k)+nfp(i,j,k+1))
+!                        enddo
+!                  enddo
+!            enddo
+            
+!            call boundary_vector(np3)
+!            call periodic(np3)
+            
+!      end subroutine get_np3
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
