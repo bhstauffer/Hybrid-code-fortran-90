@@ -43,7 +43,7 @@ module inputs
                         epsilon = 8.85e-12, &
                         rtod=180.0/pi, &
                         km_to_m = 1.0e3, &
-                        kboltz = 1.38e-29, &
+                        kboltz = 1.38e-29, & ! kg km^2/s^2/K
                         tempf0 = 50*11600.0
                         
       real:: np_top, np_bottom, b0_top, b0_bottom, Lo, vth_top, vth_bottom, vth_max, &
@@ -212,7 +212,7 @@ module inputs
                         enddo
                         
                         write(*,*) 'Courant check (>1)...', deltat/dtsub_init
-                       ! write(*,*) 'deltat, dtsub_init...', deltat, dtsub_init
+              !          write(*,*) dz_grid
                       
                         
                         write(*,*) '  '
