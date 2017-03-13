@@ -211,11 +211,10 @@ module gutsp
                         Ep(l,m) = cc(m) - gradP3(m) !add in electron pressure term
                         Ep(l,m) = Ep(l,m) * mrat(l)
                   enddo
-<<<<<<< HEAD
-                  Ep(l,3) = cc(3)
-=======
+
+           
+
                   Ep(l,3) = cc(3) - gradP3(3) !add in electron pressure term
->>>>>>> 1d-density
                   Ep(l,3) = Ep(l,3) * mrat(l) + grav3*mrat(l)  ! Second term is for gravity
 !                  write(*,*) 'Electric field..............', Ep(l,m)*mrat(l)
 !                  write(*,*) 'Gravity field...............', grav3*mrat(l), gravc(2,2,2), sum(wght(l,:))

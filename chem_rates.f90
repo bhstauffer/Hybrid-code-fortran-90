@@ -105,9 +105,9 @@ module chem_rates
             m_pu1=64.0
             m_pu2=32.0
             
-            if ((m_tstep .gt. 20) .and. (m_tstep .lt. 6000)) then
+         !   if ((m_tstep .gt. 10) .and. (m_tstep .lt. 500)) then
                   ! default load_rate = 0.1
-                  sca1 = 8.0*exp(-real(m_tstep-3000)**2/2000.0**2)
+                  sca1 = 8.0!*exp(-real(m_tstep-3000)**2/2000.0**2)
                   
                   mdot = sca1*sqrt(mion*nf_init*amp/mu0/1e9)*b0_init*dx*dy*1e6
                   dNi = 2
@@ -154,39 +154,56 @@ module chem_rates
 !                        vp(l,2) = 0
 !                        vp(l,3) = 0
                         !theta2 = pad_ranf()*2*PI
-                        vp(l,1) = 0.0!-57.0
-                        vp(l,2) = 0.0!57.0*sin(theta2)
-                        vp(l,3) = 0.0
+                        vp(l,1) = 0.0*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                        vp(l,2) = 0.0*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                        vp(l,3) = 0.0*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
                         
+                        flg=0
+                        do while (flg .eq. 0)
+                              xp(l,1) = qx(nx/2-30) + (1.0-pad_ranf())*(qx(nx/2+30)-qx(nx/2-30))
+                              rand1=pad_ranf()
+                              if (exp(-(xp(l,1)-qx(nx/2))**2/(10*dx_grid(nx/2)**2)) .gt. rand1) then !(35)
+                                    flg = 1
+                              endif
+                        enddo
                         
-                        xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
+!                        flg=0
+!                        do while (flg .eq. 0)
+!                              xp(l,2) = qy(ny/2-30) + (1.0-pad_ranf())*(qy(ny/2+30)-qy(ny/2-30))
+!                              rand1=pad_ranf()
+!                              if (exp(-(xp(l,2)-qy(ny/2))**2/(10*dy_grid(ny/2)**2)) .gt. rand1) then !(35)
+!                                    flg = 1
+!                              endif
+!                        enddo
+                        
+!                        xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
                         xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))
 !                        xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
                        
                         flg=0
                         do while (flg .eq. 0)
-                              xp(l,3) = qz(nz/2-100) + (1.0-pad_ranf())*(qz(nz/2+100)-qz(nz/2-100))
+                              xp(l,3) = qz(nz/2-80) + (1.0-pad_ranf())*(qz(nz/2+80)-qz(nz/2-80))
                               rand1=pad_ranf()
-                              if (exp(-(xp(l,3)-qz(nz/2))**2/(10*dz_grid(nz/2)**2)) .gt. rand1) then !(35)
+                              if (exp(-(xp(l,3)-qz(nz/2+50))**2/(10*dz_grid(nz/2)**2)) .gt. rand1) then !(35)
                                     flg = 1
                               endif
                         enddo
                         flg=0
 !                        do while (flg .eq. 0)
-!                              xp(l,1) = qx(1) + (1.0-pad_ranf())*(qx(nx-1)-qx(1))
+!                              xp(l,1) = qx(1) + (1.0-pad_ranf())*(qx(80)-qx(1))
 !                              rand1=pad_ranf()
-!                              if (exp(-(xp(l,1)-qx(40))**2/(35*dx_grid(nx/2)**2)) .gt. rand1) then
+!                              if (exp(-(xp(l,1)-qx(30))**2/(10*dx_grid(nx/2)**2)) .gt. rand1) then
 !                                    flg = 1
 !                              endif
 !                        enddo
 
-!                        do while (flg .eq. 0)
-!                              xp(l,2) = qy(1) + (1.0-pad_ranf())*(qy(ny-1)-qy(1))
-!                              rand1=pad_ranf()
-!                              if (exp(-(xp(l,2)-qy(ny/2))**2/(50*dy_grid(ny/2)**2)) .gt. rand1) then !(35)
-!                                    flg = 1
-!                              endif
-!                        enddo
+                        do while (flg .eq. 0)
+                              xp(l,2) = qy(1) + (1.0-pad_ranf())*(qy(ny-1)-qy(1))
+                              rand1=pad_ranf()
+                              if (exp(-(xp(l,2)-qy(ny/2))**2/(10*dy_grid(ny/2)**2)) .gt. rand1) then !(35)
+                                    flg = 1
+                              endif
+                        enddo
 
                         call get_pindex(i,j,k,l)
                      
@@ -207,7 +224,7 @@ module chem_rates
                   call update_np()
                   call update_up(vp)
                   
-                  endif
+   !               endif
                  
             endif
             

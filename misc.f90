@@ -121,14 +121,15 @@ module misc
       subroutine get_gradP()
             use dimensions
             use grid_interp
-            use var_arrays, only: np, gradP
+            use var_arrays, only: np, gradP, Tempcalc
             use grid, only: dx_grid, dy_grid, dz_grid
             use inputs, only: etemp0, mion, kboltz
             implicit none
             real:: np1,gdnp,a0,etemp,gnpf(nx,ny,nz,3)
             integer:: i,j,k
             
-            etemp = etemp0*11604.505  !eV to Kelvin
+   !         etemp = etemp0*11604.505  !eV to Kelvin
+            etemp = Tempcalc*etemp0
             do i=2,nx-1
                   do j=2,ny-1
                         do k=2,nz-1
@@ -185,7 +186,7 @@ module misc
             vpp_add(:,:) = 0
             
             do l=1,Ni_init
-                  i=floor(vp(l,1)-57.0)
+                  i=floor(vp(l,1)-114.0)
                   j=floor(vp(l,2))
                   if ( (i .lt. vxb) .or. (i .gt. vxe) ) then
                         cycle
@@ -196,7 +197,7 @@ module misc
                   vdist_init(i,j) = vdist_init(i,j) + 1
             enddo
             do l= Ni_init+1, Ni_tot
-                  i=floor(vp(l,1)-57.0)
+                  i=floor(vp(l,1)-114.0)
                   j=floor(vp(l,2))
                   if ( (i .lt. vxb) .or. (i .gt. vxe) ) then
                         cycle
@@ -207,7 +208,7 @@ module misc
                   vdist_add(i,j) = vdist_add(i,j) + 1
             enddo
             do l= 1, Ni_init
-                  m=floor(sqrt((vp(l,1)-57.0)**2+vp(l,2)**2))
+                  m=floor(sqrt((vp(l,1)-114.0)**2+vp(l,2)**2))
                   k=floor(vp(l,3))
                   if ( (m .lt. vxb) .or. (i .gt. vxe) ) then
                         cycle
@@ -218,7 +219,7 @@ module misc
                   vpp_init(m,k) = vpp_init(m,k) + 1
             enddo
             do l= Ni_init+1, Ni_tot
-                  m=floor(sqrt((vp(l,1)-57.0)**2+vp(l,2)**2))
+                  m=floor(sqrt((vp(l,1)-114.0)**2+vp(l,2)**2))
                   k=floor(vp(l,3))
                   if ( (m .lt. vxb) .or. (i .gt. vxe) ) then
                         cycle

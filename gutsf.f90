@@ -270,7 +270,7 @@ module gutsf
                               do m =1,2
                                     E(i,j,k,m) = c(i,j,k,m) + nu(i,j,k)*aj(i,j,k,m) - gradPmf(m)        ! Add in electron pressure
                               enddo
-                                    E(i,j,k,3) = c(i,j,k,3) + nu(i,j,k)*aj(i,j,k,3) + gravc(i,j,k) - gradPmf(3) ! Add in gravity term and electron pressure
+                                    E(i,j,k,3) = c(i,j,k,3) + nu(i,j,k)*aj(i,j,k,3) - gradPmf(3) ! Add in electron pressure
 !                                    write(*,*) 'Electric field.................', c(i,j,k,3) + nu(i,j,k)*aj(i,j,k,3)
 !                                    write(*,*) 'Gravity field..................', gravc(i,j,k)
                         enddo

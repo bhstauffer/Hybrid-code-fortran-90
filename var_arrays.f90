@@ -36,6 +36,7 @@ module Var_Arrays
       
       integer(4):: Ni_tot, Ni_tot_sys, Ni_init
       integer::    vdist_init(-80:80,-80:80), vdist_add(-80:80,-80:80), vpp_init(-80:80,-80:80), vpp_add(-80:80,-80:80)
+      real:: Tempcalc
       
       !Location (indices) of particles in the grid
       

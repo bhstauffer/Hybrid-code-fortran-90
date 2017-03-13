@@ -46,7 +46,7 @@ module initial
             do i=1,nx
                   do j=1,ny
                         do k= 1,nz
-                              nu(i,j,k) = nu_init
+                              nu(i,j,k) = nu_init !+ 0.05*(tanh(real(k-570))-tanh(real(k-30))+2)
                               do m = 1,3
                                     bt(i,j,k,m) = b0(i,j,k,m)
                                     b12(i,j,k,m) = b0(i,j,k,m)
@@ -74,7 +74,7 @@ module initial
             use mult_proc, only: my_rank
             use inputs, only: dx,dy,delz,out_dir,zsf!,nrgrd
             implicit none
-            integer, parameter:: nrgrd = 750
+            integer, parameter:: nrgrd = 0
             integer:: i,j,k,ind
             real:: xsf,zplus,zminus,xplus,xminus,yplus,yminus
             

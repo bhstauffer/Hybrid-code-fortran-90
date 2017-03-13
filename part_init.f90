@@ -89,7 +89,7 @@ module part_init
             real, intent(in):: mratio, mass, pbeta
                                   
             integer:: disp
-            real:: vx, vy, vz, Temp, Tempcalc, vth
+            real:: vx, vy, vz, Temp, Tempcalc, vth, va
             integer:: l,m,i,j,k
             
             disp = 0 !Displacement of gradient
@@ -97,8 +97,8 @@ module part_init
 !            grad = 100.0 ! density gradient (larger = more gradual
             
 
-!            va = b0_init/sqrt(mu0*mion*nf_init/1e9)/1e3
-      !      vth = sqrt(pbeta*va**2)
+            va = b0_init/sqrt(mu0*mion*nf_init/1e9)/1e3
+            vth = sqrt(pbeta*va**2)
             
             do l = Ni_tot_1,Ni_tot
                   xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
@@ -118,9 +118,9 @@ module part_init
                  
 
                   
-                  vx = 40.0*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
-                  vy = 40.0*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
-                  vz = 40.0*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vx = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
+                  vy = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vz = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
                   
 !                  ii = ijkp(l,1)
 !                  kk = ijkp(l,3)
@@ -274,12 +274,13 @@ module part_init
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine load_const_ppc(pbeta,begin,mass,mratio)
             use mult_proc, only: my_rank, procnum
+            use ieee_arithmetic
             use dimensions
             use boundary
             use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0,ppc
             use grid, only: qx,qy,qz,dz_grid,dy_grid,dx_grid
             use gutsp
-            use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,Ni_tot_sys,Ni_init,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p
+            use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,Ni_tot_sys,Ni_init,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p, Tempcalc
             use misc
             implicit none
             integer(4), intent(in):: begin 
@@ -287,20 +288,21 @@ module part_init
                                   
             integer:: disp,ppcpp,extra_ppc
             integer(4):: Ni_tot_1
-            real:: vx, vy, vz, vth, Temp, Tempcalc,vol,new
+            real:: vx, vy, vz, vth, Temp,vol,new,va
             integer:: l,m,i,j,k
             
-            disp = 0 !Displacement of gradient
+            disp = 100 !Displacement of gradient
             
             ppcpp=int(ppc/procnum)
-        !    vth=sqrt(pbeta*va**2)
+            va = b0_init/sqrt(mu0*mion*nf_init/1e9)/1e3
+            vth=sqrt(pbeta*va**2)
             
             Ni_tot_1 = begin
             do i=1,nx-2
             do j=1,ny-2
             do k=1,nz-2
             vol = dx_grid(i)*dy_grid(j)*dz_grid(k)  !km^3
-            new = 10.0*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)
+            new = 0.0!2.0*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)
             if (new .lt. 1.0) then
                   if (new .gt. pad_ranf()) then
                         new = 1.0
@@ -320,8 +322,9 @@ module part_init
 !                  beta_p(l) = 1.0/(beta_particle+beta_particle*amp*exp(-((xp(l,3)-qz(nz/2-disp))/ &
 !                        (grad*dz_grid(nz/2-disp)))**2))
 
-!                  beta_p(l) = beta_particle
-                  beta_p(l) = (ppcpp+extra_ppc)*procnum/(nf_init+nf_init*(amp-1.0)*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2))/vol
+!                  beta_p(l) = beta_particle  !no gradient
+!                  beta_p(l) = (ppcpp+extra_ppc)*procnum/(nf_init+nf_init*(amp-1.0)*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2))/vol  !Maxwellian distribution
+                  beta_p(l) = (ppcpp+extra_ppc)*procnum/(nf_init+nf_init*(amp-1.0)/2*(tanh(real(grad*(k-nz/2+disp)))-tanh(real(grad*(k-nz/2-disp)))))/vol  !Hyperbolic tan distribution
 !                   beta_p(l) = ppcpp*procnum/nf_init/vol
 
 !                  call get_pindex(i,j,k,l)
@@ -331,18 +334,20 @@ module part_init
 
 
                   
-                  vx = 40.0*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
-                  vy = 40.0*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
-                  vz = 40.0*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vx = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
+                  vy = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vz = vth*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
                   
 !                  ii = ijkp(l,1)
 !                  kk = ijkp(l,3)
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) = vx+57.0!*exp(-(xp(l,3)-qz(nz/2))**2/(30*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
+                  vp(l,1) = vx+ &
+                        114.0*(1+0.5*cos(8*pi*qy(j)/(qy(ny-1))))*(1+0.5*cos(8*pi*qz(k)/qz(nz-1)))
+                       ! 114.0*exp(-((xp(l,2)-qy(ny/2))**2+(xp(l,3)-qz(nz/2))**2)/(10*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
                   vp(l,2) = vy 
-                  vp(l,3) = vz 
+                  vp(l,3) = vz
                   
                   
                   
@@ -400,15 +405,26 @@ module part_init
             !      grav = (T*dn/dz)/(n*m)  where n = No*(1+(amp-1)*exp(-(z-z0)^2/dz^2))
                      
             !     grav(i,j,k) = 0.0
-                 grav(i,j,k) = -2.0*Tempcalc*(amp-1.0)*(qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp))**2*exp(-((qz(k)-qz(nz/2-disp))/ &
-                        (grad*dz_grid(nz/2-disp)))**2)/(mion*(1.0+(amp-1.0)*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)))
-                        
+            !     grav(i,j,k) = -2.0*Tempcalc*(amp-1.0)*(qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp))**2*exp(-((qz(k)-qz(nz/2-disp))/ &   !Maxwellian distribution
+            !            (grad*dz_grid(nz/2-disp)))**2)/(mion*(1.0+(amp-1.0)*exp(-((qz(k)-qz(nz/2-disp))/(grad*dz_grid(nz/2-disp)))**2)))
+                 
+                 grav(i,j,k) = Tempcalc*(amp-1.0)/2*grad/dz_grid(nz/2)*(1/cosh(real(k-nz/2+disp))**2-1/cosh(real(k-nz/2-disp))**2) / &                  ! Tanh distribution    
+                        (mion*(1.0+(amp-1.0)/2*(tanh(real(grad*(k-nz/2+disp)))-tanh(real(grad*(k-nz/2-disp))))))
+            
+        !    grav(i,j,k) = 1/cosh(real(k-nz/2+disp))**2
+            
+            if (ieee_is_nan(grav(i,j,k))) then
+                  grav(i,j,k) = 0.0
+            endif
                   
             enddo
             enddo
             enddo
+            
             Ni_init = Ni_tot
             call count_ppc()
+            Tempcalc=Tempcalc/kboltz !in K now
+            
       
       end subroutine load_const_ppc
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

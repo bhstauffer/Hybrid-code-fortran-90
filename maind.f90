@@ -24,7 +24,7 @@ program hybrid
       character(1):: mstart
       integer:: ierr,t1,t2,cnt_rt,m,mstart_n,ndiag,seed
       real(8):: time
-      logical:: restart = .true.
+      logical:: restart = .false.
       integer(4):: Ni_tot_sw!,Ni_tot_sys
       integer:: i,j,k,n,ntf !looping indicies
       real (real64) :: dp
@@ -90,8 +90,8 @@ program hybrid
       
 
       
-!      call grd7()
-      call grid_gaussian()
+      call grd7()
+!      call grid_gaussian()
       call grd6_setup(b0,bt,b12,b1,b1p2,nu,input_Eb)
       call get_beta(Ni_tot_sys,beta)
    
@@ -169,13 +169,13 @@ program hybrid
                   close(109)
                   
 ! Write fft parameter file
-                  open(401, file = trim(out_dir)//'fft_11400.dat',status='unknown',form='unformatted')
+                  open(401, file = trim(out_dir)//'fft_200.dat',status='unknown',form='unformatted')
                   write(401) dt,nt,omega_p
                   
-                  open(402, file = trim(out_dir)//'fft_14000.dat',status='unknown',form='unformatted')
+                  open(402, file = trim(out_dir)//'fft_50.dat',status='unknown',form='unformatted')
                   write(402) dt,nt,omega_p
                   
-                  open(403, file = trim(out_dir)//'fft_17000.dat',status='unknown',form='unformatted')
+                  open(403, file = trim(out_dir)//'fft_100.dat',status='unknown',form='unformatted')
                   write(403) dt,nt,omega_p
 
             endif
@@ -255,7 +255,7 @@ program hybrid
             endif
           !  if (m .lt. 600) then
                   !Call ionizing subroutine  (adds ions to the domain)
-                  call Mass_load_Io(m)
+                !  call Mass_load_Io(m)
           !  endif
             call get_interp_weights()
             call update_np()                  !np at n+1/2
@@ -327,9 +327,9 @@ program hybrid
                   write(190) pup,puf,peb,input_p
                   
                   !fft output
-                  write(401) b1(2,2,11400,1), b1(2,2,11400,2), b1(2,2,11400,3)
-                  write(402) b1(2,2,14000,1), b1(2,2,14000,2), b1(2,2,14000,3)
-                  write(403) b1(2,2,17000,1), b1(2,2,17000,2), b1(2,2,17000,3)
+                  write(401) b1(2,50,200,1), b1(2,50,200,2), b1(2,80,200,3)
+                  write(402) b1(2,50,50,1), b1(2,50,50,2), b1(2,80,50,3)
+                  write(403) b1(2,50,100,1), b1(2,50,100,2), b1(2,80,100,3)
                   
             endif
             
@@ -463,8 +463,8 @@ program hybrid
 !      close(340)
       close(342)
       close(350)
-!      close(401)
-!      close(402)
+      close(401)
+      close(402)
       close(403)
       
       call system_clock(t2,cnt_rt)
