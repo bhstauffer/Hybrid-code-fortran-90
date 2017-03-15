@@ -207,7 +207,7 @@ module misc
                   vdist_add(i,j) = vdist_add(i,j) + 1
             enddo
             do l= 1, Ni_init
-                  m=floor(sqrt((vp(l,1)-57.0)**2+vp(l,2)**2))
+                  m=floor(sqrt((vp(l,1)-57.0)**2+vp(l,2)**2))  ! -57 inside sqrt
                   k=floor(vp(l,3))
                   if ( (m .lt. vxb) .or. (i .gt. vxe) ) then
                         cycle
@@ -218,7 +218,7 @@ module misc
                   vpp_init(m,k) = vpp_init(m,k) + 1
             enddo
             do l= Ni_init+1, Ni_tot
-                  m=floor(sqrt((vp(l,1)-57.0)**2+vp(l,2)**2))
+                  m=floor(sqrt((vp(l,1)-57.0)**2+vp(l,2)**2)) ! -57 inside sqrt
                   k=floor(vp(l,3))
                   if ( (m .lt. vxb) .or. (i .gt. vxe) ) then
                         cycle

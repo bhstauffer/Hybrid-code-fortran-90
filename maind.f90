@@ -24,7 +24,7 @@ program hybrid
       character(1):: mstart
       integer:: ierr,t1,t2,cnt_rt,m,mstart_n,ndiag,seed
       real(8):: time
-      logical:: restart = .true.
+      logical:: restart = .false.
       integer(4):: Ni_tot_sw!,Ni_tot_sys
       integer:: i,j,k,n,ntf !looping indicies
       real (real64) :: dp
@@ -238,6 +238,7 @@ program hybrid
             open(342,file=trim(out_dir)//'c.test_part.dat',status='unknown',form='unformatted')
             open(350,file=trim(out_dir)//'c.mnp.dat',status='unknown',form='unformatted')
        
+            open(501,file=trim(out_dir)//'c.energy_p.dat',status='unknown',form='unformatted')
        endif
        
        if (my_rank .gt. 0) then
@@ -466,6 +467,7 @@ program hybrid
 !      close(401)
 !      close(402)
       close(403)
+      close(501)
       
       call system_clock(t2,cnt_rt)
       time=(real(t2,dp_kind) - real(t1,dp_kind))/real(cnt_rt,dp_kind)

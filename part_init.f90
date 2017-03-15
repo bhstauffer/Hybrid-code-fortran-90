@@ -67,8 +67,13 @@ module part_init
             
             
             if (my_rank .eq. 0) then
-                  write(*,*) 'Normalized energy.................',total_E/S_input_E, my_rank
+                  write(*,*) 'Normalized energy.................',total_E/S_input_E
                   write(*,*) 'Normalized energy (bndry).........',total_E/(S_input_E+bndry_Eflux)
+                  write(*,*) '          particles...............',S_Evp/S_input_E       
+                  write(*,*) '          field...................',(EE+EB1)/S_input_E
+                  write(501) m
+                  write(501) S_Evp/S_input_E
+                  write(501) (EE+EB1)/S_input_E
             endif
             
             norm_E = total_E/S_input_E
