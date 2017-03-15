@@ -344,7 +344,7 @@ module part_init
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
                   vp(l,1) = vx+ &
-                        114.0*(1+0.5*cos(8*pi*qy(j)/(qy(ny-1))))*(1+0.5*cos(8*pi*qz(k)/qz(nz-1)))
+                        57.0*(1+0.5*cos(8*pi*qy(j)/(qy(ny-1))))*(1+0.5*cos(8*pi*qz(k)/qz(nz-1)))
                        ! 114.0*exp(-((xp(l,2)-qy(ny/2))**2+(xp(l,3)-qz(nz/2))**2)/(10*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
                   vp(l,2) = vy 
                   vp(l,3) = vz

@@ -19,4 +19,4 @@
 10.0                   !mass load rate (kg/s)
 1.0                !electron temperature (Te/Ti)  
 1                     ! Boundary condition (1: fully periodic   2: Periodic on xy, zero derivative on z)  
-'./tmp1/'             !output directory 
+'./twotmp1/'             !output directory 
