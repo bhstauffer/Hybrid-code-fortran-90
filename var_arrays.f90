@@ -32,11 +32,10 @@ module Var_Arrays
                   input_p(3), &
                   input_E, input_Eb, bndry_Eflux, prev_Etot, &
                   grav(nx,ny,nz), &            !gravity term
-                  gradP(nz,ny,nz,3), &            !electron pressure gradient          
-                  mixed(nx,ny,nz), &              !Sum of mixed quantities
-                  mix_cnt(nx,ny,nz)               !count of mixed quantities
+                  gradP(nx,ny,nz,3)            !electron pressure gradient
       
-      integer(4):: Ni_tot
+      integer(4):: Ni_tot, Ni_tot_sys, Ni_init
+      integer::    vdist_init(-80:80,-80:80), vdist_add(-80:80,-80:80), vpp_init(-80:80,-80:80), vpp_add(-80:80,-80:80)
       
       !Location (indices) of particles in the grid
       

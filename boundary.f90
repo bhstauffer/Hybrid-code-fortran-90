@@ -426,7 +426,6 @@ module boundary
             integer:: l
             
             if (boundx .eq. 1) then   !Fully periodic
-                  
                   where (xp(:,1) .gt. qx(nx-1))
                         xp(:,1) = qx(1) + (xp(:,1) - qx(nx-1))
                   endwhere

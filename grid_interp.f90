@@ -9,7 +9,7 @@ module grid_interp
             implicit none
             real, intent(inout):: bt(nx,ny,nz,3)
             real, intent(out):: btc(nx,ny,nz,3)
-            real:: b1,b2
+            real:: b1,b2, btmf(nx,ny,nz,3)
             integer:: i,j,k,im,jm,km
             
             call boundary_vector(bt)
@@ -40,6 +40,9 @@ module grid_interp
                         enddo
                   enddo
             enddo
+            
+            call edge_to_face(bt,btmf)
+            call face_to_center(btmf,btc)
             
             call boundary_vector(btc)
 !            call periodic(btc)

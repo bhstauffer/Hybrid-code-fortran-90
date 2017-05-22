@@ -36,8 +36,8 @@ module initial
                   do j=1,ny
                         do k=1,nz
                               b0(i,j,k,1) = 0.0
-                              b0(i,j,k,2) = b0_init*eoverm !0.0
-                              b0(i,j,k,3) = 0.0 !b0_init*eoverm
+                              b0(i,j,k,2) = 0.0
+                              b0(i,j,k,3) = b0_init*eoverm
                         enddo
                   enddo
             enddo
@@ -74,7 +74,7 @@ module initial
             use mult_proc, only: my_rank
             use inputs, only: dx,dy,delz,out_dir,zsf!,nrgrd
             implicit none
-            integer, parameter:: nrgrd = 20
+            integer, parameter:: nrgrd = 750
             integer:: i,j,k,ind
             real:: xsf,zplus,zminus,xplus,xminus,yplus,yminus
             
@@ -209,7 +209,6 @@ module initial
                   close(40)
                   
             endif
-
             
       end subroutine grd7
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
