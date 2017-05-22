@@ -1925,6 +1925,53 @@ module gutsp
 
             
       end subroutine get_pindex
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!            
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      
+      subroutine count_ppc()
+! Count the number of particles in each cell
+            use dimensions
+            use MPI
+            use mult_proc, only: my_rank
+            use grid, only: dx_grid,dy_grid,dz_grid
+            use boundary
+            use var_arrays, only: Ni_tot,ijkp
+            use inputs, only: out_dir
+            implicit none
+            real:: volb,ppcpp_count(nx,ny,nz),recvbuf(nx*ny*nz)
+            integer:: i,j,k,l,ierr,count
+            
+            count = nx*ny*nz
+            
+            do i=1,nx
+                  do j=1,ny
+                        do k=1,nz
+                              ppcpp_count(i,j,k)=0.0
+                        enddo
+                  enddo
+            enddo
+            
+            do l=1, Ni_tot
+                  i=ijkp(l,1)
+                  j=ijkp(l,2)
+                  k=ijkp(l,3)
                   
+                  ppcpp_count(i,j,k) = ppcpp_count(i,j,k) + 1.0
+                  
+                  
+            enddo
+            
+            call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+            call MPI_ALLREDUCE(ppcpp_count(:,:,:),recvbuf,count,MPI_REAL,MPI_SUM,MPI_COMM_WORLD,ierr)
+            
+            ppcpp_count(:,:,:) = reshape(recvbuf,(/nx,ny,nz/))
+            
+            if (my_rank .eq. 0) then
+                  open(411,file=trim(out_dir)//'c.ppc.dat',status='unknown',form='unformatted')
+                  write(411) j
+                  write(411) ppcpp_count
+                  close(411)
+            endif
+            
+      end subroutine count_ppc
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
 end module gutsp

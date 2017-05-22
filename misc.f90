@@ -157,6 +157,96 @@ module misc
             !gradP(:,:,:,:) = 0
             
       end subroutine get_gradP
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine get_v_dist()
+            use MPI
+            use dimensions
+            use var_arrays, only: vdist_init,vdist_add, vpp_init,vpp_add,Ni_init, Ni_tot,vp
+            implicit none
+            integer:: i,j,k,m,l,vxb,vxe,vyb,vye,vzb,vze,ierr,count
+            integer, allocatable:: recvbuf(:)
+            
+!            integer:: vdist_init(-80:80),vdist_add(-80:80), Ni_init, Ni_tot
+!            Ni_init=10
+!            Ni_tot = 100
+            
+            vxb=-80
+            vxe=80
+            vyb=-80
+            vye=80
+            vzb=-80
+            vze=80
+            count = (-vxb+vxe+1)*(-vyb+vye+1)
+            allocate(recvbuf(count))
+            
+            vdist_init(:,:) = 0
+            vdist_add(:,:) = 0
+            vpp_init(:,:) = 0
+            vpp_add(:,:) = 0
+            
+            do l=1,Ni_init
+                  i=floor(vp(l,1)-57.0)
+                  j=floor(vp(l,2))
+                  if ( (i .lt. vxb) .or. (i .gt. vxe) ) then
+                        cycle
+                  endif
+                  if ( (j .lt. vyb) .or. (j .gt. vye) ) then
+                        cycle
+                  endif
+                  vdist_init(i,j) = vdist_init(i,j) + 1
+            enddo
+            do l= Ni_init+1, Ni_tot
+                  i=floor(vp(l,1)-57.0)
+                  j=floor(vp(l,2))
+                  if ( (i .lt. vxb) .or. (i .gt. vxe) ) then
+                        cycle
+                  endif
+                  if ( (j .lt. vyb) .or. (j .gt. vye) ) then
+                        cycle
+                  endif
+                  vdist_add(i,j) = vdist_add(i,j) + 1
+            enddo
+            do l= 1, Ni_init
+                  m=floor(sqrt((vp(l,1)-57.0)**2+vp(l,2)**2))  ! -57 inside sqrt
+                  k=floor(vp(l,3))
+                  if ( (m .lt. vxb) .or. (i .gt. vxe) ) then
+                        cycle
+                  endif
+                  if ( (k .lt. vyb) .or. (j .gt. vye) ) then
+                        cycle
+                  endif
+                  vpp_init(m,k) = vpp_init(m,k) + 1
+            enddo
+            do l= Ni_init+1, Ni_tot
+                  m=floor(sqrt((vp(l,1)-57.0)**2+vp(l,2)**2)) ! -57 inside sqrt
+                  k=floor(vp(l,3))
+                  if ( (m .lt. vxb) .or. (i .gt. vxe) ) then
+                        cycle
+                  endif
+                  if ( (k .lt. vyb) .or. (j .gt. vye) ) then
+                        cycle
+                  endif
+                  vpp_add(m,k) = vpp_add(m,k) + 1
+            enddo
+            
+            call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+            call MPI_ALLREDUCE(vdist_init(:,:),recvbuf,count,MPI_INTEGER,MPI_SUM,MPI_COMM_WORLD,ierr)
+            vdist_init(:,:) = reshape(recvbuf,(/(-vxb+vxe+1),(-vyb+vye+1)/))
+            
+            call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+            call MPI_ALLREDUCE(vdist_add(:,:),recvbuf,count,MPI_INTEGER,MPI_SUM,MPI_COMM_WORLD,ierr)
+            vdist_add(:,:) = reshape(recvbuf,(/(-vxb+vxe+1),(-vyb+vye+1)/))
+            
+            call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+            call MPI_ALLREDUCE(vpp_init(:,:),recvbuf,count,MPI_INTEGER,MPI_SUM,MPI_COMM_WORLD,ierr)
+            vpp_init(:,:) = reshape(recvbuf,(/(-vxb+vxe+1),(-vyb+vye+1)/))
+            
+            call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+            call MPI_ALLREDUCE(vpp_add(:,:),recvbuf,count,MPI_INTEGER,MPI_SUM,MPI_COMM_WORLD,ierr)
+            vpp_add(:,:) = reshape(recvbuf,(/(-vxb+vxe+1),(-vyb+vye+1)/))
+            deallocate(recvbuf)
+            
+      end subroutine get_v_dist
             
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

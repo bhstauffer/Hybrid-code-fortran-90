@@ -15,31 +15,31 @@ module grid_interp
             call boundary_vector(bt)
 !            call periodic(bt)
             
-          !  do i=2,nx-1
-          !        do j=2,ny-1
-          !              do k=2,nz-1
-          !                    im=i-1
-          !                    jm=j-1
-          !                    km=k-1
+            do i=2,nx-1
+                  do j=2,ny-1
+                        do k=2,nz-1
+                              im=i-1
+                              jm=j-1
+                              km=k-1
                               
-          !                    b2 = bt(i,jm,k,1) + yrat(j)*(bt(i,j,k,1)-bt(i,jm,k,1))
-          !                    b1 = bt(i,jm,km,1)+ yrat(j)*(bt(i,j,km,1)-bt(i,jm,km,1))
+                              b2 = bt(i,jm,k,1) + yrat(j)*(bt(i,j,k,1)-bt(i,jm,k,1))
+                              b1 = bt(i,jm,km,1)+ yrat(j)*(bt(i,j,km,1)-bt(i,jm,km,1))
                               
-           !                   btc(i,j,k,1) = b1 + zrat(k)*(b2-b1)
+                              btc(i,j,k,1) = b1 + zrat(k)*(b2-b1)
                               
-           !                   b2 = bt(im,j,k,2) + xrat(i)*(bt(i,j,k,2)-bt(im,j,k,2))
-           !                   b1 = bt(im,j,km,2)+ xrat(i)*(bt(i,j,km,2)-bt(im,j,km,2))
+                              b2 = bt(im,j,k,2) + xrat(i)*(bt(i,j,k,2)-bt(im,j,k,2))
+                              b1 = bt(im,j,km,2)+ xrat(i)*(bt(i,j,km,2)-bt(im,j,km,2))
                               
-           !                   btc(i,j,k,2) = b1 + zrat(k)*(b2-b1)
+                              btc(i,j,k,2) = b1 + zrat(k)*(b2-b1)
                               
-           !                   b2 = bt(i,jm,k,3) + yrat(j)*(bt(i,j,k,3)-bt(i,jm,k,3))
-           !                   b1 = bt(im,jm,k,3)+ yrat(j)*(bt(im,j,k,3)-bt(im,jm,k,3))
+                              b2 = bt(i,jm,k,3) + yrat(j)*(bt(i,j,k,3)-bt(i,jm,k,3))
+                              b1 = bt(im,jm,k,3)+ yrat(j)*(bt(im,j,k,3)-bt(im,jm,k,3))
                               
-            !                  btc(i,j,k,3) = b1 + xrat(i)*(b2-b1)
+                              btc(i,j,k,3) = b1 + xrat(i)*(b2-b1)
                               
-           !             enddo
-           !       enddo
-           ! enddo
+                        enddo
+                  enddo
+            enddo
             
             call edge_to_face(bt,btmf)
             call face_to_center(btmf,btc)
