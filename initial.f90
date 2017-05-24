@@ -6,8 +6,8 @@ module initial
       
       
       subroutine grd6_setup(b0,bt,b12,b1,b1p2,nu,input_Eb)
-            use inputs, only: q, mO, PI, b0_top, b0_bottom, b0_init, nu_init, km_to_m, mu0
-            use grid, only: dx_cell, dy_cell, dz_cell
+            use inputs, only: q, mO, PI, b0_top, b0_bottom, b0_init, nu_init, km_to_m, mu0,Lo
+            use grid, only: dx_cell, dy_cell, dz_cell,qz
             implicit none
             real, intent(out):: b0(nx,ny,nz,3), &
                                 bt(nx,ny,nz,3), &
@@ -35,9 +35,13 @@ module initial
             do i=1,nx
                   do j=1,ny
                         do k=1,nz
+                              !b0(i,j,k,1) = 0.5*(b0_1x+b0_2x) + &
+                              !              0.5*(b0_1x+b0_2x)*tanh((qz(k)-qz(nz/2))/(Lo))
+                              !b0(i,j,k,1) = 0.5*(b0_1y+b0_2y) + &
+                              !              0.5*(b0_1y+b0_2y)*tanh((qz(k)-qz(nz/2))/(Lo))
                               b0(i,j,k,1) = 0.0
-                              b0(i,j,k,2) = 0.0
-                              b0(i,j,k,3) = b0_init*eoverm
+                              b0(i,j,k,2) = b0_init*eoverm
+                              b0(i,j,k,3) = 0.0 ! b0_init*eoverm
                         enddo
                   enddo
             enddo
@@ -74,7 +78,7 @@ module initial
             use mult_proc, only: my_rank
             use inputs, only: dx,dy,delz,out_dir,zsf!,nrgrd
             implicit none
-            integer, parameter:: nrgrd = 750
+            integer, parameter:: nrgrd = 20
             integer:: i,j,k,ind
             real:: xsf,zplus,zminus,xplus,xminus,yplus,yminus
             

@@ -1042,6 +1042,7 @@ module gutsp
       subroutine update_mixed(mixed,mix_cnt)
 ! Weight density to eight nearest grid points
             use dimensions
+            use boundary
             use MPI
             use var_arrays, only: Ni_tot,ijkp,mix_ind
             implicit none
@@ -1051,14 +1052,16 @@ module gutsp
             
             count = nx*ny*nz
             
-            do i=1,nx
-                  do j=1,ny
-                        do k=1,nz
-                              mixed(i,j,k) = 0.0
-                              mix_cnt(i,j,k) = 0.0
-                        enddo
-                  enddo
-            enddo
+            !do i=1,nx
+            !      do j=1,ny
+            !            do k=1,nz
+            !                  mixed(i,j,k) = 0.0
+            !                  mix_cnt(i,j,k) = 0.0
+            !            enddo
+            !      enddo
+            !enddo
+            mixed = 0.0
+            mix_cnt = 0.0
             
             do l = 1, Ni_tot
                   i=ijkp(l,1)
@@ -1066,7 +1069,7 @@ module gutsp
                   k=ijkp(l,3)
                   
                   mixed(i,j,k) = mixed(i,j,k) + mix_ind(l)
-                  mix_cnt(i,j,k) = mix_cnt(i,j,k) + 1
+                  mix_cnt(i,j,k) = mix_cnt(i,j,k) + 1.0
                   
             enddo
             
@@ -1080,7 +1083,12 @@ module gutsp
             
             mix_cnt(:,:,:) = reshape(recvbuf,(/nx,ny,nz/))
             
-            mixed(:,:,:) = mixed(:,:,:)/mix_cnt(:,:,:)
+            where(mix_cnt(:,:,:) .gt. 0)
+                  mixed(:,:,:) = mixed(:,:,:)/mix_cnt(:,:,:)
+            endwhere
+            
+            call add_boundary_scalar(mixed)
+            call boundary_scalar(mixed)
             
       end subroutine update_mixed
       

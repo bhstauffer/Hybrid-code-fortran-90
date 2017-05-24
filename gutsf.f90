@@ -234,7 +234,7 @@ module gutsf
             use boundary
             use grid_interp
             use var_arrays, only: grav, gradP
-            use inputs, only: mion
+            use inputs, only: mion,boundx
             implicit none
             real, intent(in):: up(nx,ny,nz,3), nu(nx,ny,nz)
             real, intent(inout):: bt(nx,ny,nz,3)
@@ -278,6 +278,14 @@ module gutsf
             enddo
             
             call boundary_vector(E)
+            ! Specific boundary for RT
+            if (boundx .eq. 2) then
+               E(:,:,nz,2) = 0.0
+               E(:,:,nz,1) = 0.0
+               
+               E(:,:,1,2) = 0.0
+               E(:,:,1,1) = 0.0
+            endif
 !            call periodic(E)
       
       end subroutine get_E
@@ -322,7 +330,7 @@ module gutsf
             use grid_interp
             use boundary
             use var_arrays, only: grav, gradP
-            use inputs, only: mion
+            use inputs, only: mion,boundx
             implicit none
             real, intent(in):: b1(nx,ny,nz,3), b1p2(nx,ny,nz,3), up(nx,ny,nz,3), nu(nx,ny,nz), &
                                np(nx,ny,nz)
@@ -384,6 +392,14 @@ module gutsf
             enddo
             
             call boundary_vector(E)
+            !Specific boundary for RT
+            if (boundx .eq. 2) then
+               E(:,:,nz,2) = 0.0
+               E(:,:,nz,1) = 0.0
+               
+               E(:,:,1,2) = 0.0
+               E(:,:,1,1) = 0.0
+            endif
 !            call periodic(E)
             
       end subroutine get_Ep1
@@ -423,6 +439,7 @@ module gutsf
             enddo
             
             call boundary_vector(b1p2)
+            
 !            call periodic(b1p2)
             
       end subroutine correct_B

@@ -7,11 +7,11 @@ module inputs
       
       real:: b0_init, nf_init,dt_frac, vsw, vth, Ni_tot_frac, dx_frac, &
             nu_init_frac,lambda_i,m_pu, mO, ppc, nu_init, ion_amu, load_rate, amp, &
-            height_stretch, zsf, etemp0, mion
+            height_stretch, zsf, ratio, mion, etemp0
       real, parameter:: amu=1.6605e-27!, mion = 3.841e-26
       integer:: mp, nt, nout, loc, grad, nrgrd, boundx
       integer(4):: Ni_tot_0
-
+      real*8:: va
       real, parameter:: q=1.6e-19         !electron charge
 
 !       Grid paramters
@@ -108,8 +108,11 @@ module inputs
                  write(*,*) 'location of transform...',loc
                  read(100,*) load_rate
                  write(*,*) 'mass loading rate.....', load_rate
-                 read(100,*) etemp0
-                 write(*,*) 'electon temperature (eV)...', etemp0
+                 read(100,*) ratio
+                 write(*,*) 'RT population ratio...', ratio
+                 etemp0 = 0
+                 !read(100,*) etemp0
+                 !write(*,*) 'electon temperature (eV)...', etemp0
                  read(100,*) boundx
                  write(*,*) 'boundary condition......', boundx
                  read(100,*) out_dir
@@ -135,7 +138,7 @@ module inputs
                   lambda_i = (3e8/sqrt((nf_init*amp/1e9)*q*q/(8.85e-12*mion)))/1e3
                                     
                   dx= lambda_i*dx_frac
-                  dy=lambda_i*dx_frac           !units in km
+                  dy= lambda_i*dx_frac           !units in km
                   delz = lambda_i*dx_frac       !dz at release coordinates
                   
                   dt= dt_frac*mion/(q*b0_init)  !main time step
@@ -152,7 +155,7 @@ module inputs
                   
                   m_heavy = 1.0
                   np_top = nf_init
-                  np_bottom = nf_init/m_heavy
+                  np_bottom = nf_init*2.0
                   f_proton_top = 0.5
                   b0_top= 1.0*b0_init
                   b0_bottom = b0_init
@@ -179,7 +182,7 @@ module inputs
                   implicit none
                   integer:: i,j,k
                   
-                  real*8:: ak, btot, a1, a2, womega, phi, deltat, va, cwpi
+                  real*8:: ak, btot, a1, a2, womega, phi, deltat, cwpi
                   
       ! Check input paramters
       
@@ -218,10 +221,12 @@ module inputs
                         write(*,*) '  '
                         write(*,*) 'Bottom paramters...'
                         write(*,*) '  '
-                        va = b0_init/sqrt(mu0*m_bottom*np_bottom/1e9)/1e3
+                        va = b0_init/sqrt(mu0*m_bottom*nf_init/1e9)/1e3
+                        vth_top = sqrt(vth*va**2)
                         
                         write(*,*) 'Alfven veloctiy ......', va
                         write(*,*) 'Thermal velocity......', vth_top
+                        write(*,*) 'Plasma beta...........', vth
                         write(*,*) 'Mach number...........', vbottom/(va+vth_bottom)
                         
                         write(*,*) 'Thermal gyroradius....', m_bottom*vth_bottom/(q*b0_init),m_bottom*vth_bottom/(q*b0_init)/dx
@@ -234,7 +239,7 @@ module inputs
                         write(*,*) 'Top parameters...'
                         write(*,*) '  '
                         
-                        va = b0_init/sqrt(mu0*m_top*np_top/1e9)/1e3
+                        va = b0_init/sqrt(mu0*m_top*nf_init/1e9)/1e3
                         
                         write(*,*) 'Alfven velocity......', va
                         write(*,*) 'Thermal velocity.....', vth_top

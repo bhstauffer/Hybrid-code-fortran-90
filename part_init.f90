@@ -69,11 +69,11 @@ module part_init
             if (my_rank .eq. 0) then
                   write(*,*) 'Normalized energy.................',total_E/S_input_E
                   write(*,*) 'Normalized energy (bndry).........',total_E/(S_input_E+bndry_Eflux)
-                  write(*,*) '          particles...............',S_Evp/S_input_E       
-                  write(*,*) '          field...................',(EE+EB1)/S_input_E
-                  write(501) m
-                  write(501) S_Evp/S_input_E
-                  write(501) (EE+EB1)/S_input_E
+!                  write(*,*) '          particles...............',S_Evp/S_input_E       
+!                  write(*,*) '          field...................',(EE+EB1)/S_input_E
+!                  write(501) m
+!                  write(501) S_Evp/S_input_E
+!                  write(501) (EE+EB1)/S_input_E
             endif
             
             norm_E = total_E/S_input_E
@@ -189,6 +189,265 @@ module part_init
       end subroutine load_Maxwellian
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine load_RT_pad(pbeta,Ni_tot_1,mass,mratio)
+            use dimensions
+            use mult_proc
+            use MPI
+            use boundary
+            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, delz, Lo, nf_init, va
+            use grid, only: qx,qy,qz,dz_grid
+            use gutsp
+            use var_arrays, only: vp,vp1,xp,input_p,Ni_tot,input_E,m_arr,mrat,beta,beta_p,grav,mix_ind
+            implicit none
+            integer(4), intent(in):: Ni_tot_1 
+            real, intent(in):: mratio, mass, pbeta
+            real:: npb(nz),npt(nz), np_tot(nz)  !need to establish analytical density profile                     
+           
+
+            integer:: disp
+            real:: vth, vx, vy, vz, grav0, rho(nz),vbal(nz), np_top,np_bottom
+            integer:: l,m,i,j,k,flg
+            real:: rnd
+            integer:: Ni_tot_p_t,Ni_tot_2
+
+            vth = 50.0!sqrt(pbeta*va**2)
+            grav0= .4*vth**2/Lo
+            do i=1,nx
+               do j=1,ny
+                  grav(i,j,:)=-grav0*(tanh((qz(:)-qz(nz/2) - 60*delz)/(10*delz))-tanh((qz(:)-qz(nz/2)+60*delz)/(10*delz)))
+               enddo
+            enddo
+            np_top = nf_init
+            np_bottom = nf_init*amp
+            npb(:) = np_bottom*((1.0-tanh((qz(:)-qz(nz/2))/(Lo)))/2.0) 
+            npt(:) = np_top
+            np_tot = npb+npt
+            
+!            rho = (amp-1)/2*tanh((qz(:)-qz(nz/2))/Lo)+(amp+1)/2
+
+            vbal(1) = vth
+            do k = 2,nz 
+               vbal(k) = sqrt((vbal(1))**2 - (vth**2/np_top)*(npb(k)-npb(1)) + &
+                    2*sum(grav(1,1,1:k)*np_tot(1:k))*delz/np_top)
+!               if (my_rank .eq. 0) &
+!                    write(*,*) 'vth_bal...',k,vbal(k),grav(1,1,k),grav0
+            enddo
+!            stop
+
+!            do k=1,nz
+!                  vbal(k) = sqrt(3*sum(rho(k:nz)*grav(nx/2,2,k:nz)*dz_grid(k:nz))/rho(k))
+!!                  if (my_rank .eq. 0) write(*,*) 'vbal...',k,vbal(k)
+!            enddo
+
+            
+            do l = 1,Ni_tot
+               xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
+               xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))
+
+               flg = 0
+               do while (flg .eq. 0)
+                  xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
+                  rnd = ((1.0-tanh((xp(l,3)-qz(nz/2))/(Lo)))/2.0)  !for bottom
+                  if (pad_ranf() .le. rnd) flg = 1
+                  m_arr(l) = mion
+                  mrat(l) = 1.0
+               enddo
+
+               beta_p(l) = 1.0
+               call get_pindex(i,j,k,l)
+               
+               
+               if (xp(l,3) .gt. qz(nz/2)) mix_ind(l) = 1
+               if (xp(l,3) .le. qz(nz/2)) mix_ind(l) = 0
+               
+               
+               vp(l,1) = (vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+               vp(l,2) = (vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+               vp(l,3) = (vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())+&
+                    0.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2)*cos(2*PI*(qx(nx-1)-xp(l,1))/(qx(nx-1)-qx(1)))
+               
+               do m=1,3
+                  vp1(l,m) = vp(l,m)
+                  input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2/(beta * beta_p(l))
+                  input_p(m) = input_p(m) + m_arr(l) * vp(l,m) / (beta * beta_p(l))
+               enddo
+            enddo
+
+
+            Ni_tot_2 = Ni_tot + 1
+            
+            ! Ni_tot = beta / procnum * integral(N_top dv)
+            ! Ni_tot2 = beta/ procnum * integral( N_bot dz ) * [x]*[y]
+            ! integral of (1-tanh(z-z0/Lo))/2 = (z-L0*ln(cosh(z-z0/Lo)))/2
+            ! Ni_tot 2 = Ni_tot * 1/2 * (amp-1) * (z-L0*ln(cosh(z-z0/Lo))) | (qz(1) to qz(nz-1)) / (qz(nz-1)-qz(1))
+            Ni_tot_p_t = nint( Ni_tot / 2 * amp * ( (qz(nz-1) - Lo * log(cosh((qz(nz-1)-qz(nz/2))/Lo))) - &
+                  (qz(1) - Lo * log(cosh((qz(1) - qz(nz/2))/Lo))) ) / (qz(nz-1)-qz(1)) )
+                  !write(*,*) 'one.....', Ni_tot_p_t
+            !Ni_tot_p_t = amp*nint(Ni_tot*(np_top/np_bottom))
+                  !write(*,*) 'two.....', Ni_tot_p_t
+            Ni_tot = Ni_tot + Ni_tot_p_t 
+
+            do l = Ni_tot_2,Ni_tot
+               xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
+               xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))
+               xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
+               m_arr(l) = mass
+               mrat(l) = mratio
+               ! density = nbot ( tanh(x-Lx/2 / Lo) + 1 ) amp/2
+               
+               beta_p(l) = 1.0
+!               beta_p(l) = 1.0/(beta_particle*(tanh((xp(l,3)-qz(nz/2))/Lo)*(amp-1)/2+(amp+1)/2))
+!               !                  beta_p(l) = beta_particle
+               call get_pindex(i,j,k,l)
+               
+               
+               if (xp(l,3) .gt. qz(nz/2)) mix_ind(l) = 1
+               if (xp(l,3) .le. qz(nz/2)) mix_ind(l) = 0
+               
+               
+               vp(l,1) = (vbal(k))*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+               vp(l,2) = (vbal(k))*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+               vp(l,3) = (vbal(k))*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())+&
+                    0.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2)*cos(2*PI*(qx(nx-1)-xp(l,1))/(qx(nx-1)-qx(1)))
+               
+               do m=1,3
+                  vp1(l,m) = vp(l,m)
+                  input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2/(beta * beta_p(l))
+                  input_p(m) = input_p(m) + m_arr(l) * vp(l,m) / (beta * beta_p(l))
+               enddo
+            enddo
+
+            !convert gravity into non-normalized units (km/s)
+!            grav = -grav
+            call boundary_scalar(grav)
+            
+!            call MPI_BARRIER(MPI_COMM_WORLD,m)
+!            call update_mixed()
+!            if (my_rank .eq. 0) then
+!            endif
+!            stop
+            call get_interp_weights()
+            call update_np()    
+            call update_up(vp)
+                  
+      end subroutine load_RT_pad
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine loadRT_ppc(pbeta,mass,mratio)
+            use dimensions
+            use mult_proc, only: procnum, my_rank
+            use MPI
+            use boundary
+            use inputs, only: PI,km_to_m, beta_particle, amp, dx,dy,delz,grad, delz, nf_init, va,Lo,ratio 
+            use grid, only: qx,qy,qz,dz_grid
+            use gutsp
+            use var_arrays, only: vp,vp1,xp,input_p,Ni_tot,input_E,m_arr,mrat,beta,beta_p,grav,mix_ind,ijkp
+            implicit none
+            integer(4):: Ni_tot_1 
+            real, intent(in):: mratio, mass, pbeta
+            real:: npb(nz),npt(nz), np_tot(nz)  !need to establish analytical density profile                     
+            real:: vth, vx, vy, vz, grav0,vbal(nz)
+            integer:: l,m,i,j,k,flg, count1(nx,ny,nz)
+            real:: rnd, np_top,np_bottom, vol
+            !ratio = 0.75
+            !Lo = 4.0*delz
+            vth = 50.0!sqrt(pbeta*va**2)
+            grav0= .4*vth**2/Lo
+            beta = 1.0
+            vol = (qx(nx-1)-qx(1))*(qy(ny-1)-qy(1))*(qz(nz-1)-qz(1))!dx*dy*delz
+            do i=1,nx
+               do j=1,ny
+                  grav(i,j,:)=-grav0*(tanh((qz(:)-qz(nz/2) - 60*delz)/(10*delz))-tanh((qz(:)-qz(nz/2)+60*delz)/(10*delz)))
+               enddo
+            enddo
+            np_top = nf_init
+            np_bottom = nf_init*(amp-1.0)
+            npb(:) = np_bottom*((1.0-tanh((qz(:)-qz(nz/2))/(Lo)))/2.0) 
+            npt(:) = np_top
+            np_tot = npb+npt
+
+            vbal(1) = vth
+            do k = 2,nz 
+               vbal(k) = sqrt((vbal(1))**2 - (vth**2/np_top)*(npb(k)-npb(1)) + &
+                    2*sum(grav(1,1,1:k)*np_tot(1:k))*delz/np_top)
+            enddo
+            ! Load population 1, where vth is constant, but n varies
+            do l = 1, int(Ni_tot*ratio,4)
+                  xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
+                  xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))
+                  !do
+                        xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
+                  !      if (pad_ranf() .le. ((1.0-tanh((xp(l,3)-qz(nz/2))/(Lo)))/2.0) ) exit
+                  !enddo
+                  m_arr(l) = mass
+                  mrat(l) = mratio
+                  beta_p(l) = real(Ni_tot*ratio*procnum)/vol/(np_bottom*((1.0-tanh((xp(l,3)-qz(nz/2))/Lo))/2.0) ) !   beta =  Ni_tot/volume  /  (density)
+                  !if (my_rank .eq. 0) write(*,*) xp(l,3), xp(l,3)-qz(nz/2), (1.0-tanh((xp(l,3)-qz(nz/2))/Lo))/2.0
+                  call get_pindex(i,j,k,l)
+                  if (xp(l,3) .gt. qz(nz/2)) mix_ind(l) = 1
+                  if (xp(l,3) .le. qz(nz/2)) mix_ind(l) = 0
+                  vp(l,1) = (vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vp(l,2) = (vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vp(l,3) = (vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+            enddo
+            !call MPI_BARRIER(MPI_COMM_WORLD,l)
+            !stop
+            ! load population 2, where n is constant, but vth varies
+            do l = int(Ni_tot*ratio,4)+1, Ni_tot
+                  xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
+                  xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))
+                  !do
+                        xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
+                        !rnd = ((1.0-tanh((xp(l,3)-qz(nz/2))/(Lo)))/2.0)
+                  !if (pad_ranf() .le. ((1.0+tanh((xp(l,3)-qz(nz/2))/(Lo)))/2.0)) exit
+                  !enddo
+                  m_arr(l) = mass
+                  mrat(l) = mratio
+                  beta_p(l) = real(Ni_tot*(1.0-ratio)*procnum)/vol/np_top
+                  call get_pindex(i,j,k,l)
+                  if (xp(l,3) .gt. qz(nz/2)) mix_ind(l) = 1
+                  if (xp(l,3) .le. qz(nz/2)) mix_ind(l) = 0
+                  vp(l,1) = (vbal(k))*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vp(l,2) = (vbal(k))*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vp(l,3) = (vbal(k))*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+            enddo
+            count1 = 0
+!            do l = 1, Ni_tot/2
+!                  i = ijkp(l,1)
+!                  j = ijkp(l,2)
+!                  k = ijkp(l,3)
+!                  count1(i,j,k) = count1(i,j,k) + 1
+!            enddo
+            
+!            do l = 1,Ni_tot/2
+!                  beta_p(l) = real(count1(ijkp(l,1),ijkp(l,2),ijkp(l,3)))/vol/(np_bottom*((1.0+tanh(xp(l,3)-qz(nz/2))/Lo)/2.0) )
+!            enddo
+!            count1 = 0
+!            do l = 1, Ni_tot
+!                  i = ijkp(l,1)
+!                  j = ijkp(l,2)
+!                  k = ijkp(l,3)
+!                  count1(i,j,k) = count1(i,j,k) + 1
+!            enddo
+            !do l = 1,Ni_tot
+            !      beta_p(l) = 1.0!real(count1(ijkp(l,1),ijkp(l,2),ijkp(l,3)))/vol/(np_top) 
+            !enddo
+            
+            do l = 1, Ni_tot
+                  do m=1,3
+                    vp1(l,m) = vp(l,m)
+                    input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2/(beta * beta_p(l))
+                    input_p(m) = input_p(m) + m_arr(l) * vp(l,m) / (beta * beta_p(l))
+                  enddo
+            enddo
+            
+            call boundary_scalar(grav)
+            
+            call get_interp_weights()
+            call update_np()    
+            call update_up(vp)
+                  
+      end subroutine loadRT_ppc
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
       subroutine load_ring_beam(vring,dNi,mass,mratio)
             use dimensions
             use boundary

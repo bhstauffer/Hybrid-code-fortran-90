@@ -90,9 +90,10 @@ program hybrid
       
 
       
-!      call grd7()
-      call grid_gaussian()
+      call grd7()
+!      call grid_gaussian()
       call grd6_setup(b0,bt,b12,b1,b1p2,nu,input_Eb)
+      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
       call get_beta(Ni_tot_sys,beta)
    
       input_E = 0.0
@@ -102,7 +103,9 @@ program hybrid
     
       !Initialize particles: use load Maxwellian, or sw_part_setup, etc.
 !      call load_Maxwellian(vth,1,mion,1.0)
-      call load_const_ppc(vth,1,mion,1.0)
+!      call load_const_ppc(vth,1,mion,1.0)
+!      call load_RT_pad(vth,1,mion,1.0)
+      call loadRT_ppc(vth,mion,1.0)
   
 !      call load_den_grad(1,mion,1.0)
 !      call count_ppc()
@@ -169,14 +172,14 @@ program hybrid
                   close(109)
                   
 ! Write fft parameter file
-                  open(401, file = trim(out_dir)//'fft_11400.dat',status='unknown',form='unformatted')
-                  write(401) dt,nt,omega_p
+!                  open(401, file = trim(out_dir)//'fft_11400.dat',status='unknown',form='unformatted')
+!                  write(401) dt,nt,omega_p
                   
-                  open(402, file = trim(out_dir)//'fft_14000.dat',status='unknown',form='unformatted')
-                  write(402) dt,nt,omega_p
+!                  open(402, file = trim(out_dir)//'fft_14000.dat',status='unknown',form='unformatted')
+!                  write(402) dt,nt,omega_p
                   
-                  open(403, file = trim(out_dir)//'fft_17000.dat',status='unknown',form='unformatted')
-                  write(403) dt,nt,omega_p
+!                  open(403, file = trim(out_dir)//'fft_17000.dat',status='unknown',form='unformatted')
+!                  write(403) dt,nt,omega_p
 
             endif
       
@@ -217,10 +220,10 @@ program hybrid
             open(140,file=trim(out_dir)//'c.aj.dat',status='unknown',form='unformatted')
             open(150,file=trim(out_dir)//'c.E.dat',status='unknown',form='unformatted')
             open(160,file=trim(out_dir)//'c.energy.dat',status='unknown',form='unformatted')
-            open(170,file=trim(out_dir)//'c.vdist_init.dat',status='unknown',form='unformatted')
-            open(175,file=trim(out_dir)//'c.vdist_add.dat',status='unknown',form='unformatted')
-            open(176,file=trim(out_dir)//'c.vpp_init.dat',status='unknown',form='unformatted')
-            open(177,file=trim(out_dir)//'c.vpp_add.dat',status='unknown',form='unformatted')
+!            open(170,file=trim(out_dir)//'c.vdist_init.dat',status='unknown',form='unformatted')
+!            open(175,file=trim(out_dir)//'c.vdist_add.dat',status='unknown',form='unformatted')
+!            open(176,file=trim(out_dir)//'c.vpp_init.dat',status='unknown',form='unformatted')
+!            open(177,file=trim(out_dir)//'c.vpp_add.dat',status='unknown',form='unformatted')
             
             !diagnostics chex,bill,satnp
             
@@ -256,7 +259,7 @@ program hybrid
             endif
           !  if (m .lt. 600) then
                   !Call ionizing subroutine  (adds ions to the domain)
-                  call Mass_load_Io(m)
+          !        call Mass_load_Io(m)
           !  endif
             call get_interp_weights()
             call update_np()                  !np at n+1/2
@@ -328,9 +331,9 @@ program hybrid
                   write(190) pup,puf,peb,input_p
                   
                   !fft output
-                  write(401) b1(2,2,11400,1), b1(2,2,11400,2), b1(2,2,11400,3)
-                  write(402) b1(2,2,14000,1), b1(2,2,14000,2), b1(2,2,14000,3)
-                  write(403) b1(2,2,17000,1), b1(2,2,17000,2), b1(2,2,17000,3)
+!                  write(401) b1(2,2,11400,1), b1(2,2,11400,2), b1(2,2,11400,3)
+!                  write(402) b1(2,2,14000,1), b1(2,2,14000,2), b1(2,2,14000,3)
+!                  write(403) b1(2,2,17000,1), b1(2,2,17000,2), b1(2,2,17000,3)
                   
             endif
             
@@ -338,15 +341,15 @@ program hybrid
             if (ndiag .eq. nout) then
                   call get_temperature()
                   call update_rho()
-                  call get_v_dist()
-!                  call update_mixed(mixed,mix_cnt,Ni_tot,ijkp,mix_ind)
+!                  call get_v_dist()
+                  call update_mixed(mixed,mix_cnt)
                   if (my_rank .eq. 0) then
                         write(110) m
                         write(110) np
                         write(115) m
                         write(115) np_b
-!                        write(120) m
-!                        write(120) mixed
+                        write(120) m
+                        write(120) mixed
                         write(130) m
                         write(130) bt
                         write(140) m
@@ -372,14 +375,14 @@ program hybrid
                         write(350) m
                         write(350) mnp
                         
-                        write(170) m
-                        write(170) vdist_init
-                        write(175) m
-                        write(175) vdist_add
-                        write(176) m
-                        write(176) vpp_init
-                        write(177) m
-                        write(177) vpp_add
+!                        write(170) m
+!                        write(170) vdist_init
+!                        write(175) m
+!                        write(175) vdist_add
+!                        write(176) m
+!                        write(176) vpp_init
+!                        write(177) m
+!                        write(177) vpp_add
                         
 !                        write(342) m
 !                        write(342) vp(299985:Ni_max,:)
@@ -443,11 +446,11 @@ program hybrid
       close(140)
       close(150)
       close(160)
-      close(170)
+!      close(170)
       close(172)
-      close(175)
-      close(176)
-      close(177)
+!      close(175)
+!      close(176)
+!      close(177)
       close(180)
       close(190)
       close(192)
