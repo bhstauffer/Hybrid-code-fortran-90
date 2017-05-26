@@ -1892,11 +1892,6 @@ module gutsp
             integer, intent(in):: l
             integer, intent(out):: i,j,k
             integer:: hi,mid
-!            i=1               
-!            do while (xp(l,1) .gt. qx(i))
-!                  i=i+1
-!            enddo
-!            i=i-1
             i=1
             hi = nx
             do
@@ -1908,15 +1903,22 @@ module gutsp
                   endif
                   if (i+1 .ge. hi) exit
             enddo
-
             ijkp(l,1)=i
-            j = floor(xp(l,2)/dy)
+            
+            j=1
+            hi = ny
+            do
+                  mid = (j+hi)/2
+                  if (xp(l,2) .lt. qy(mid)) then
+                        hi=mid
+                  else
+                        j=mid
+                  endif
+                  if (j+1 .ge. hi) exit
+            enddo
+           
             ijkp(l,2) = j
-!            k=1
-!            do while (xp(l,3) .gt. qz(k))
-!                  k=k+1
-!            enddo
-!            k=k-1
+
             k=1
             hi = nz
             do
@@ -1934,7 +1936,6 @@ module gutsp
             
       end subroutine get_pindex
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      
       subroutine count_ppc()
 ! Count the number of particles in each cell
             use dimensions
