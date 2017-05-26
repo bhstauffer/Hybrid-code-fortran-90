@@ -103,7 +103,7 @@ module misc
       subroutine get_beta(Ni_tot_sys,beta)
             use dimensions
             use grid, only: qx,qy,qz
-            use inputs, only: np_top
+            use inputs, only: nf_init
             implicit none
             integer(4), intent(in):: Ni_tot_sys
             real, intent(out):: beta
@@ -111,7 +111,7 @@ module misc
             
             
             vol = ((qx(nx-1)-qx(1))*(qy(ny-1)-qy(1))*(qz(nz-1)-qz(1)))
-            beta = (Ni_tot_sys/vol)/np_top
+            beta = (Ni_tot_sys/vol)/nf_init
             
             write(*,*) 'beta....',beta
             

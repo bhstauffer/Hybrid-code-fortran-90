@@ -351,7 +351,7 @@ module part_init
             !ratio = 0.75
             !Lo = 4.0*delz
             vth = 50.0!sqrt(pbeta*va**2)
-            grav0= .4*vth**2/Lo
+            grav0= .4*vth**2/Lo  !0.4 originally
             beta = 1.0
             vol = (qx(nx-1)-qx(1))*(qy(ny-1)-qy(1))*(qz(nz-1)-qz(1))!dx*dy*delz
             do i=1,nx

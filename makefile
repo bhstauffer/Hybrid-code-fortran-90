@@ -1,8 +1,8 @@
-F90 = mpif90 -i4 -real-size 32 -mcmodel=medium -O2
+F90 = mpif90 -i4 -real-size 32 -mcmodel=medium -O2 
 Fone = ifort -i4 -real-size 32 -O2 -mcmodel=medium -openmp
 
 FILES = dimensions.f90 mult_proc.f90 grid.f90 var_arrays.f90 inputs.f90 misc.f90 boundary.f90 grid_interp.f90 gutsf.f90 gutsp.f90 initial.f90 part_init.f90 chem_rates.f90 maind.f90
-DEBUG = -check all -g -warn
+DEBUG = -check all -g -fp-stack-check
 FILESO = dimensions.f90 boundary.f90 grid_interp.f90 mult_proc.f90 var_arrays.f90 inputs.f90 grid.f90 initial.f90 gutsf.f90 misc.f90 part_init.f90 gutsp.f90 chem_rates.f90 maind.f90
 INCLUDE = dimensions.o inputs.o grid.o mult_proc.o var_arrays.o
 INCLUDE2 = dimensions.o inputs.o grid.o mult_proc.o boundary.o var_arrays.o
