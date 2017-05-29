@@ -286,7 +286,8 @@ module part_init
             !Ni_tot_p_t = amp*nint(Ni_tot*(np_top/np_bottom))
                   !write(*,*) 'two.....', Ni_tot_p_t
             Ni_tot = Ni_tot + Ni_tot_p_t 
-
+            !write(*,*) 'Ni_tot for each processor..........', Ni_tot
+            !stop
             do l = Ni_tot_2,Ni_tot
                xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
                xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))

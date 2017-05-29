@@ -14,7 +14,7 @@
 1.0                   !scale height to start stretching
 0.0                   !dz stretching scale as a fraction of lambda_i
 0.002 		      !nu_init_frac, fraction of gyrofrequency for nu_init (0.002)
-100                   !number of particles per cell per species (integer division causes the actual ppc to be a little lower than this parameter)
+40                   !number of particles per cell per species (integer division causes the actual ppc to be a little lower than this parameter)
 2020                   !Location of fft analysis (integer)
 10.0                   !mass load rate (kg/s)
 0.5                ! RT population ratio  

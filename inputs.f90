@@ -138,7 +138,7 @@ module inputs
                   lambda_i = (3e8/sqrt((nf_init*amp/1e9)*q*q/(8.85e-12*mion)))/1e3
                                     
                   dx= lambda_i*dx_frac
-                  dy= lambda_i*dx_frac           !units in km
+                  dy= lambda_i                  !units in km, increased for y dimension
                   delz = lambda_i*dx_frac       !dz at release coordinates
                   
                   dt= dt_frac*mion/(q*b0_init)  !main time step

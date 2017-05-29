@@ -47,8 +47,8 @@ program hybrid
 
       write(filenum, '(I2)') my_rank
       
-
-      Ni_tot=(nx-2)*(ny-2)*(nz-2)*int(ppc/procnum) !1D
+      if (int(ppc/procnum) .gt. 0) Ni_tot=(nx-2)*(ny-2)*(nz-2)*int(ppc/procnum) !3D
+      if (int(ppc/procnum) .eq. 0) Ni_tot=(nx-2)*(ny-2)*(nz-2)
       Ni_tot_0 = Ni_tot
       Ni_tot_sw = Ni_tot
       Ni_tot_sys = Ni_tot*procnum
@@ -104,8 +104,8 @@ program hybrid
       !Initialize particles: use load Maxwellian, or sw_part_setup, etc.
 !      call load_Maxwellian(vth,1,mion,1.0)
 !      call load_const_ppc(vth,1,mion,1.0)
-!      call load_RT_pad(vth,1,mion,1.0)
-      call loadRT_ppc(vth,mion,1.0)
+      call load_RT_pad(vth,1,mion,1.0)
+!      call loadRT_ppc(vth,mion,1.0)
   
 !      call load_den_grad(1,mion,1.0)
 !      call count_ppc()

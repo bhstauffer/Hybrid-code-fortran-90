@@ -1,5 +1,5 @@
-F90 = mpif90 -i4 -real-size 32 -mcmodel=medium -O2 
-Fone = ifort -i4 -real-size 32 -O2 -mcmodel=medium -openmp
+F90 = mpif90 -i4 -real-size 32 -mcmodel=large -O2
+Fone = ifort -i4 -real-size 32 -O2 -mcmodel=medium -openmp 
 
 FILES = dimensions.f90 mult_proc.f90 grid.f90 var_arrays.f90 inputs.f90 misc.f90 boundary.f90 grid_interp.f90 gutsf.f90 gutsp.f90 initial.f90 part_init.f90 chem_rates.f90 maind.f90
 DEBUG = -check all -g -fp-stack-check
@@ -13,7 +13,7 @@ MODS = dimensions.mod mult_proc.mod var_array.mod inputs.mod grid.mod initial.mo
 
 hybrid: $(OBJECTS) predictor.o
 	$(F90) -o hybrid $(OBJECTS) -O2
-	$(F90) -o pred predictor.o dimensions.o
+	$(F90) -o pred predictor.o dimensions.o inputs.o grid.o mult_proc.o var_arrays.o initial.o
 
 debug: $(OBJECTS) 
 	$(F90) -o hybrid_d $(OBJECTS) $(DEBUG)
