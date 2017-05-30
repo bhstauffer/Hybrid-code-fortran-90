@@ -102,6 +102,7 @@ module misc
 
       subroutine get_beta(Ni_tot_sys,beta)
             use dimensions
+            use mult_proc, only: my_rank
             use grid, only: qx,qy,qz
             use inputs, only: nf_init
             implicit none
@@ -113,7 +114,7 @@ module misc
             vol = ((qx(nx-1)-qx(1))*(qy(ny-1)-qy(1))*(qz(nz-1)-qz(1)))
             beta = (Ni_tot_sys/vol)/nf_init
             
-            write(*,*) 'beta....',beta
+            if (my_rank .eq. 0) write(*,*) 'beta....',beta
             
       end subroutine get_beta
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

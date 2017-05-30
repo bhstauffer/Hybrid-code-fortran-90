@@ -372,7 +372,7 @@ module part_init
                     2*sum(grav(1,1,1:k)*np_tot(1:k))*delz/np_top)
             enddo
             ! Load population 1, where vth is constant, but n varies
-            do l = 1, int(Ni_tot*ratio,4)
+            do l = 1, int(real(Ni_tot)*ratio,4)
                   xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
                   xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))
                   !do
@@ -393,7 +393,7 @@ module part_init
             !call MPI_BARRIER(MPI_COMM_WORLD,l)
             !stop
             ! load population 2, where n is constant, but vth varies
-            do l = int(Ni_tot*ratio,4)+1, Ni_tot
+            do l = int(real(Ni_tot)*ratio,4)+1, Ni_tot
                   xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
                   xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))
                   !do

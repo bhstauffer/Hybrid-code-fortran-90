@@ -66,61 +66,63 @@ module inputs
       contains
       
             subroutine readInputs()
+                 use mult_proc, only: my_rank
                  implicit none
                   
                  open(unit=100, file= 'inputs.dat', status='old')
                   
                  read(100,*) b0_init
-                 write(*,*) 'b0_init...........',b0_init
                  read(100,*) ion_amu
-                 write(*,*) 'amu...............',ion_amu
-                 read(100,*) m_pu
-                 write(*,*) 'm_pu..............',m_pu
-                 read(100,*) nf_init
-                 write(*,*) 'nf_init...........',nf_init
-                 read(100,*) amp
-                 write(*,*) 'amplitude.........', amp
-                 read(100,*) dt_frac
-                 write(*,*) 'dt_frac...........',dt_frac
-                 read(100,*) nt
-                 write(*,*) 'nt................',nt
-                 read(100,*) nout
-                 write(*,*) 'nout..............',nout
-                 read(100,*) vsw
-                 write(*,*) 'vsw...............',vsw
-                 read(100,*) vth
-                 write(*,*) 'vth...............',vth
-                 read(100,*) Ni_tot_frac
-                 write(*,*) 'Ni_tot_frac.......',Ni_tot_frac
-                 read(100,*) dx_frac
-                 write(*,*) 'dx_frac...........',dx_frac
-                 read(100,*) grad
-                 write(*,*) 'scale height......', grad
-                 read(100,*) height_stretch
-                 write(*,*) 'start stretching...', height_stretch
-                 read(100,*) zsf
-                 write(*,*) 'z stretch factor...', zsf
-                 read(100,*) nu_init_frac
-                 write(*,*) 'nu_init_frac......',nu_init_frac
-                 read(100,*) ppc
-                 write(*,*) 'part per cell.....',ppc
-                 read(100,*) loc
-                 write(*,*) 'location of transform...',loc
+                 read(100,*) m_pu               
+                 read(100,*) nf_init               
+                 read(100,*) amp                
+                 read(100,*) dt_frac              
+                 read(100,*) nt               
+                 read(100,*) nout                
+                 read(100,*) vsw                
+                 read(100,*) vth                
+                 read(100,*) Ni_tot_frac                
+                 read(100,*) dx_frac                 
+                 read(100,*) grad               
+                 read(100,*) height_stretch                 
+                 read(100,*) zsf                 
+                 read(100,*) nu_init_frac             
+                 read(100,*) ppc                
+                 read(100,*) loc                 
                  read(100,*) load_rate
-                 write(*,*) 'mass loading rate.....', load_rate
                  read(100,*) ratio
-                 write(*,*) 'RT population ratio...', ratio
                  etemp0 = 0
                  !read(100,*) etemp0
-                 !write(*,*) 'electon temperature (eV)...', etemp0
-                 read(100,*) boundx
-                 write(*,*) 'boundary condition......', boundx
+                 read(100,*) boundx                
                  read(100,*) out_dir
-                 write(*,*) 'output dir........',out_dir
+                 
                  
                  close(100)
-                 
-                
+                 if (my_rank .eq. 0) then
+                 write(*,*) 'b0_init...........',b0_init
+                 write(*,*) 'amu...............',ion_amu
+                 write(*,*) 'm_pu..............',m_pu
+                 write(*,*) 'nf_init...........',nf_init
+                 write(*,*) 'amplitude.........', amp
+                 write(*,*) 'dt_frac...........',dt_frac
+                 write(*,*) 'nt................',nt
+                 write(*,*) 'nout..............',nout
+                 write(*,*) 'vsw...............',vsw
+                 write(*,*) 'vth...............',vth
+                 write(*,*) 'Ni_tot_frac.......',Ni_tot_frac
+                 write(*,*) 'dx_frac...........',dx_frac
+                 write(*,*) 'scale height......', grad
+                 write(*,*) 'start stretching...', height_stretch
+                 write(*,*) 'z stretch factor...', zsf
+                 write(*,*) 'nu_init_frac......',nu_init_frac
+                 write(*,*) 'part per cell.....',ppc
+                 write(*,*) 'location of transform...',loc
+                 write(*,*) 'mass loading rate.....', load_rate
+                 write(*,*) 'RT population ratio...', ratio
+                 write(*,*) 'boundary condition......', boundx
+                 write(*,*) 'electon temperature (eV)...', etemp0
+                 write(*,*) 'output dir........',out_dir
+                 endif
             end subroutine readInputs
             
             
