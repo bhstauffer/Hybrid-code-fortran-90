@@ -32,6 +32,7 @@ module Var_Arrays
                   input_p(3), &
                   input_E, input_Eb, bndry_Eflux, prev_Etot, &
                   grav(nx,ny,nz), &            !gravity term
+                  !vbal(nz), &                  !thermal velocity for pressure balance
                   gradP(nx,ny,nz,3), &         !electron pressure gradient
                   mixed(nx,ny,nz), &           !Sum of mixed quantities
                   mix_cnt(nx,ny,nz)            !count of mixed quantities

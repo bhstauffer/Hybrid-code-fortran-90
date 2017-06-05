@@ -345,18 +345,19 @@ module part_init
             integer(4):: Ni_tot_1 
             real, intent(in):: mratio, mass, pbeta
             real:: npb(nz),npt(nz), np_tot(nz)  !need to establish analytical density profile                     
-            real:: vth, vx, vy, vz, grav0,vbal(nz)
-            integer:: l,m,i,j,k,flg, count1(nx,ny,nz)
-            real:: rnd, np_top,np_bottom, vol
+            real:: vth, vx, vy, vz, grav0, vbal(nx)
+            integer:: l,m,i,j,k,flg
+            real:: rnd, np_top,np_bottom, vol,mode
             !ratio = 0.75
             !Lo = 4.0*delz
+            mode = 1.0
             vth = 50.0!sqrt(pbeta*va**2)
             grav0= .4*vth**2/Lo  !0.4 originally
             beta = 1.0
-            vol = (qx(nx-1)-qx(1))*(qy(ny-1)-qy(1))*(qz(nz-1)-qz(1))!dx*dy*delz
+            vol = (qx(nx-1)-qx(1))*(qy(ny-1)-qy(1))*(qz(nz)-qz(1))!dx*dy*delz
             do i=1,nx
                do j=1,ny
-                  grav(i,j,:)=-grav0*(tanh((qz(:)-qz(nz/2) - 60*delz)/(10*delz))-tanh((qz(:)-qz(nz/2)+60*delz)/(10*delz)))
+                  grav(i,j,:)=-grav0*(tanh((qz(:)-qz(nz/2) - 130*delz)/(30*delz))-tanh((qz(:)-qz(nz/2)+130*delz)/(30*delz)))
                enddo
             enddo
             np_top = nf_init
@@ -375,7 +376,7 @@ module part_init
                   xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
                   xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))
                   !do
-                        xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
+                        xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz)-qz(1))
                   !      if (pad_ranf() .le. ((1.0-tanh((xp(l,3)-qz(nz/2))/(Lo)))/2.0) ) exit
                   !enddo
                   m_arr(l) = mass
@@ -387,7 +388,7 @@ module part_init
                   if (xp(l,3) .le. qz(nz/2)) mix_ind(l) = 0
                   vp(l,1) = (vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
                   vp(l,2) = (vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
-                  vp(l,3) = (vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vp(l,3) = (vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) + vth*cos(xp(l,1)*2*PI*mode/qx(nx))/cosh(-(xp(l,3)-qz(nz/2))/(8*delz))**2
             enddo
             !call MPI_BARRIER(MPI_COMM_WORLD,l)
             !stop
@@ -396,7 +397,7 @@ module part_init
                   xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
                   xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))
                   !do
-                        xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
+                        xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz)-qz(1))
                         !rnd = ((1.0-tanh((xp(l,3)-qz(nz/2))/(Lo)))/2.0)
                   !if (pad_ranf() .le. ((1.0+tanh((xp(l,3)-qz(nz/2))/(Lo)))/2.0)) exit
                   !enddo
@@ -408,9 +409,9 @@ module part_init
                   if (xp(l,3) .le. qz(nz/2)) mix_ind(l) = 0
                   vp(l,1) = (vbal(k))*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
                   vp(l,2) = (vbal(k))*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
-                  vp(l,3) = (vbal(k))*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vp(l,3) = (vbal(k))*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) + vbal(k)*cos(xp(l,1)*2*PI*m/qx(nx))/cosh(-(xp(l,3)-qz(nz/2))/(8*delz))**2
             enddo
-            count1 = 0
+!            count1 = 0
 !            do l = 1, Ni_tot/2
 !                  i = ijkp(l,1)
 !                  j = ijkp(l,2)
