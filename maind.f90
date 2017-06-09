@@ -317,7 +317,7 @@ program hybrid
  
             call move_ion_half()       !final ion move to n+1
 
-
+   !         call RT_ybound_set(vth)   ! RT set ybound so that field lines are fixed
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !       diagnositc output
             

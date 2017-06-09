@@ -1936,6 +1936,50 @@ module gutsp
             
       end subroutine get_pindex
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine RT_ybound_set(vth)
+! Resets the perpendicular momentum of the ions near the boundary so that field lines remain fixed.  Incomplete
+            use dimensions
+            use inputs, only: ratio, PI, dy
+            use grid, only: qy
+            use var_arrays, only: Ni_tot, xp,vp, vbal
+            use boundary, only: pad_ranf
+            implicit none
+            real, intent(in):: vth
+            integer:: i,j,k,l, loc
+            real:: rand1, width
+            !equation =1.0
+            width = 3.0
+            loc = 10
+            do l = 1,int(Ni_tot*ratio,4)
+            if (xp(l,2) .gt. qy(ny-loc)) then
+                  if (pad_ranf() .lt. exp(-(xp(l,2)-qy(ny))**2/(width*dy)**2) ) then
+                        vp(l,1) = (vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                        vp(l,3) = (vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  endif
+            else if (xp(l,2) .lt. qy(ny+loc)) then
+                  if (pad_ranf() .lt. exp(-(xp(l,2)-qy(1))**2/(width*dy)**2) ) then
+                        vp(l,1) = (vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                        vp(l,3) = (vth)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  endif
+            endif
+            enddo
+            do l = int(Ni_tot*ratio,4)+1, Ni_tot
+            if (xp(l,2) .gt. qy(ny-loc)) then
+                  if (pad_ranf() .lt. exp(-(xp(l,2)-qy(ny))**2/(width*dy)**2) ) then
+                        call get_pindex(i,j,k,l)
+                        vp(l,1) = (vbal(k))*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                        vp(l,3) = (vbal(k))*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  endif
+            else if (xp(l,2) .lt. qy(ny+loc)) then
+                  if (pad_ranf() .lt. exp(-(xp(l,2)-qy(1))**2/(width*dy)**2) ) then
+                        call get_pindex(i,j,k,l)
+                        vp(l,1) = (vbal(k))*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                        vp(l,3) = (vbal(k))*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  endif
+            endif
+            enddo
+      end subroutine
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine count_ppc()
 ! Count the number of particles in each cell
             use dimensions
