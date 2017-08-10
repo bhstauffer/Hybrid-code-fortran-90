@@ -61,7 +61,8 @@ module inputs
 !       Density scaling paramter, alpha, and ion particle array dims
 
       real:: alpha
-      
+
+      real:: Omega_i
       
       contains
       
@@ -171,7 +172,7 @@ module inputs
                   alpha = (mu0/1.0e3)*q*(q/mion)  !mH...determines particle scaling
                   
                   nrgrd = nint(grad*height_stretch)
-                  
+
             end subroutine initparameters
             
             

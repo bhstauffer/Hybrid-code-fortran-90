@@ -48,7 +48,7 @@ program hybrid
       write(filenum, '(I2)') my_rank
       
 
-      Ni_tot=(nx-2)*(ny-2)*(nz-2)*int(ppc/procnum) !1D
+      Ni_tot=int((nx-2)*(ny-2)*(nz-2)*ppc/procnum) !1D
       Ni_tot_0 = Ni_tot
       Ni_tot_sw = Ni_tot
       Ni_tot_sys = Ni_tot*procnum
@@ -62,7 +62,7 @@ program hybrid
 
 !      stop
       
-      mstart_n = 3 !number of times restarted
+      mstart_n = 0 !number of times restarted
       write(mstart, '(I1)') mstart_n
       
       ndiag = 0
@@ -238,6 +238,10 @@ program hybrid
 !            open(310,file=trim(out_dir)//'c.vp_'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
 !            open(315,file=trim(out_dir)//'c.mrat_'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
 !            open(317,file=trim(out_dir)//'c.beta_p__'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+!            open(305,file=trim(out_dir)//'c.xp_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
+!            open(310,file=trim(out_dir)//'c.vp_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
+!            open(315,file=trim(out_dir)//'c.mrat_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
+!            open(317,file=trim(out_dir)//'c.beta_p_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
        endif
        
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -336,8 +340,8 @@ program hybrid
                   if (my_rank .eq. 0) then
                         write(110) m
                         write(110) np
-                        write(115) m
-                        write(115) np_b
+!                        write(115) m
+!                        write(115) np_b
                         write(120) m
                         write(120) mixed
                         write(130) m
@@ -350,33 +354,33 @@ program hybrid
                         write(180) up
                         write(300) m
                         write(300) temp_p/1.6e-19  !output in eV
-!                        write(305) m
-!                        write(305) xp
-!                        write(310) m
-!                        write(310) vp
-!                        write(315) m
-!                        write(315) mrat
-!                        write(317) m
-!                        write(317) beta_p
-                        write(330) m
-                        write(330) up_t
-                        write(340) m
-                        write(340) up_b
-                        write(350) m
-                        write(350) mnp
+                        write(305) m
+                        write(305) xp
+                        write(310) m
+                        write(310) vp
+                        write(315) m
+                        write(315) mrat
+                        write(317) m
+                        write(317) beta_p
+!                        write(330) m
+!                        write(330) up_t
+!                        write(340) m
+!                        write(340) up_b
+!                        write(350) m
+!                        write(350) mnp
                         
                         ndiag = 0
                    endif
                    
                    if (my_rank .gt. 0) then
-!                        write(305) m
-!                        write(305) xp
-!                        write(310) m
-!                        write(310) vp
-!                        write(315) m
-!                        write(315) mrat
-!                        write(317) m
-!                        write(317) beta_p
+                        write(305) m
+                        write(305) xp
+                        write(310) m
+                        write(310) vp
+                        write(315) m
+                        write(315) mrat
+                        write(317) m
+                        write(317) beta_p
                         
                         ndiag = 0
                   endif

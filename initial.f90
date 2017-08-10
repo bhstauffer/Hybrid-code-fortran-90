@@ -6,8 +6,8 @@ module initial
       
       
       subroutine grd6_setup(b0,bt,b12,b1,b1p2,nu,input_Eb)
-            use inputs, only: q, mO, PI, b0_top, b0_bottom, b0_init, nu_init, km_to_m, mu0, delz, dy
-            use grid, only: dx_cell, dy_cell, dz_cell, qz, qy
+            use inputs, only: q, mO, PI, b0_top, b0_bottom, b0_init, nu_init, km_to_m, mu0, delz, dy, Lo
+            use grid, only: dx_cell, dy_cell, dz_cell, qz, qy, qx
             implicit none
             real, intent(out):: b0(nx,ny,nz,3), &
                                 bt(nx,ny,nz,3), &
@@ -24,35 +24,39 @@ module initial
             eoverm = q/mO
             mO_q = mO/q
             
-            phi = 2.0*PI/180.0
+            phi = 5.0*PI/180.0
             
-            b0_1x = b0_top*eoverm*sin(phi)
+            b0_1x = b0_init*eoverm*sin(phi)
             b0_2x = b0_bottom*eoverm*sin(phi)
             
-            b0_1y = -b0_top*eoverm*cos(phi)
+            b0_1y = b0_init*eoverm*cos(phi)
             b0_2y = -b0_bottom*eoverm*cos(phi)
             
             do i=1,nx
                   do j=1,ny
                         do k=1,nz
-                              b0(i,j,k,1) = 0.0*b0_init*eoverm
-                              b0(i,j,k,2) = 1.0*b0_init*eoverm
-                              b0(i,j,k,3) = 0.0*b0_init*eoverm
+                              b0(i,j,k,1) = b0_1x !*tanh((qz(k)-qz(nz/2))/Lo)
+                              b0(i,j,k,2) = b0_1y
+                              b0(i,j,k,3) = 0.0
                         enddo
                   enddo
-            enddo
-            
+            enddo            
+         
 !            input_Eb = 0.0
             do i=1,nx
                   do j=1,ny
                         do k= 1,nz
-                           nu(i,j,k) = nu_init*&
+                           nu(i,j,k) = 0.01*b0_init*eoverm*&
                                 (exp(-(qz(nz)-qz(k))**2/(5.0*delz)**2) + &
                                 exp(-(qz(1)-qz(k))**2/(5.0*delz)**2)) + nu_init
-                           nu(i,j,k) = b0_init*eoverm*&
-                                (exp(-(qy(ny)-qy(j))**2/(40.0*dy)**2) + &
-                                exp(-(qy(1)-qy(j))**2/(40.0*dy)**2)) + nu_init
 
+!                           nu(i,j,k) = b0_init*eoverm*&
+!                                (exp(-(qy(ny)-qy(j))**2/(40.0*dy)**2) + &
+!                                exp(-(qy(1)-qy(j))**2/(40.0*dy)**2)) + nu_init
+!                           nu(i,j,k) = b0_init*eoverm*&
+!                                (0.5*(1.0+tanh((qy(j)-qy(3*ny/4))/(15*dy))) + &
+!                                 0.5*(1.0-tanh((qy(j)-qy(1*ny/4))/(15*dy))))+ nu_init
+                           
 !                           nu(i,j,k) = nu_init
                               do m = 1,3
                                     bt(i,j,k,m) = b0(i,j,k,m)

@@ -141,7 +141,8 @@ module boundary
             do i=1,nx
                   do j=1,ny
                         do m=1,3
-                              b(i,j,nz,m) = b(i,j,nz-1,m)
+!                              b(i,j,nz-1,m) = b(i,j,nz-2,m)
+!                              b(i,j,nz,m) = b(i,j,nz-1,m)
 !                              b(i,j,1,m) = b(i,j,2,m)
                         enddo
                   enddo
@@ -304,6 +305,7 @@ module boundary
             do i=1,nx
                   do j=1,ny
                         b(i,j,1) = b(i,j,2)
+!                        b(i,j,nz-1) = b(i,j,nz-2)
                         b(i,j,nz) = b(i,j,nz-1)
                   enddo
             enddo    

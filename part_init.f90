@@ -80,17 +80,17 @@ module part_init
       subroutine load_Maxwellian(vth,Ni_tot_1,mass,mratio)
             use dimensions
             use boundary
-            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0,boundx, Lo
+            use inputs, only: PI, vsw, dx, dy, km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0,boundx, Lo, q, mO
             use grid, only: qx,qy,qz,dz_grid
             use gutsp
-            use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p,mix_ind
+            use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p,mix_ind,b0
             implicit none
             integer(4), intent(in):: Ni_tot_1 
             real, intent(in):: mratio, mass, vth
             real:: Lo_y
                                   
             integer:: disp
-            real:: vth2, vx, vy, vz, va, Temp, Tempcalc, pl_beta(nx,ny,nz)
+            real:: vth2, vx, vy, vz, va, va_x, Temp, Tempcalc, pl_beta(nx,ny,nz)
             integer:: l,m,i,j,k,ii,kk
             
             disp = 0 !Displacement of gradient
@@ -104,7 +104,11 @@ module part_init
                         enddo
                   enddo
             enddo
+            va_x = (mO/q)*b0(1,1,1,1)/sqrt(mu0*mion*nf_init/1e9)/1e3
             va = b0_init/sqrt(mu0*mion*nf_init/1e9)/1e3
+
+!            write(*,*) 'Va....',va
+!            stop
             
             do l = Ni_tot_1,Ni_tot
                   xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
@@ -149,7 +153,7 @@ module part_init
 
 !                  vth2=va*sqrt(pl_beta(ijkp(l,1),ijkp(l,2),ijkp(l,3)))
 
-                  vth2 = vth
+                  vth2 = vth + va_x*cosh((qz(nz/2)-qz(k))/Lo)**(-2) 
 
                   
                   vx = vth2*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
@@ -163,12 +167,13 @@ module part_init
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) =  vsw*(tanh((qz(k)-qz(nz/2))/(Lo))) + vx 
+                  vp(l,1) =  0.8*va*(tanh((qz(k)-qz(nz/2))/(Lo))) + vx !+ &
+!                       -(0.1*20*dx/(PI*Lo))*va*cosh((qz(nz/2)-qz(k))/Lo)**(-2)*tanh((qz(nz/2)-qz(k))/Lo)*cos(qx(i)*PI/(20*dx))
 !vx!+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
                   vp(l,2) = vy! +57.0*(1+0.5*cos(8*pi*qx(ii)/qx(nx-1)))* &
                        !(1+0.5*cos(8*pi*qz(kk)/qz(nz)))* &
                        !exp(-((qx(ii)-qx(nx/2))**2 + (qz(kk)-qz(nz/2))**2)/(10*dx)**2)
-                  vp(l,3) = vz 
+                  vp(l,3) = vz !+0.1*0.5*va*cosh((qz(nz/2)-qz(k))/Lo)**(-2)*sin(PI*qx(i)/(20*dx))
                   
                   do m=1,3
                         vp1(l,m) = vp(l,m)

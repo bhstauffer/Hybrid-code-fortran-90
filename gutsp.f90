@@ -125,16 +125,15 @@ module gutsp
             use dimensions
             use grid_interp
             use var_arrays, only: Ep,aj,up,btc,Ni_tot,ijkp,mrat,wght,grav, gradP, xp, vp,np
-            use inputs, only: mion,dx
-            use grid, only: qz
+            use inputs, only: mion,dx,Lo,omega_p,dy,vsw
+            use grid, only: qz,qy
             implicit none
             real:: ajc(nx,ny,nz,3), &     !aj at cell center
 !                   upc(nx,ny,nz,3), &   !up at cell center
                    gravc(nx,ny,nz), & !gravity at cell center
                    aa(3),bb(3),cc(3),aj3(3),up3(3),btc3(3), grav3, gradP3(3)    !dummy variables
             integer:: l,i,j,k,m,ip,jp,kp
-            
-            
+                        
             call face_to_center(aj,ajc)
 !            ajc(:,:,:,1) = ajc(:,:,:,1)/np(:,:,:)
 !            ajc(:,:,:,2) = ajc(:,:,:,2)/np(:,:,:)
@@ -211,26 +210,27 @@ module gutsp
                   cc(3) = aa(1)*bb(2) - aa(2)*bb(1)
                   
                   
-                  do m=1,2
-                        Ep(l,m) = cc(m) - gradP3(m)! - &
+!                  do m=1,2
+                        Ep(l,1) = cc(1) - gradP3(1) !- 0.1*omega_p*&
+!                                (0.5*(1.0+tanh((xp(l,2)-qy(ny-30))/(15*dy))) + &
+!                                 0.5*(1.0-tanh((xp(l,2)-qy(30))/(15*dy))))*(up3(1) - vsw*(tanh((xp(l,3)-qz(nz/2))/(Lo))))
+
+                        Ep(l,2) = cc(2) - gradP3(2)
+
 !                             2.0*exp(-(xp(l,3)-qz(nz))**2/(20*dx)**2)*(vp(l,m) - 0.0*up3(m)) - &
 !                             2.0*exp(-(xp(l,3)-qz(1))**2/(20*dx)**2)*(vp(l,m) - 0.0*up3(m)) !add in electron pressure term
-                        Ep(l,m) = Ep(l,m) * mrat(l)
+                        Ep(l,1) = Ep(l,1) * mrat(l)
+                        Ep(l,2) = Ep(l,2) * mrat(l)
                         !*(1.0-exp(-(xp(l,3)-qz(nz))**2/(20*dx)**2))* &
                         !     (1.0-exp(-(xp(l,3)-qz(1))**2/(20*dx)**2))
-                  enddo
+!                  enddo
                   Ep(l,3) = cc(3) - gradP3(3)! - &
 !                       2.0*exp(-(xp(l,3)-qz(nz))**2/(20*dx)**2)*(vp(l,3) - 0.0*up3(3)) - &
 !                       2.0*exp(-(xp(l,3)-qz(1))**2/(20*dx)**2)*(vp(l,3) - 0.0*up3(3))  !add in electron pressure term
                   Ep(l,3) = Ep(l,3) * mrat(l) + grav3*mrat(l)  ! Second term is for gravity
-!                  write(*,*) 'Electric field..............', Ep(l,m)*mrat(l)
-!                  write(*,*) 'Gravity field...............', grav3*mrat(l), gravc(2,2,2), sum(wght(l,:))
-!                  stop
-                 
 
                   
             enddo
-            !write(*,*) 'electric field, gravity....', maxval(Ep(:,:)), maxval(gravc(:,:,:))
             
       end subroutine get_Ep
       
