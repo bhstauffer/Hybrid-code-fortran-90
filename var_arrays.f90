@@ -20,6 +20,7 @@ module Var_Arrays
                   nu(nx,ny,nz), &       !collision frequency
                   Ep(Ni_max,3), &       !Ion particle electric field
                   E(nx,ny,nz,3), &        !E field from electron mom. eq.
+                  Ec(nx,ny,nz,3), &
                   temp_p(nx,ny,nz), &   !temperature
                   mnp(nx,ny,nz), &      !mass density
                   beta, beta_p(Ni_max), &       !variable for particle scaling

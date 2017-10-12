@@ -234,14 +234,14 @@ program hybrid
        endif
        
        if (my_rank .gt. 0) then
-!            open(305,file=trim(out_dir)//'c.xp_'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
-!            open(310,file=trim(out_dir)//'c.vp_'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
-!            open(315,file=trim(out_dir)//'c.mrat_'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
-!            open(317,file=trim(out_dir)//'c.beta_p__'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
-!            open(305,file=trim(out_dir)//'c.xp_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
-!            open(310,file=trim(out_dir)//'c.vp_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
-!            open(315,file=trim(out_dir)//'c.mrat_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
-!            open(317,file=trim(out_dir)//'c.beta_p_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
+            open(305,file=trim(out_dir)//'c.xp_'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(310,file=trim(out_dir)//'c.vp_'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(315,file=trim(out_dir)//'c.mrat_'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(317,file=trim(out_dir)//'c.beta_p__'//trim(filenum)//'_'//trim(mstart)//'.dat',status='unknown',form='unformatted')
+            open(305,file=trim(out_dir)//'c.xp_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
+            open(310,file=trim(out_dir)//'c.vp_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
+            open(315,file=trim(out_dir)//'c.mrat_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
+            open(317,file=trim(out_dir)//'c.beta_p_'//trim(filenum)//'.dat',status='unknown',form='unformatted')
        endif
        
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -338,6 +338,7 @@ program hybrid
                   call update_rho()
                   call update_mixed()
                   if (my_rank .eq. 0) then
+                        call face_to_center(E,Ec)
                         write(110) m
                         write(110) np
 !                        write(115) m
@@ -345,11 +346,11 @@ program hybrid
                         write(120) m
                         write(120) mixed
                         write(130) m
-                        write(130) bt
+                        write(130) btc
                         write(140) m
                         write(140) aj*alpha*np3
                         write(150) m
-                        write(150) E
+                        write(150) Ec
                         write(180) m
                         write(180) up
                         write(300) m
