@@ -35,7 +35,7 @@ module initial
             do i=1,nx
                   do j=1,ny
                         do k=1,nz
-                              b0(i,j,k,1) = b0_1x !*tanh((qz(k)-qz(nz/2))/Lo)
+                              b0(i,j,k,1) = b0_1x*tanh((qz(k)-qz(nz/2))/Lo)
                               b0(i,j,k,2) = b0_1y
                               b0(i,j,k,3) = 0.0
                         enddo
@@ -46,16 +46,17 @@ module initial
             do i=1,nx
                   do j=1,ny
                         do k= 1,nz
-                           nu(i,j,k) = 0.01*b0_init*eoverm*&
+                           nu(i,j,k) = 2*nu_init*b0_init*eoverm*&
                                 (exp(-(qz(nz)-qz(k))**2/(5.0*delz)**2) + &
                                 exp(-(qz(1)-qz(k))**2/(5.0*delz)**2)) + nu_init
 
 !                           nu(i,j,k) = b0_init*eoverm*&
 !                                (exp(-(qy(ny)-qy(j))**2/(40.0*dy)**2) + &
 !                                exp(-(qy(1)-qy(j))**2/(40.0*dy)**2)) + nu_init
-!                           nu(i,j,k) = b0_init*eoverm*&
-!                                (0.5*(1.0+tanh((qy(j)-qy(3*ny/4))/(15*dy))) + &
-!                                 0.5*(1.0-tanh((qy(j)-qy(1*ny/4))/(15*dy))))+ nu_init
+
+!                           nu(i,j,k) = nu(i,j,k) + b0_init*eoverm*&
+!                                (0.5*(1.0+tanh((qy(j)-qy(2*ny/3))/(15*dy))) + &
+!                                 0.5*(1.0-tanh((qy(j)-qy(1*ny/3))/(15*dy))))!+ nu_init
                            
 !                           nu(i,j,k) = nu_init
                               do m = 1,3

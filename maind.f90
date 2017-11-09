@@ -29,6 +29,7 @@ program hybrid
       integer:: i,j,k,n,ntf !looping indicies
       real (real64) :: dp
       integer, parameter :: dp_kind = kind(dp)
+      integer(4):: Nif,Nif2
       
 !      filenum = (/'1 ','2 ','3 ','4 ','5 ','6 ','7 ','8 ','9 ', &
 !            '10','11','12','13','14','15','16'/)
@@ -103,7 +104,18 @@ program hybrid
       call MPI_BARRIER(MPI_COMM_WORLD,ierr)
     
       !Initialize particles: use load Maxwellian, or sw_part_setup, etc.
-      call load_Maxwellian(vth,1,mion,1.0)
+!      call load_Maxwellian(vth,1,mion,1.0)
+      
+
+      call init_KH_part()
+
+!      Nif = nint(Ni_tot/3.)
+!      Nif2 = nint(Ni_tot*2/3.)
+
+!      call load_Maxwellian_KH(vth,1,Nif,mion,1.0,1.,1)
+!      call load_Maxwellian_KH(vth,Nif+1,Nif2,mion,1.0,1.,2)
+!      call load_Maxwellian_KH(2*vth,Nif2+1,Ni_tot,4*mion,0.25,1000.,2)
+      
 
       if (my_rank .eq. 0) then
             call check_inputs()     
