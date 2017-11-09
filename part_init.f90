@@ -388,7 +388,7 @@ module part_init
        
         m1 = 1.0
         m2 = 1.0
-        m3 = 1.0
+        m3 = 2.0
 
         vth1 = sqrt((m2/m1)*(N2/N1)*(beta1/beta2)*vth2*vth2 + (m3/m1)*(N3/N1)*(beta1/beta3)*vth3*vth3)
 !        vth2 = sqrt((m1/m2)*(N1/N2)*(beta2/beta1)*vth1*vth1 + (m3/m2)*(N3/N2)*(beta2/beta3)*vth3*vth3)
