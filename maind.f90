@@ -30,6 +30,7 @@ program hybrid
       real (real64) :: dp
       integer, parameter :: dp_kind = kind(dp)
       integer(4):: Nif,Nif2
+      integer:: ndiag_part
       
 !      filenum = (/'1 ','2 ','3 ','4 ','5 ','6 ','7 ','8 ','9 ', &
 !            '10','11','12','13','14','15','16'/)
@@ -45,6 +46,7 @@ program hybrid
       call system_clock(t1, cnt_rt)
       
 !Initialize all variables
+
 
       write(filenum, '(I2)') my_rank
       
@@ -67,6 +69,7 @@ program hybrid
       write(mstart, '(I1)') mstart_n
       
       ndiag = 0
+      ndiag_part = 0
       prev_Etot = 1.0
 !      nuei = 0.0
 
@@ -345,6 +348,7 @@ program hybrid
             endif
             
             ndiag = ndiag+1
+            ndiag_part = ndiag_part + 1
             if (ndiag .eq. nout) then
                   call get_temperature()
                   call update_rho()
@@ -367,14 +371,15 @@ program hybrid
                         write(180) up
                         write(300) m
                         write(300) temp_p/1.6e-19  !output in eV
-                        write(305) m
-                        write(305) xp
-                        write(310) m
-                        write(310) vp
-                        write(315) m
-                        write(315) mrat
-                        write(317) m
-                        write(317) beta_p
+!                        write(305) m
+!                        write(305) xp
+!                        write(310) m
+!                        write(310) vp
+!                        write(315) m
+!                        write(315) mrat
+!                        write(317) m
+!                        write(317) beta_p
+
 !                        write(330) m
 !                        write(330) up_t
 !                        write(340) m
@@ -382,10 +387,14 @@ program hybrid
 !                        write(350) m
 !                        write(350) mnp
                         
-                        ndiag = 0
-                   endif
+                     endif
+                     ndiag = 0
                    
-                   if (my_rank .gt. 0) then
+                  endif
+
+                  
+                  if (ndiag_part .eq. nout*4) then
+                     if (my_rank .eq. 0) then
                         write(305) m
                         write(305) xp
                         write(310) m
@@ -394,11 +403,24 @@ program hybrid
                         write(315) mrat
                         write(317) m
                         write(317) beta_p
-                        
-                        ndiag = 0
+                        endif
+
+                     if (my_rank .gt. 0) then
+                        write(305) m
+                        write(305) xp
+                        write(310) m
+                        write(310) vp
+                        write(315) m
+                        write(315) mrat
+                        write(317) m
+                        write(317) beta_p
+                        endif
+
+                     ndiag_part = 0
                   endif
-                   
-            endif
+
+
+
 !            write(*,*) 'minimum density.....', minval(np(:,:,:))
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !       Write restart file
