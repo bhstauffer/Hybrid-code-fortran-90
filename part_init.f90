@@ -322,7 +322,7 @@ module part_init
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) =  0.8*va*(tanh((qz(k)-qz(nz/2))/(Lo))) + vx !+ &
+                  vp(l,1) =  1.0*va*(tanh((qz(k)-qz(nz/2))/(Lo))) + vx !+ &
 !                       -(0.1*20*dx/(PI*Lo))*va*cosh((qz(nz/2)-qz(k))/Lo)**(-2)*tanh((qz(nz/2)-qz(k))/Lo)*cos(qx(i)*PI/(20*dx))
 !vx!+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
                   vp(l,2) = vy! +57.0*(1+0.5*cos(8*pi*qx(ii)/qx(nx-1)))* &
@@ -370,7 +370,7 @@ module part_init
 
         beta1 = 1.0
         beta2 = 2.0
-        beta3 = 10.0
+        beta3 = 40.0
 
         N_1 = Ni_tot
         N_2 = nint(Ni_tot*2.0)
@@ -383,7 +383,7 @@ module part_init
 
         vth1 = vth
         vth2 = vth
-        vth3 = 2*vth
+        vth3 = 4*vth
 
        
         m1 = 1.0
