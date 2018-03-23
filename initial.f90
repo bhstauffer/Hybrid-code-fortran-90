@@ -54,9 +54,9 @@ module initial
 !                                (exp(-(qy(ny)-qy(j))**2/(40.0*dy)**2) + &
 !                                exp(-(qy(1)-qy(j))**2/(40.0*dy)**2)) + nu_init
 
-!                           nu(i,j,k) = nu(i,j,k) + b0_init*eoverm*&
-!                                (0.5*(1.0+tanh((qy(j)-qy(2*ny/3))/(15*dy))) + &
-!                                 0.5*(1.0-tanh((qy(j)-qy(1*ny/3))/(15*dy))))!+ nu_init
+                           nu(i,j,k) = nu(i,j,k) + b0_init*eoverm*&
+                                (0.5*(1.0+tanh((qy(j)-qy(3*ny/4))/(15*dy))) + &
+                                 0.5*(1.0-tanh((qy(j)-qy(1*ny/4))/(15*dy))))!+ nu_init
                            
 !                           nu(i,j,k) = nu_init
                               do m = 1,3

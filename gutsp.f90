@@ -211,9 +211,9 @@ module gutsp
                   
                   
 !                  do m=1,2
-                        Ep(l,1) = cc(1) - gradP3(1) !- 0.1*omega_p*&
-!                                (0.5*(1.0+tanh((xp(l,2)-qy(ny-30))/(15*dy))) + &
-!                                 0.5*(1.0-tanh((xp(l,2)-qy(30))/(15*dy))))*(up3(1) - vsw*(tanh((xp(l,3)-qz(nz/2))/(Lo))))
+                        Ep(l,1) = cc(1) - gradP3(1) - 0.1*omega_p*&
+                                (0.5*(1.0+tanh((xp(l,2)-qy(3.*ny/4.))/(15*dy))) + &
+                                 0.5*(1.0-tanh((xp(l,2)-qy(1.*ny/4.))/(15*dy))))*(up3(1) - vsw*(tanh((xp(l,3)-qz(nz/2))/(Lo))))
 
                         Ep(l,2) = cc(2) - gradP3(2)
 
