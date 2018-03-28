@@ -369,13 +369,14 @@ module part_init
       
 
         beta1 = 1.0
-        beta2 = 2.0
-        beta3 = 40.0
+        beta2 = 1.0
+        beta3 = 1.0
 
         N_1 = Ni_tot
-        N_2 = nint(Ni_tot*2.0)
-        N_3 = nint(Ni_tot*3.)
-        Ni_tot = N_3
+        N_2 = nint(2.0*Ni_tot)
+        Ni_tot = N_2
+        !        N_3 = nint(Ni_tot*0.5)
+        !        Ni_tot = N_3
 
         N1 = real(N_1)
         N2 = real(N_2) - real(N_1)
@@ -383,16 +384,16 @@ module part_init
 
         vth1 = vth
         vth2 = vth
-        vth3 = 4*vth
+        vth3 = vth
 
        
         m1 = 1.0
         m2 = 1.0
-        m3 = 1.1
+        m3 = 1.0
 
-!        vth1 = sqrt((m2/m1)*(N2/N1)*(beta1/beta2)*vth2*vth2 + (m3/m1)*(N3/N1)*(beta1/beta3)*vth3*vth3)
-        vth2 = sqrt((m1/m2)*(N1/N2)*(beta2/beta1)*vth1*vth1 - (m3/m2)*(N3/N2)*(beta2/beta3)*vth3*vth3)
-!        vth3 = sqrt((m2/m3)*(N2/N3)*(beta3/beta2)*vth2*vth2 + (m1/m3)*(N1/N3)*(beta3/beta1)*vth1*vth1)
+!!        vth1 = sqrt((m2/m1)*(N2/N1)*(beta1/beta2)*vth2*vth2 + (m3/m1)*(N3/N1)*(beta1/beta3)*vth3*vth3)
+!        vth2 = sqrt((m1/m2)*(N1/N2)*(beta2/beta1)*vth1*vth1 - (m3/m2)*(N3/N2)*(beta2/beta3)*vth3*vth3)
+!!        vth3 = sqrt((m2/m3)*(N2/N3)*(beta3/beta2)*vth2*vth2 + (m1/m3)*(N1/N3)*(beta3/beta1)*vth1*vth1)
 
 
         write(*,*) 'vth...',vth1,vth2,vth3
@@ -401,7 +402,7 @@ module part_init
 
         call load_Maxwellian_KH(vth1,1,N_1,m1*mion,1/m1,beta1,1)
         call load_Maxwellian_KH(vth2,N_1+1,N_2,m2*mion,1/m2,beta2,2)
-        call load_Maxwellian_KH(vth3,N_2+1,N_3,m3*mion,1/m3,beta3,2)
+!        call load_Maxwellian_KH(vth3,N_2+1,N_3,m3*mion,1/m3,beta3,2)
         
       end subroutine init_KH_part
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

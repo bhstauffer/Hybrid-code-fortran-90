@@ -1,7 +1,7 @@
 
 @get_const
 
-dir = './run_34/'
+dir = './run_35/'
 read_para,dir
 restore,filename=dir+'para.sav'
 read_coords,dir,x,y,z
@@ -12,7 +12,7 @@ cwpi = cwpi/1e3
 
 dx = x(1)-x(0)
 
-nfrm = 9
+nfrm = 15
 c_read_3d_vec_m_32,dir,'c.b1',nfrm,b1
 
 
@@ -38,21 +38,21 @@ p = plot(freq, f, /YLOG, /xlog,XTITLE='$k_\perp$',/xsty,/ysty)
 xrange=[min(freq),max(freq)]
 yrange=[min(f),max(f)]
 p.ytitle='Power'
-p = plot([2*!pi/cwpi,2*!pi/cwpi],[min(f),max(f)],':',/overplot,/current)
+p = plot([!pi/cwpi,!pi/cwpi],[min(f),max(f)],':',/overplot,/current)
 
-fkx = 5e-9*freq^(-5./3.)
+fkx = 2e-9*freq^(-5./3.)
 
-wh = where(freq lt 2*!pi/cwpi)
+wh = where(freq lt !pi/cwpi)
 p = plot(freq(wh),fkx(wh),/overplot,/current,'2r')
 
-fkx = 4e-11*freq^(-8./3.)
+fkx = 4e-12*freq^(-8./3.)
 
-wh = where(freq gt 2*!pi/cwpi)
+wh = where(freq gt !pi/cwpi)
 p = plot(freq(wh),fkx(wh),/overplot,/current,'2b')
 
-fkx = 3e-10*freq^(-7./3.)
+fkx = 3e-11*freq^(-7./3.)
 
-wh = where(freq gt 2*!pi/cwpi)
+wh = where(freq gt !pi/cwpi)
 p = plot(freq(wh),fkx(wh),/overplot,/current,'2g')
 
 p.save,'ps_kaw.png'
