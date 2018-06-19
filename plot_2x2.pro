@@ -38,7 +38,8 @@ pro plot_2x2,nf,yslc
   device,decomposed=0
   loadct,27
   
-  dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_14/'
+;  dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_14/'
+  dir = './run_36/'
   
   nframe=nf
   read_para,dir
@@ -67,7 +68,7 @@ pro plot_2x2,nf,yslc
   stream = video.addvideostream(xsz, ysz, framerate)
   
   
-  openr,1,'./tmp1/c.test_part.dat',/f77_unformatted
+  openr,1,dir+'/c.test_part.dat',/f77_unformatted
   xpart = fltarr(3,3)
   readu,1,xpart
   xp = xpart

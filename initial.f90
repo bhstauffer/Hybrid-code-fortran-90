@@ -24,7 +24,7 @@ module initial
             eoverm = q/mO
             mO_q = mO/q
             
-            phi = 5.0*PI/180.0
+            phi = 2.0*PI/180.0
             
             b0_1x = b0_init*eoverm*sin(phi)
             b0_2x = b0_bottom*eoverm*sin(phi)
@@ -35,7 +35,7 @@ module initial
             do i=1,nx
                   do j=1,ny
                         do k=1,nz
-                              b0(i,j,k,1) = b0_1x*tanh((qz(k)-qz(nz/2))/Lo)
+                              b0(i,j,k,1) = b0_1x!*tanh((qz(k)-qz(nz/2))/Lo)
                               b0(i,j,k,2) = b0_1y
                               b0(i,j,k,3) = 0.0
                         enddo

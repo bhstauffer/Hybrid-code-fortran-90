@@ -87,7 +87,7 @@ ach = 0.7
 ;file_dir = '/Volumes/MacD97-2/hybrid/3d_buf/run_test/'
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_29/'
-dir = './run_35/'
+dir = './run_37/'
 ;dir = '/Volumes/Scratch/hybrid/KH3D/run_1_periodic/'
 
 mrestart = ''
@@ -138,6 +138,7 @@ swap_arr_s,mixed,nx,ny,nz
 swap_arr_s,np,nx,ny,nz
 swap_arr_s,temp_p,nx,ny,nz
 swap_arr_s,edotb,nx,ny,nz
+swap_arr_s,efld,nx,ny,nz
 
 xx = x
 yy = z
@@ -670,9 +671,9 @@ end
 ;main program
 ;--------------------------------------------------------------------------
 
-nfrm = 15
+nfrm = 28
 
-for i = 1,nfrm do begin
+for i = 23,nfrm do begin
    plot_isosurface,i,/tubes
 endfor
 

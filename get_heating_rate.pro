@@ -24,10 +24,11 @@ end
 
 @get_const
 
-dir = './run_35/'
+dir = './run_38/'
 read_para,dir
 restore,filename=dir+'para.sav'
 read_coords,dir,x,y,z
+
 
 wpi = sqrt(q*q*np_top/1e9/(epo*mproton))
 cwpi = 3e8/wpi
@@ -35,13 +36,16 @@ cwpi = cwpi/1e3
 
 dx = x(1)-x(0)
 
-nfr = 19
+nfr = 10
 poft = 0.0
 for i = 1,nfr do begin
    nfrm = i
-;c_read_3d_vec_m_32,dir,'c.b1',nfrm,b1
+   c_read_3d_vec_m_32,dir,'c.b1',nfrm,b1
+   c_read_3d_vec_m_32,dir,'c.up',nfrm,up
    c_read_3d_m_32,dir,'c.temp_p',nfrm,tp
    c_read_3d_m_32,dir,'c.np',nfrm,np
+
+   b1 = b1*mproton/q
    
    p = np*tp
    
@@ -51,13 +55,28 @@ for i = 1,nfr do begin
    ;plot_image,reform(p(*,ny/2,*)),x,z,1.0,1,'p'
    
    sz = size(parr)
-   print,total(parr1)/(float(sz(1))*11.)
+;   print,total(parr1)/(float(sz(1))*11.)
    poft = [poft,total(parr1)/(float(sz(1))*11.)]
    
 endfor
-tm = dt*findgen(n_elements(poft(1:*)))
+tm = dt*100.*findgen(n_elements(poft(1:*)))
 
 plot,tm,poft(1:*),yrange=[min(poft(1:*)),max(poft(1:*))]
+
+dEdt = (6.8e18-6.3e18)/300
+print,dEdt*1.6e-19/1e9
+
+bx = b1(*,ny/2,nz/2,0)
+bz = b1(*,ny/2,nz/2,2)
+ux = up(*,ny/2,nz/2,0)*1e3
+uz = up(*,ny/2,nz/2,2)*1e3
+dens = np(*,ny/2,nz/2)/1e9
+temp_p = tp(*,ny/2,nz/2)
+
+print,'bx...',b1(*,ny/2,nz/2,0)
+
+x = x*1e3
+save,filename='KH_profiles.sav',x,bx,bz,ux,uz,dens,temp_p
 
 stop
 

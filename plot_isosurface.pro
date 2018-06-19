@@ -83,7 +83,7 @@ pro plot_isosurface,nfrm,LINES=lines, TUBES=tubes
 temp_val = 150 ;eV
 den_val = 0.5 ;c
 b_val = 0.0e-9
-edotb_val = 0.05
+edotb_val = 0.025
 
 Rio = 1200.
 ctbl = 13
@@ -92,7 +92,7 @@ ach = 0.7
 ;file_dir = '/Volumes/MacD97-2/hybrid/3d_buf/run_test/'
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_9/'
-dir = './run_35/'
+dir = './run_38/'
 ;dir = '/Volumes/Scratch/hybrid/KH3D/run_3_periodic/'
 ;dir = './tmp1/'
 
@@ -176,13 +176,13 @@ xtit = OBJ_NEW('IDLgrText','x',baseline = [1.0,0,0], $
                alignment=0.5,/enable_formatting,color=!color.black,$
               char_dimensions = [10,10])
 
-ytit = OBJ_NEW('IDLgrText','y',baseline = [0,1.0,0], $
+ytit = OBJ_NEW('IDLgrText','z',baseline = [0,1.0,0], $
                updir = [-1.0,0,0], locations=[-10,ny-5,0],$
                char_dimensions=[10,10],$
                alignment=0.5,/enable_formatting,color=!color.black)
 
 
-ztit = OBJ_NEW('IDLgrText','z',baseline = [1.0,0,0.0], $
+ztit = OBJ_NEW('IDLgrText','y',baseline = [1.0,0,0.0], $
                updir = [0.0,0.0,1.0],locations=[-10,0,nz-5],$
                char_dimensions=[10,10],$
                alignment=0.5,/enable_formatting,color=!color.black)
@@ -231,7 +231,7 @@ iseed=0L
 
 ;for k = nz/2+1,nz/2+2,4 do begin
 ;for j = ny/2-2,ny/2+2,3 do begin
-for j = 53,57,3 do begin
+for j = 52,56,3 do begin
 ;j = 29
    for i = 10,nx-10,4 do begin
       print,i,j
@@ -482,7 +482,7 @@ outverts=MESH_SMOOTH(outverts,outconn)
 
 oedotb_m = OBJ_NEW('IDLgrPolygon',outverts, POLYGONS=outconn, $
                           SHADING = 1,alpha_channel=ach,palette=opalette,$
-	  color=!color.blue)
+	  color=!color.red)
 
 oModel->Add, oedotb_m
 endif

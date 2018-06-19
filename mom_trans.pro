@@ -1,18 +1,18 @@
 pro plot_image,img,x,y,sclf,loc,tit
 
-   im = image(img(*,*),x,y,/current,rgb_table=33,layout=[2,1,loc],font_size=12,aspect_ratio=1.0)
+   im = image(img(*,*),x,y,/current,rgb_table=33,layout=[2,1,loc],font_size=14,aspect_ratio=1.0)
 
-   xax = axis('x',axis_range=[min(x),max(x)],location=[0,min(y(*))],thick=2,tickdir=1,target=im,tickfont_size=12)
-   yax = axis('y',axis_range=[min(y),max(y)],location=[0,0],thick=2,tickdir=1,target=im,tickfont_size=12)
+   xax = axis('x',axis_range=[min(x),max(x)],location=[0,min(y(*))],thick=2,tickdir=1,target=im,tickfont_size=14)
+   yax = axis('y',axis_range=[min(y),max(y)],location=[0,0],thick=2,tickdir=1,target=im,tickfont_size=14)
 
    im.xtitle='$x (c/\omega_{pi})$'
-   im.ytitle='$z (c/\omega_{pi})$'
+   im.ytitle='$y (c/\omega_{pi})$'
 
 ;   ct = colorbar(target = im,title=tit,orientation=1,textpos=1,font_size=12);,$
 ;                 position=[max(x), min(y),
 ;                 0.05*(max(x)-min(x)),max(y)],/data)
    im.scale,sclf,sclf
-   ct = colorbar(target = im,title=tit,textpos=1,font_size=12,orientation=1,$
+   ct = colorbar(target = im,title=tit,textpos=1,font_size=14,orientation=1,$
                  position=[1.01,0,1.06,1.0],/relative)
 
    
@@ -20,7 +20,7 @@ pro plot_image,img,x,y,sclf,loc,tit
 end
 
 
-pro mom_trans,nf,slc,rhouu,bb,TM,TR,x,y,w
+pro mom_trans,nf,slc,rhouu,bb,TM,TR,x,y,w,dt,omega_p
 
 ;1 = xy
 ;2 = yz
@@ -45,7 +45,7 @@ loadct,27
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_30/'
 ;dir = '/Volumes/Scratch/hybrid/KH3d/run_3_periodic/'
-dir='./run_35/'
+dir='./run_36/'
 
 nframe=nf
 read_para,dir
@@ -53,6 +53,9 @@ restore,filename=dir+'para.sav'
 read_coords,dir,x,y,z
 @get_const
 
+omega_p = q*B0_top/mp
+print,omega_p,dt,0.08/omega_p
+;stop
 
 ;XINTERANIMATE, SET=[xsz,ysz, nframe], /SHOWLOAD 
 ;w = window(dimensions=[xsz,ysz],/buffer)   
@@ -231,8 +234,8 @@ end
 
 ;main program
 
-xsz = 1200./2
-ysz = 800./2
+xsz = 700.
+ysz = 800.
 
 ;XINTERANIMATE, SET=[xsz,ysz, nframe], /SHOWLOAD 
 w = window(dimensions=[xsz,ysz],/buffer)   
@@ -244,25 +247,29 @@ bb_arr = 0.0
 
 ntot = 239*129
 
-for i = 1,15 do begin
-   mom_trans,i,55,rhouu,bb,TM,TR,x,y,w
-;   plot_image,TM,x,y,0.8,1,'$T^M_{xz}$'
-;   plot_image,TR,x,y,0.8,2,'$T^R_{xz}$'
+for i = 1,28 do begin
+   mom_trans,i,55,rhouu,bb,TM,TR,x,y,w,dt,omega_p
+   plot_image,TM,x,y,0.8,1,'$T^M_{xz}$'
+   plot_image,TR,x,y,0.8,2,'$T^R_{xz}$'
 
-;   w.save,'gifs_mom_trans/gif'+strcompress(10+i)+'.gif'
+   w.save,'gifs_mom_trans/gif'+strcompress(10+i)+'.gif'
 
    rhouu_arr = [rhouu_arr,rhouu]
    bb_arr = [bb_arr,bb]
 endfor
 
-p=plot(bb_arr/ntot,'b',name='$B_xB_z$')
-p1=plot(rhouu_arr/ntot,'r',name='$\rho u_x u_z$',/overplot)
-p2 = plot((bb_arr+rhouu_arr)/ntot,/overplot,name='Total')
-print,'max mom trans...',(bb_arr+rhouu_arr)/ntot
-p2.ytitle='Normalized momentum flux %'
-p2.xtitle='time'
+tm = dt*100*findgen(n_elements(bb_arr))*omega_p
 
-l = legend(target=[p,p1,p2],position=[0.33,0.83],/normal)
+p=plot(tm,bb_arr/ntot/1e-13,'b',name='$B_xB_z \mu_o^{-1}$',/xsty,font_size=18)
+p1=plot(tm,rhouu_arr/ntot/1e-13,'r',name='$\rho u_x u_z$',/overplot)
+p2 = plot(tm,(bb_arr+rhouu_arr)/ntot/1e-13,/overplot,name='Total')
+print,'max mom trans...',(bb_arr+rhouu_arr)/ntot
+p2.ytitle='Momentum flux (10$^{-13}$ N/m$^2$)'
+p2.xtitle='time ($\Omega_i^{-1}$)'
+
+print,'dt...',dt
+
+l = legend(target=[p,p1,p2],position=[0.33,0.83],/normal,font_size=16)
 
 l.save,'mom_trans_stress.png'
 
