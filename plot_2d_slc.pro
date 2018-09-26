@@ -28,8 +28,8 @@ pro plot_2d_slc,nf,slc,pln
 
 
   sclf = 0.8
-  xsz = 2000.
-  ysz = 1200.
+  xsz = 1600.
+  ysz = 1000.
   file = 'ion_cyclotron.mp4'
   width = xsz
   height = ysz
@@ -43,7 +43,7 @@ loadct,27
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_24/'
 ;dir = '/Volumes/Scratch/hybrid/KH3D/run_1_periodic/'
-dir = './run_38/'
+dir = './run_test/'
 
 nrestart = ''
 

@@ -92,7 +92,7 @@ ach = 0.7
 ;file_dir = '/Volumes/MacD97-2/hybrid/3d_buf/run_test/'
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_9/'
-dir = './run_38/'
+dir = './run_36/'
 ;dir = '/Volumes/Scratch/hybrid/KH3D/run_3_periodic/'
 ;dir = './tmp1/'
 

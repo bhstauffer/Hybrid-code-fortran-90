@@ -39,7 +39,7 @@ pro plot_3x3,nf,yslc
   loadct,27
   
 ;  dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_30/'
-  dir = './run_36/'
+  dir = './run_test/'
   
   nframe=nf
   read_para,dir

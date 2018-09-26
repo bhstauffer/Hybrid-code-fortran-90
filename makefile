@@ -1,4 +1,4 @@
-F90 = mpif90 -i4 -real-size 32 -O2 -mcmodel=large
+F90 = mpif90 -i4 -real-size 32 -O2 -mcmodel=medium
 #F90 = mpif90 -i4 -real-size 32 -O2 -mmacosx-version-min=10.6
 Fone = ifort -i4 -real-size 32 -O2 -mcmodel=medium -openmp
 

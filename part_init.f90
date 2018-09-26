@@ -232,7 +232,7 @@ module part_init
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      subroutine load_Maxwellian_KH(vth,Ni_tot_1,Ni_tot_2,mass,mratio,beta_part,region)
+      subroutine load_Maxwellian_KH(vth,Ni_tot_1,Ni_tot_2,mass,mratio,beta_part,rL,region)
 !!!!!! Adds particles to bottom if .true. else add to top.
 
             use dimensions
@@ -244,7 +244,7 @@ module part_init
             implicit none
             integer(4), intent(in):: Ni_tot_1, Ni_tot_2
             real, intent(in):: beta_part
-            real, intent(in):: mratio, mass, vth
+            real, intent(in):: mratio, mass, vth, rL
             real:: Lo_y
                                   
             integer:: disp
@@ -283,10 +283,12 @@ module part_init
                   endif
 
                   if (region .eq. 1) then
-                     rnd = ((1.0-tanh((xp(l,3)-qz(nz/2)-delz*0.5)/(Lo)))/2.0)  !for bottom
+!                     rnd = ((1.0-tanh((xp(l,3)-qz(nz/2)-delz*0.5)/(Lo)))/2.0)  !for bottom
+                     rnd = ((1.0-tanh((xp(l,3)-qz(nz/2)-delz*0.5)/(rL)))/2.0)  !for bottom
                   endif
                   if (region .eq. 2) then
-                     rnd = (1.0+tanh((xp(l,3)-qz(nz/2)-delz*0.5)/(Lo)))/2.0 !for top
+!                     rnd = (1.0+tanh((xp(l,3)-qz(nz/2)-delz*0.5)/(Lo)))/2.0 !for top
+                     rnd = (1.0+tanh((xp(l,3)-qz(nz/2)-delz*0.5)/(rL)))/2.0 !for top
                   endif
                   if (pad_ranf() .le. rnd) flg = 1
                   
@@ -322,8 +324,8 @@ module part_init
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) =  0.8*va*(tanh((qz(k)-qz(nz/2))/(Lo))) + vx !+ &
-!                       -(0.1*20*dx/(PI*Lo))*va*cosh((qz(nz/2)-qz(k))/Lo)**(-2)*tanh((qz(nz/2)-qz(k))/Lo)*cos(qx(i)*PI/(20*dx))
+                  vp(l,1) =  0.8*va*(tanh((qz(k)-qz(nz/2))/(Lo))) + vx + &
+                       -0.0*va*cosh((qz(nz/2)-qz(k))/Lo)**(-2)*tanh((qz(nz/2)-qz(k))/Lo)*cos(qx(i)*PI/(0.5*nx*dx))
 !vx!+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
                   vp(l,2) = vy! +57.0*(1+0.5*cos(8*pi*qx(ii)/qx(nx-1)))* &
                        !(1+0.5*cos(8*pi*qz(kk)/qz(nz)))* &
@@ -366,43 +368,52 @@ module part_init
         real:: m1, m2, m3
         real:: beta1, beta2, beta3          !macro scaling parameters
         real:: N1, N2, N3    !actual number of particles
-      
+        real:: d1, d2, d3    !actual number density
+        real:: rL1, rL2, rL3 !gyroradius
 
+        d1 = 0.4
+        d2 = 0.2
+        d3 = 0.01
+        
         beta1 = 1.0 
-        beta2 = 1.0
-        beta3 = 1.0
+        beta2 = d1/d2
+        beta3 = d1/d3
 
         N_1 = Ni_tot
         N_2 = nint(2.0*Ni_tot)
-        Ni_tot = N_2
-!        N_3 = nint(2.0*Ni_tot)
-!        Ni_tot = N_3
+!        Ni_tot = N_2
+        N_3 = nint(3.0*Ni_tot)
+        Ni_tot = N_3
 
         N1 = real(N_1)
         N2 = real(N_2) - real(N_1)
-!        N3 = real(N_3) - real(N_2)
+        N3 = real(N_3) - real(N_2)
 
         vth1 = vth
         vth2 = vth
-!        vth3 = vth
+        vth3 = vth
 
-       
         m1 = 1.0
         m2 = 1.0
-!        m3 = 2.0
-
+        m3 = 8.0
+        
 !!        vth1 = sqrt((m2/m1)*(N2/N1)*(beta1/beta2)*vth2*vth2 + (m3/m1)*(N3/N1)*(beta1/beta3)*vth3*vth3)
-!        vth2 = sqrt((m1/m2)*(N1/N2)*(beta2/beta1)*vth1*vth1 - (m3/m2)*(N3/N2)*(beta2/beta3)*vth3*vth3)
+        vth2 = sqrt((m1/m2)*(N1/N2)*(beta2/beta1)*vth1*vth1 - (m3/m2)*(N3/N2)*(beta2/beta3)*vth3*vth3)
 !        vth3 = sqrt(-(m2/m3)*(N2/N3)*(beta3/beta2)*vth2*vth2 + (m1/m3)*(N1/N3)*(beta3/beta1)*vth1*vth1)
 
+        rL1 = m1*mion*vth1/(q*B0_init)  !gryoradius
+        rL2 = m2*mion*vth2/(q*B0_init)
+        rL3 = m3*mion*vth3/(q*B0_init)
 
+!        write(*,*) 'rL...',rL1,rL2,rL3,lambda_i
+!        stop
+        
         write(*,*) 'vth...',vth1,vth2,vth3
 !        stop
 
-
-        call load_Maxwellian_KH(vth1,1,N_1,m1*mion,1/m1,beta1,1)
-        call load_Maxwellian_KH(vth2,N_1+1,N_2,m2*mion,1/m2,beta2,2)
-        call load_Maxwellian_KH(vth3,N_2+1,N_3,m3*mion,1/m3,beta3,2)
+        call load_Maxwellian_KH(vth1,1,N_1,m1*mion,1/m1,beta1,rL1,1)
+        call load_Maxwellian_KH(vth2,N_1+1,N_2,m2*mion,1/m2,beta2,rL2,2)
+        call load_Maxwellian_KH(vth3,N_2+1,N_3,m3*mion,1/m3,beta3,rL3,2)
         
       end subroutine init_KH_part
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
