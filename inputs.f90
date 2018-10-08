@@ -7,7 +7,7 @@ module inputs
       
       real:: b0_init, nf_init,dt_frac, vsw, vth, Ni_tot_frac, dx_frac, &
             nu_init_frac,lambda_i,m_pu, mO, ppc, nu_init, ion_amu, load_rate, amp, &
-            height_stretch, zsf, etemp0, mion, va
+            height_stretch, zsf, etemp0, mion, va, dens1, dens2, dens3, va_f
       real, parameter:: amu=1.6605e-27!, mion = 3.841e-26
       integer:: mp, nt, nout, loc, grad, nrgrd, boundx
       integer(4):: Ni_tot_0
@@ -79,16 +79,20 @@ module inputs
                  write(*,*) 'm_pu..............',m_pu
                  read(100,*) nf_init
                  write(*,*) 'nf_init...........',nf_init
-                 read(100,*) amp
-                 write(*,*) 'amplitude.........', amp
+                 read(100,*) dens2
+                 write(*,*) 'dens2................',dens2
+                 read(100,*) dens3
+                 write(*,*) 'dens3................',dens3
+!                 read(100,*) amp
+!                 write(*,*) 'amplitude.........', amp
                  read(100,*) dt_frac
                  write(*,*) 'dt_frac...........',dt_frac
                  read(100,*) nt
                  write(*,*) 'nt................',nt
                  read(100,*) nout
                  write(*,*) 'nout..............',nout
-                 read(100,*) vsw
-                 write(*,*) 'vsw...............',vsw
+                 read(100,*) va_f
+                 write(*,*) 'va_f...............',va_f
                  read(100,*) vth
                  write(*,*) 'vth...............',vth !plasma beta
                  read(100,*) Ni_tot_frac
@@ -105,10 +109,10 @@ module inputs
                  write(*,*) 'nu_init_frac......',nu_init_frac
                  read(100,*) ppc
                  write(*,*) 'part per cell.....',ppc
-                 read(100,*) loc
-                 write(*,*) 'location of transform...',loc
-                 read(100,*) load_rate
-                 write(*,*) 'mass loading rate.....', load_rate
+!                 read(100,*) loc
+!                 write(*,*) 'location of transform...',loc
+!                 read(100,*) load_rate
+!                 write(*,*) 'mass loading rate.....', load_rate
                  read(100,*) etemp0
                  write(*,*) 'electon temperature (eV)...', etemp0
                  read(100,*) boundx
@@ -136,7 +140,7 @@ module inputs
 
                   omega_p = q*b0_init/mion
                   
-                  lambda_i = (3e8/sqrt((nf_init*amp/1e9)*q*q/(8.85e-12*mion)))/1e3
+                  lambda_i = (3e8/sqrt((nf_init/1e9)*q*q/(8.85e-12*mion)))/1e3
                                     
                   dx= lambda_i*dx_frac
                   dy=2.0*lambda_i*dx_frac           !units in km

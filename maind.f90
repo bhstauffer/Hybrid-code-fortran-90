@@ -38,6 +38,7 @@ program hybrid
       call readInputs()
       call initparameters()
       
+
       call MPI_INIT(ierr)
       call MPI_COMM_RANK(MPI_COMM_WORLD, my_rank, ierr)
       call MPI_COMM_SIZE(MPI_COMM_WORLD, procnum, ierr)
@@ -100,6 +101,7 @@ program hybrid
 !      call grid_gaussian()
       call grd6_setup(b0,bt,b12,b1,b1p2,nu,input_Eb)
       call get_beta(Ni_tot_sys,beta)
+
       
       input_E = 0.0
       bndry_Eflux = 0.0

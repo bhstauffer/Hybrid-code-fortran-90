@@ -237,7 +237,7 @@ module part_init
 
             use dimensions
             use boundary
-            use inputs, only: PI, vsw, dx, dy, delz,km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0,boundx, Lo, q, mO
+            use inputs, only: PI, va_f, dx, dy, delz,km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0,boundx, Lo, q, mO
             use grid, only: qx,qy,qz,dz_grid
             use gutsp
             use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p,mix_ind,b0
@@ -324,7 +324,7 @@ module part_init
                   
 !                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
 !               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
-                  vp(l,1) =  0.8*va*(tanh((qz(k)-qz(nz/2))/(Lo))) + vx + &
+                  vp(l,1) =  va_f*va*(tanh((qz(k)-qz(nz/2))/(Lo))) + vx + &
                        -0.0*va*cosh((qz(nz/2)-qz(k))/Lo)**(-2)*tanh((qz(nz/2)-qz(k))/Lo)*cos(qx(i)*PI/(0.5*nx*dx))
 !vx!+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
                   vp(l,2) = vy! +57.0*(1+0.5*cos(8*pi*qx(ii)/qx(nx-1)))* &
@@ -371,13 +371,13 @@ module part_init
         real:: d1, d2, d3    !actual number density
         real:: rL1, rL2, rL3 !gyroradius
 
-        d1 = 0.4
-        d2 = 0.2
-        d3 = 0.01
+!        n1 = 0.4
+!        n2 = 0.2
+!        n3 = 0.01
         
         beta1 = 1.0 
-        beta2 = d1/d2
-        beta3 = d1/d3
+        beta2 = 1./dens2
+        beta3 = 1./dens3
 
         N_1 = Ni_tot
         N_2 = nint(2.0*Ni_tot)
@@ -395,7 +395,7 @@ module part_init
 
         m1 = 1.0
         m2 = 1.0
-        m3 = 8.0
+        m3 = m_pu
         
 !!        vth1 = sqrt((m2/m1)*(N2/N1)*(beta1/beta2)*vth2*vth2 + (m3/m1)*(N3/N1)*(beta1/beta3)*vth3*vth3)
         vth2 = sqrt((m1/m2)*(N1/N2)*(beta2/beta1)*vth1*vth1 - (m3/m2)*(N3/N2)*(beta2/beta3)*vth3*vth3)

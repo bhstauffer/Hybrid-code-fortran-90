@@ -38,8 +38,8 @@ pro plot_3x3,nf,yslc
   device,decomposed=0
   loadct,27
   
-;  dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_30/'
-  dir = './run_test/'
+  dir = '/Volumes/Scratch/hybrid/KH3D/run_test/'
+;  dir = './run_test/'
   
   nframe=nf
   read_para,dir
