@@ -5,10 +5,10 @@
 0.5	    !d2 (magnetospheric proton density)
 0.01	    !d3 (magnetospheric heavy ion density)
 0.2         !particle time step (fraction of omega_i) (0.08 is the default)
-10000       !number of time steps (10000)
-50          !diagnostic output interval (100)
+3200       !number of time steps (10000)
+200          !diagnostic output interval (100)
 0.8         !flow speed (v_Alfven) 
-1.0         !plasma beta !was thermal speed for Maxwellian (40 km/s)
+2.0         !plasma beta !was thermal speed for Maxwellian (40 km/s)
 1.0         !Ni_tot initial (fraction of Ni_max)
 1.0         !grid size as fraction of lambda_i
 1000        !density scale height (multiple of dx) (3000 for full torus)
@@ -18,7 +18,7 @@
 50          !number of particles per cell per species
 0.0         !electron temperature (eV)  
 2           ! Boundary condition (1: fully periodic   2: Periodic on xy, zero derivative on z)  
-'/Volumes/Scratch/hybrid/KH3D/run_test_1/'             !output directory 
+'./run2_3d/'             !output directory 
 
 
 ! Blake's parameters

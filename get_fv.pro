@@ -232,7 +232,8 @@ end
 pro get_fv,nfrm
 
 ;nfrm = v
-dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_29/'
+;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_29/'
+dir = './run_test/'
 
 nframe=nfrm
 read_para,dir

@@ -13,16 +13,16 @@ read_coords,dir,x,y,z
 va = b0_bottom/sqrt(muo*mproton*np_bottom/1e9)
 
 vo = 0.8*va/1e3
-Lo = 1.0*dx
+Lo = 1.5*dx
 
-Am = 2.0*nx*ny
+Am = 1.5*(nx-1)*(ny-1)
 
-nfrm = 20
+nfrm = 12
 
 lnvz = fltarr(nfrm)
 mix_arr = fltarr(nfrm)
 
-nout=100
+nout=500
 ;dt = 0.5
 tm = dt*nout+findgen(nfrm)*nout*dt
 
@@ -52,11 +52,8 @@ p = plot(tm,mix_arr^2,xrange=[t1,t2],yrange=[1,max(mix_arr^2)],/xsty,/ysty,$
 p.xtitle='time (s)'
 p.ytitle='Mixing/(Lo*nx*ny)'
 
-
 wh = where((tm ge t1) and (tm le t2))
 fit = poly_fit(tm(wh),mix_arr(wh)^2,1,sigma=sigma)
-
-
 
 f = fit(1)
 s = sigma(1)
@@ -76,22 +73,52 @@ return
 end
 ;-------------------------------------------------------------------------
 
-dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_19/'  
+;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_19/'
+dir = '../run2/'
 read_data,dir,f,s
 
 
-dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_20/'  
+;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_20/'  
+dir = '../run3/'
 read_data,dir,ff,ss
 
 f = [f,ff]
 s = [s,ss]
 
 
-dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_21/'  
+dir = '../run4/'
 read_data,dir,ff,ss
 
 f = [f,ff]
 s = [s,ss]
+
+dir = '../run5/'
+read_data,dir,ff,ss
+
+f = [f,ff]
+s = [s,ss]
+
+
+dir = '../run6/'
+read_data,dir,ff,ss
+
+f = [f,ff]
+s = [s,ss]
+
+dir = '../run7/'
+read_data,dir,ff,ss
+
+f = [f,ff]
+s = [s,ss]
+
+
+
+
+;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_21/'  
+;read_data,dir,ff,ss
+
+;f = [f,ff]
+;s = [s,ss]
 
 
 
@@ -109,33 +136,35 @@ s = [s,ss]
 ;f = [f,ff]
 ;s = [s,ss]
 
-dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_24/'  
-read_data,dir,f1,s1
+;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_24/'  
+;read_data,dir,f1,s1
 
 
-dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_23/'  
-read_data,dir,ff,ss
+;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_23/'  
+;read_data,dir,ff,ss
 
-f1 = [f1,ff]
-s1 = [s1,ss]
+;f1 = [f1,ff]
+;s1 = [s1,ss]
 
 
-dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_22/'  
-read_data,dir,ff,ss
+;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_22/'  
+;read_data,dir,ff,ss
 
-f1 = [f1,ff]
-s1 = [s1,ss]
+;f1 = [f1,ff]
+;s1 = [s1,ss]
 
-b = barplot([1,2,5],f/1e9, nbars = 2, fill_color='red', index=0,name='beta 1.0',xtickdir=1,ytickdir=1)
+xarr = [2,3,4,5,6,7]
+
+b = barplot(xarr,f/1e9, nbars = 2, fill_color='red', index=0,name='beta 1.0',xtickdir=1,ytickdir=1)
 ;b.title='$\beta$ = 1.0'
-b.xtitle='mass'
+b.xtitle='run'
 b.ytitle='$D (10^9 m^2/s)$'
 
-b1 = barplot([1,2,5],f1/1e9, nbars = 2, fill_color='blue',index=1,/overplot,name='beta 0.5')
+;b1 = barplot(xarr,f1/1e9, nbars = 2, fill_color='blue',index=1,/overplot,name='beta 0.5')
 
-l = legend(target=[b,b1])
+;l = legend(target=[b,b1])
 
-l.save,"diffusion_coeff.pdf"
+;l.save,"diffusion_coeff.pdf"
 
 stop
 end

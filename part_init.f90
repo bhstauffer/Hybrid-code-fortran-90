@@ -375,20 +375,24 @@ module part_init
 !        n2 = 0.2
 !        n3 = 0.01
         
-        beta1 = 1.0 
-        beta2 = 1./dens2
-        beta3 = 1./dens3
 
         N_1 = Ni_tot
-        N_2 = nint(2.0*Ni_tot)
+        N_2 = nint(1.5*Ni_tot)
 !        Ni_tot = N_2
-        N_3 = nint(3.0*Ni_tot)
+        N_3 = nint(2.0*Ni_tot)
         Ni_tot = N_3
 
         N1 = real(N_1)
         N2 = real(N_2) - real(N_1)
         N3 = real(N_3) - real(N_2)
 
+        beta1 = 1.0 
+        beta2 = (N2/N1)/dens2
+        beta3 = (N3/N1)/dens3
+
+        write(*,*) 'beta...',beta1,beta2,beta3
+!        stop
+        
         vth1 = vth
         vth2 = vth
         vth3 = vth

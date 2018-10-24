@@ -45,7 +45,7 @@ loadct,27
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_30/'
 ;dir = '/Volumes/Scratch/hybrid/KH3d/run_3_periodic/'
-dir='./run_36/'
+dir='./run1_3d/'
 
 nframe=nf
 read_para,dir
@@ -245,9 +245,9 @@ bb_arr = 0.0
 
 ;ntot = 109.*99.
 
-ntot = 239*129
+ntot = 209*129
 
-for i = 1,28 do begin
+for i = 1,15 do begin
    mom_trans,i,55,rhouu,bb,TM,TR,x,y,w,dt,omega_p
    plot_image,TM,x,y,0.8,1,'$T^M_{xz}$'
    plot_image,TR,x,y,0.8,2,'$T^R_{xz}$'

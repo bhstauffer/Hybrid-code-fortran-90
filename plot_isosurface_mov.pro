@@ -87,7 +87,7 @@ ach = 0.7
 ;file_dir = '/Volumes/MacD97-2/hybrid/3d_buf/run_test/'
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_29/'
-dir = './run_37/'
+dir = './run_test/'
 ;dir = '/Volumes/Scratch/hybrid/KH3D/run_1_periodic/'
 
 mrestart = ''
@@ -671,9 +671,9 @@ end
 ;main program
 ;--------------------------------------------------------------------------
 
-nfrm = 28
+nfrm = 15
 
-for i = 23,nfrm do begin
+for i = 1,nfrm do begin
    plot_isosurface,i,/tubes
 endfor
 

@@ -386,8 +386,8 @@ program hybrid
 !                        write(330) up_t
 !                        write(340) m
 !                        write(340) up_b
-!                        write(350) m
-!                        write(350) mnp
+                        write(350) m
+                        write(350) mnp
                         
                      endif
                      ndiag = 0

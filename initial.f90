@@ -86,7 +86,7 @@ module initial
             use mult_proc, only: my_rank
             use inputs, only: dx,dy,delz,out_dir,zsf!,nrgrd
             implicit none
-            integer, parameter:: nrgrd = 20
+            integer, parameter:: nrgrd = 30
             integer:: i,j,k,ind
             real:: xsf,zplus,zminus,xplus,xminus,yplus,yminus
             

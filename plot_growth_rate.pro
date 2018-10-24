@@ -17,20 +17,20 @@ Lo = 1.0*dx
 
 Am = 2.0*nx*ny
 
-nfrm = 20
+nfrm = 12
 
 lnvz = fltarr(nfrm)
 mix_arr = fltarr(nfrm)
 
-nout=100
+nout=500
 ;dt = 0.5
 tm = dt*nout+findgen(nfrm)*nout*dt
 
 t1 = min(tm)
 t2 = max(tm)
 
-t1 = 50
-t2 = 200
+;t1 = 50
+;t2 = 200
 
 
 for i = 1,nfrm do begin 
@@ -70,22 +70,41 @@ return
 end
 ;-------------------------------------------------------------------------
 
-dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_19/'  
+;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_19/'  
+dir = '../run2/'
 read_data,dir,f,s
 
 
-dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_20/'  
+;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_20/'  
+dir = '../run3/'
 read_data,dir,ff,ss
 
 f = [f,ff]
 s = [s,ss]
 
-
-dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_21/'  
+dir = '../run4/'
 read_data,dir,ff,ss
 
 f = [f,ff]
 s = [s,ss]
+
+dir = '../run5/'
+read_data,dir,ff,ss
+
+f = [f,ff]
+s = [s,ss]
+
+dir = '../run6/'
+read_data,dir,ff,ss
+
+f = [f,ff]
+s = [s,ss]
+
+;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_21/'  
+;read_data,dir,ff,ss
+
+;f = [f,ff]
+;s = [s,ss]
 
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_24/'  
@@ -102,34 +121,36 @@ s = [s,ss]
 ;f = [f,ff]
 ;s = [s,ss]
 
-dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_24/'  
-read_data,dir,f1,s1
+;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_24/'  
+;read_data,dir,f1,s1
 
 
-dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_23/'  
-read_data,dir,ff,ss
+;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_23/'  
+;read_data,dir,ff,ss
 
-f1 = [f1,ff]
-s1 = [s1,ss]
+;f1 = [f1,ff]
+;s1 = [s1,ss]
 
 
-dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_22/'  
-read_data,dir,ff,ss
+;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_22/'  
+;read_data,dir,ff,ss
 
-f1 = [f1,ff]
-s1 = [s1,ss]
+;f1 = [f1,ff]
+;s1 = [s1,ss]
 
-b = barplot([1,2,5],f, nbars = 2, fill_color='red', index=0,name='beta 1.0')
+xarr = [1,2,3,4,5]
+
+b = barplot(xarr,f, nbars = 2, fill_color='red', index=0,name='beta 1.0')
 ;b.title='$\beta$ = 1.0'
 b.xtitle='mass'
 b.ytitle='$\gamma (L_o/V_o)$'
 
 
-b1 = barplot([1,2,5],f1, nbars = 2, fill_color='blue',index=1,/overplot,name='beta 0.5')
+;b1 = barplot(xarr,f1, nbars = 2, fill_color='blue',index=1,/overplot,name='beta 0.5')
 
-l = legend(target=[b,b1])
+;l = legend(target=[b,b1])
 
-l.save,filename='growth_rates.pdf'
+;l.save,filename='growth_rates.pdf'
 
 stop
 end
