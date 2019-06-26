@@ -114,6 +114,16 @@ program hybrid
 
       call init_KH_part()
 
+      if (my_rank .eq. 0) then
+         ! call check_inputs()
+            Ni_tot_sys = Ni_tot*procnum
+            write(*,*) 'Total particles, PPP, #pc', Ni_tot_sys,Ni_tot,procnum
+            write(*,*) 'Particles per cell... ', Ni_tot_sys/((nx-2)*(ny-2)*(nz-2))
+            write(*,*) ' '
+      endif
+
+!      stop
+      
 !      Nif = nint(Ni_tot/3.)
 !      Nif2 = nint(Ni_tot*2/3.)
 

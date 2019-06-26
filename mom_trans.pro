@@ -1,5 +1,6 @@
+;--------------------------------------------------------------------------------------------
 pro plot_image,img,x,y,sclf,loc,tit
-
+;--------------------------------------------------------------------------------------------
    im = image(img(*,*),x,y,/current,rgb_table=33,layout=[2,1,loc],font_size=14,aspect_ratio=1.0)
 
    xax = axis('x',axis_range=[min(x),max(x)],location=[0,min(y(*))],thick=2,tickdir=1,target=im,tickfont_size=14)
@@ -18,16 +19,16 @@ pro plot_image,img,x,y,sclf,loc,tit
    
 
 end
+;--------------------------------------------------------------------------------------------
 
-
-pro mom_trans,nf,slc,rhouu,bb,TM,TR,x,y,w,dt,omega_p
-
+;--------------------------------------------------------------------------------------------
+pro mom_trans,dir,nf,slc,rhouu,bb,TM,TR,x,y,w,dt,omega_p,dudz,rho0,dV0,coverwpi
+;--------------------------------------------------------------------------------------------
 ;1 = xy
 ;2 = yz
 ;3 = xz
 
 pln = 1
-
 
   sclf = 1.0
   xsz = 2000.
@@ -45,7 +46,7 @@ loadct,27
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_30/'
 ;dir = '/Volumes/Scratch/hybrid/KH3d/run_3_periodic/'
-dir='./run1_3d/'
+;dir='./run_b1_v3_4/'
 
 nframe=nf
 read_para,dir
@@ -54,28 +55,6 @@ read_coords,dir,x,y,z
 @get_const
 
 omega_p = q*B0_top/mp
-print,omega_p,dt,0.08/omega_p
-;stop
-
-;XINTERANIMATE, SET=[xsz,ysz, nframe], /SHOWLOAD 
-;w = window(dimensions=[xsz,ysz],/buffer)   
-
-;video_file = 'KAW.mp4'
-;video = idlffvideowrite(video_file)
-;framerate = 7.5
-;;wdims = w.window.dimensions
-;stream = video.addvideostream(xsz, ysz, framerate)
-
-;openr,1,'./tmp1/c.test_part.dat',/f77_unformatted
-;xpart = fltarr(3,3)
-;readu,1,xpart
-;xp = xpart
-;while not(eof(1)) do begin
-;   readu,1,xpart
-;   xp = [xp,xpart]
-;endwhile
-;close,1
-
 case pln of
    1: begin
       x = x 
@@ -101,6 +80,7 @@ x = x/coverwpi
 y = y/(coverwpi)
 z = z/coverwpi
 
+rho0 = mproton*(np_top/1e9)
 
 ;mrestart = '_0'
 mrestart = ''
@@ -167,6 +147,9 @@ nfrm = nf
       end
    endcase
 
+   dV0 = total(up(*,1,nz-5,0)-up(*,1,5,0))/nx
+   print,dV0
+   
 ; calculate stresses on boundary
 
    rhouu = 0.0
@@ -174,7 +157,8 @@ nfrm = nf
    upave = total(up(*,1,2,0))/nx
    rhouu0 = mp*npave/1e9*(upave*1e3)^2
    bb = 0.0
-
+   dudz = 0.0
+   
    TM = bx(*,*)*1e-9*bz(*,*)*1e-9/muo/rhouu0
    TR = -mp*nparr(*,*)*1e6*upx(*,*)*upz(*,*)*1e6/rhouu0
    TM(0,0) = 0.3
@@ -186,91 +170,123 @@ nfrm = nf
 ;         bb = bb+bx(i,j)*1e-9*bz(i,j)*1e-9/muo/rhouu0
          rhouu = rhouu-mp*nparr(i,j)*1e6*upx(i,j)*upz(i,j)*1e6
          bb = bb+bx(i,j)*1e-9*bz(i,j)*1e-9/muo
-
+         dudz = dudz + (up(i,j,slc+1,0) - up(i,j,slc-1,0))/(3*dx)
       endfor
    endfor
-   print,'rhouu...',rhouu/(nx*ny),bb/(nx*ny),(rhouu+bb)/(nx*ny)
 
-
-
-;   plot_image,bx,x,y,sclf,1,'Bx (nT)'
-
-;   plot_image,by,x,y,sclf,2,'By (nT)'
-
-;   plot_image,bz,x,y,sclf,3,'Bz (nT)'
-
-;   plot_image,upx,x,y,sclf,4,'ux (km/s)'
-
-;   plot_image,upy,x,y,sclf,5,'uy (km/s)'      
-
-;   plot_image,upz,x,y,sclf,6,'uz (km/s)'
-
-;   plot_image,tparr,x,y,sclf,7,'Tp (eV)'
-
-;   plot_image,nparr,x,y,sclf,8,'np (cm$^{-3}$)'
-
-;   wh = where(mixarr gt 1.0)
-;   if(wh(0) gt -1.0) then begin
-;      mixarr(wh) = 1.0;dir = './tmp1/'
-
-;   endif
-
-;   plot_image,mixarr,x,y,sclf,9,'mixing'
-
-;   img = w.CopyWindow()
-
-;   print, 'Time:', video.put(stream, w.copywindow())
-;   xinteranimate, frame = nfrm-1, image = img
-
-
-;endfor
-
-;video.cleanup
-;xinteranimate,/keep_pixmaps
+   rhouu = rhouu/(nx*ny)
+   bb = bb/(nx*ny)
+   dudz = dudz/(nx*ny)
 
 return
 end
 
-
+;--------------------------------------------------------------------------------------------
 ;main program
+;--------------------------------------------------------------------------------------------
 
-xsz = 700.
-ysz = 800.
+files=['./run_b0.5_v3_4/','./run_b1_v3_4/','./run_b2_v3_4/','./run_b3_v3_4/','./run_b4_v3_4/','./run_b5_v3_4/','./run_b6_v3_4/','./run_b7_v3_4/']
 
+
+maxnu = 0.0
+maxnu_bb = 0.0
+maxnu_rhouu = 0.0
+
+for nf = 0,n_elements(files)-1 do begin
+
+   xsz = 700.
+   ysz = 800.
+   
 ;XINTERANIMATE, SET=[xsz,ysz, nframe], /SHOWLOAD 
-w = window(dimensions=[xsz,ysz],/buffer)   
-
-rhouu_arr = 0.0
-bb_arr = 0.0
-
+   w = window(dimensions=[xsz,ysz],/buffer)   
+   
+   rhouu_arr = 0.0
+   bb_arr = 0.0
+   dudz_arr = 0.0
+   
 ;ntot = 109.*99.
+   
+   ntot = 129.*199.
+   
+   for i = 1,8 do begin
+      mom_trans,files(nf),i,55,rhouu,bb,TM,TR,x,y,w,dt,omega_p,dudz,rho0,dV0,coverwpi
+      plot_image,TM,x,y,0.8,1,'$T^M_{xz}$'
+      plot_image,TR,x,y,0.8,2,'$T^R_{xz}$'
+      
+      w.save,'gifs_mom_trans/gif'+strcompress(10+i)+'.gif'
+      
+      rhouu_arr = [rhouu_arr,rhouu]
+      bb_arr = [bb_arr,bb]
+      dudz_arr = [dudz_arr, dudz]
+   endfor
+   
+   tm = dt*100*findgen(n_elements(bb_arr))*omega_p
+   
+;dudz_avg = dudz_arr
+   
+;print,'dudz_avg...',dudz_avg
+;dudz_avg(0) = dudz_avg(1)
+;stop
+   
+   nu_anom = (1/rho0)*(bb_arr+rhouu_arr)/dudz_arr
+   nu_anom_bb = (1/rho0)*(bb_arr)/dudz_arr
+   nu_anom_rhouu = (1/rho0)*(rhouu_arr)/dudz_arr
+   nu_anom = nu_anom/(2*1.5*coverwpi*1e3*dV0*1e3)
+   nu_anom_bb = nu_anom_bb/(2*1.5*coverwpi*1e3*dV0*1e3)
+   nu_anom_rhouu = nu_anom_rhouu/(2*1.5*coverwpi*1e3*dV0*1e3)
 
-ntot = 209*129
+   
+   p=plot(tm,bb_arr/1e-13,'b',name='$B_xB_z \mu_o^{-1}$',/xsty,font_size=18)
+   p1=plot(tm,rhouu_arr/1e-13,'r',name='$\rho u_x u_z$',/overplot)
+   p2 = plot(tm,(bb_arr+rhouu_arr)/1e-13,/overplot,name='Total')
+   print,'max mom trans...',(bb_arr+rhouu_arr)
+   p2.ytitle='Momentum flux (10$^{-13}$ N/m$^2$)'
+   p2.xtitle='time ($\Omega_i^{-1}$)'
 
-for i = 1,15 do begin
-   mom_trans,i,55,rhouu,bb,TM,TR,x,y,w,dt,omega_p
-   plot_image,TM,x,y,0.8,1,'$T^M_{xz}$'
-   plot_image,TR,x,y,0.8,2,'$T^R_{xz}$'
+   maxnu = [maxnu,max(nu_anom)]
+   maxnu_bb = [maxnu_bb,max(nu_anom_bb)]
+   maxnu_rhouu = [maxnu_rhouu,max(nu_anom_rhouu)]
+   
+;print,'dt...',dt
+   
+   l = legend(target=[p,p1,p2],position=[0.33,0.83],/normal,font_size=16)
+   
+   pnu = plot(tm,nu_anom,/xsty,font_size=18)
+   pnu = plot(tm,nu_anom_bb,'b',/overplot)
+   pnu = plot(tm,nu_anom_rhouu,'r',/overplot)
+   pnu.xtitle='time ($\Omega_i^{-1}$)'
+   pnu.ytitle='$\nu_{anom}$ ($2L_0v_0$)'
+   
+   l.save,'mom_trans_stress.png'
 
-   w.save,'gifs_mom_trans/gif'+strcompress(10+i)+'.gif'
-
-   rhouu_arr = [rhouu_arr,rhouu]
-   bb_arr = [bb_arr,bb]
 endfor
 
-tm = dt*100*findgen(n_elements(bb_arr))*omega_p
+xarr = [0.5,1,2,3,4,5,6,7]
+maxnu = maxnu(1:*)
+maxnu_bb = maxnu_bb(1:*)
+maxnu_rhouu = maxnu_rhouu(1:*)
 
-p=plot(tm,bb_arr/ntot/1e-13,'b',name='$B_xB_z \mu_o^{-1}$',/xsty,font_size=18)
-p1=plot(tm,rhouu_arr/ntot/1e-13,'r',name='$\rho u_x u_z$',/overplot)
-p2 = plot(tm,(bb_arr+rhouu_arr)/ntot/1e-13,/overplot,name='Total')
-print,'max mom trans...',(bb_arr+rhouu_arr)/ntot
-p2.ytitle='Momentum flux (10$^{-13}$ N/m$^2$)'
-p2.xtitle='time ($\Omega_i^{-1}$)'
+b1 = barplot(xarr,maxnu, bottom_color="white",fill_color='black', nbars=3,index=0,xtickdir=1,ytickdir=1,xminor=0,$
+           name='total',width=1.2)
+b2 = barplot(xarr,maxnu_bb, bottom_color="white",fill_color='blue', nbars=3,index=1,xtickdir=1,ytickdir=1,xminor=0,$
+            name='Maxwell',/overplot,width=1.2)
+b3 = barplot(xarr,maxnu_rhouu, bottom_color="white",fill_color='red', nbars=3,index=2,xtickdir=1,ytickdir=1,xminor=0,$
+            name='Reynolds',/overplot,width=1.2)
+b1.xtitle='plasma $\beta$'
+b1.ytitle='max($\nu_{anom}$) $(2 L_0 v_0)$'
+l = legend(target=[b1,b2,b3],position=[0.33,0.83],/normal,font_size=16)
 
-print,'dt...',dt
+xarr = 0.8/sqrt(1 + ((5./3.)/2)*xarr)
+b1 = barplot(xarr,maxnu, bottom_color="white",fill_color='black', nbars=3,index=0,xtickdir=1,ytickdir=1,xminor=0,$
+           name='total',width=0.3)
+b2 = barplot(xarr,maxnu_bb, bottom_color="white",fill_color='blue', nbars=3,index=1,xtickdir=1,ytickdir=1,xminor=0,$
+            name='Maxwell',/overplot,width=0.3)
+b3 = barplot(xarr,maxnu_rhouu, bottom_color="white",fill_color='red', nbars=3,index=2,xtickdir=1,ytickdir=1,xminor=0,$
+            name='Reynolds',/overplot,width=0.3)
+b1.xtitle='$M_f = 0.8/(1-\gamma \beta/2)^{1/2}$'
+b1.ytitle='max($\nu_{anom}$) $(2 L_0 v_0)$'
+b1.xrange=[0.3,0.7]
+l = legend(target=[b1,b2,b3],position=[0.33,0.83],/normal,font_size=16)
 
-l = legend(target=[p,p1,p2],position=[0.33,0.83],/normal,font_size=16)
-
-l.save,'mom_trans_stress.png'
 
 end

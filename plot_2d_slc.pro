@@ -43,7 +43,8 @@ loadct,27
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_24/'
 ;dir = '/Volumes/Scratch/hybrid/KH3D/run_1_periodic/'
-dir = './run_test/'
+;dir = './run_test/'
+dir = './run_b3_v3_4/'
 
 nrestart = ''
 
@@ -161,6 +162,10 @@ for nfrm = 1,nframe,1 do begin
    endcase
 
 
+   dB = sqrt(bx^2 + by^2 + bz^2)/(b0_bottom/1e-9)
+;   print,dB,sqrt(bx^2 + by^2 + bz^2)
+;   stop
+ 
    plot_image,bx,x,y,sclf,1,'Bx (nT)'
 
    plot_image,by,x,y,sclf,2,'By (nT)'
@@ -177,6 +182,8 @@ for nfrm = 1,nframe,1 do begin
 
    plot_image,nparr,x,y,sclf,8,'np (cm$^{-3}$)'
 
+   plot_image,db,x,y,sclf,10,'|B|/$B_0$'
+   
    wh = where(mixarr gt 1.0)
    if(wh(0) gt -1.0) then begin
       mixarr(wh) = 1.0
@@ -191,6 +198,11 @@ for nfrm = 1,nframe,1 do begin
 
 
 endfor
+
+;p = plot(x,smooth(nparr(*,50)/max(nparr(*,50)),2),/xsty)
+;p = plot(x,smooth(by(*,50)/max(by(*,50)),2),'r',/overplot)
+;p = plot(x,smooth(bx(*,50)/max(bx(*,50)),2),'g',/overplot)
+;p = plot(x,smooth(bz(*,50)/max(bz(*,50)),2),'b',/overplot)
 
 video.cleanup
 xinteranimate,/keep_pixmaps

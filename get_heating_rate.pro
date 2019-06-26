@@ -24,7 +24,7 @@ end
 
 @get_const
 
-dir = './run_38/'
+dir = './run_test/'
 read_para,dir
 restore,filename=dir+'para.sav'
 read_coords,dir,x,y,z
@@ -36,7 +36,7 @@ cwpi = cwpi/1e3
 
 dx = x(1)-x(0)
 
-nfr = 10
+nfr = 8
 poft = 0.0
 for i = 1,nfr do begin
    nfrm = i

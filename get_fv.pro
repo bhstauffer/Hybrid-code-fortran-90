@@ -81,7 +81,7 @@ end
 
 
 ;----------------------------------------------------------------
-pro get_dist,xx,yy,zz,xp,vp,x,y,z,up,temp,va,mrat,B,wh_part
+pro get_dist,xx,yy,zz,xp,vp,x,y,z,up,temp,va,mrat,pbeta,B,wh_part
 ;----------------------------------------------------------------
 
 B = reform(B)
@@ -94,7 +94,7 @@ bxhat = bx/sqrt(B2)
 byhat = by/sqrt(B2)
 bzhat = bz/sqrt(B2)
 
-vscl=12
+vscl=6
 dx = x(1)-x(0)
 
 xd = x(floor(xx))
@@ -103,7 +103,7 @@ zd = z(floor(zz))
 
 r = sqrt((xp(*,0)-xd)^2 + (xp(*,1)-yd)^2 + (xp(*,2)-zd)^2)
 
-wh = where(r lt 3*dx and mrat lt 1.0)
+wh = where(r lt 3*dx and mrat eq 1.0)
 wh_part = wh
 whh = where(r lt 3*dx and mrat lt 1.0)
 
@@ -116,8 +116,6 @@ plots,vp(whh,0),vp(whh,2),psym=3,color=240
 
 m = bzhat/bxhat
 plots,[-vscl,vscl],[-vscl,vscl]*m,linestyle=1
-
-
 
 u0 = up(fix(xx),fix(yy),fix(zz),*)/va
 vth = sqrt(2*temp(fix(xx),fix(yy),fix(zz))*(1e-19/1.67e-27))/1e3/va
@@ -146,24 +144,50 @@ plots,[-vscl,vscl],[-vscl,vscl]*m,linestyle=1
 
 
 
-nvx = 120
+nvx = 140
 dx=0.2
 vx_arr = (findgen(nvx)-nvx/2)*dx
 vy_arr = (findgen(nvx)-nvx/2)*dx
 fv_p =fltarr(nvx,nvx)
 
+alpha_arr = fltarr(n_elements(whh))
 
-for k = 0,n_elements(wh)-1 do begin
+for k = 0,n_elements(whh)-1 do begin
 
-   vx = vp(wh(k),0)
-   vy = vp(wh(k),1)
+   vx = vp(whh(k),0)
+   vy = vp(whh(k),1)
+   vz = vp(whh(k),2)
 
-   i = round(vx/dx)+nvx/2
-   j = round(vy/dx)+nvx/2
+   v2 = sqrt(vx*vx + vy*vy + vz*vz)
+   
+   vdotb = vx*bxhat + vy*byhat + vz*bzhat
+   alpha = acos(vdotb/v2)
+   alpha_arr(k) = alpha
+   
+   vperp = v2*sin(alpha)
+   vpar = v2*cos(alpha)
+   
+;   i = round(vx/dx)+nvx/2
+;   j = round(vy/dx)+nvx/2
 
+   i = round(vpar/dx)+nvx/2
+   j = round(vperp/dx)+nvx/2
+   
    fv_p(i,j) = fv_p(i,j) + 1.0
-
+   
 endfor
+
+alpha_arr = alpha_arr*!radeg
+h = histogram(alpha_arr, binsize=5, LOCATIONS = xbin)
+
+b = barplot(xbin,h,xtickname=[0,30,60,90,120,150,180],xtickvalues=[0,30,60,90,120,150,180],xtickdir=1)
+b.xtitle='pitch angle (deg)'
+b.ytitle='number of particles'
+ax = b.AXES
+ax[2].HIDE = 1                  ; hide top X axis
+ax[3].HIDE = 1                  ; hide right Y axis
+
+
 
 wh = where(fv_p ge 1)
 fv_p = alog(fv_p)
@@ -172,14 +196,16 @@ sz = size(fv_p)
 scl = round(1000/sz(1))
 
 img = image(fv_p,vx_arr,vy_arr,rgb_table=39,aspect_ratio=1.0,/current,font_size=20)
-xax = axis('x',axis_range=[-max(vx_arr),max(vx_arr)],location=[-max(vx_arr),-max(vx_arr)],thick=2,tickdir=1,target=img,tickfont_size=12)
-yax = axis('y',axis_range=[-max(vy_arr),max(vy_arr)],location=[-max(vy_arr),-max(vy_arr)],thick=2,tickdir=1,target=img,tickfont_size=12)
+xax = axis('x',axis_range=[-max(vx_arr),max(vx_arr)],location=[-max(vx_arr),0],thick=2,tickdir=1,target=img,tickfont_size=12)
+;yax = axis('y',axis_range=[-max(vy_arr),max(vy_arr)],location=[-max(vy_arr),-max(vy_arr)],thick=2,tickdir=1,target=img,tickfont_size=12)
+yax = axis('y',axis_range=[0,max(vy_arr)],location=[-max(vy_arr),0],thick=2,tickdir=1,target=img,tickfont_size=12)
+;yax = axis('y',axis_range=[0,max(vy_arr)],location=[0,-max(vy_arr)],thick=2,tickdir=1,target=img,tickfont_size=12)
 img.scale,scl,scl
-img.xtitle='$v_\perp$'
-img.ytitle='$v_\parallel$'
-img = plot([-vscl,vscl],[-vscl,vscl]*m,'2--',/current,/overplot)
-img.xrange=[-4,4]
-img.yrange=[-4,4]
+img.ytitle='$v_\perp (v_A)$ '
+img.xtitle='$v_\parallel (v_A)$'
+;img = plot([-vscl,vscl],[-vscl,vscl]*m,'2--',/current,/overplot)
+img.xrange=[-3.5,3.5]
+img.yrange=[-3.5,3.5]
 
 img.save,'test.png'
 
@@ -233,7 +259,7 @@ pro get_fv,nfrm
 
 ;nfrm = v
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_29/'
-dir = './run_test/'
+dir = './run_29/'
 
 nframe=nfrm
 read_para,dir
@@ -255,16 +281,18 @@ i=0
 read_part,dir+'c.xp_'+strcompress(i,/remove_all),nfrm,Ni_max,xp
 read_part,dir+'c.vp_'+strcompress(i,/remove_all),nfrm,Ni_max,vp
 read_part_scalar,dir+'c.mrat_'+strcompress(i,/remove_all),nfrm,Ni_max,mrat
-
+read_part_scalar,dir+'c.beta_p_'+strcompress(i,/remove_all),nfrm,Ni_max,pbeta
 
 for i = 1,9 do begin
    read_part,dir+'c.xp_ '+strcompress(i,/remove_all),nfrm,Ni_max,xpp
    read_part,dir+'c.vp_ '+strcompress(i,/remove_all),nfrm,Ni_max,vpp
    read_part_scalar,dir+'c.mrat_ '+strcompress(i,/remove_all),nfrm,Ni_max,mratt
+   read_part_scalar,dir+'c.beta_p_ '+strcompress(i,/remove_all),nfrm,Ni_max,pbta
 
    xp = [xp,xpp]
    vp = [vp,vpp]
    mrat = [mrat,mratt]
+   pbeta = [pbeta,pbta]
 ;read_part_scalar,dir+'c.mrat_0',nfrm,Ni_max,mrat
 
 endfor
@@ -276,7 +304,6 @@ for i = 10,11 do begin
    vp = [vp,vpp]
    mrat = [mrat,mratt]
 ;read_part_scalar,dir+'c.mrat_0',nfrm,Ni_max,mrat
-
 endfor
 
 
@@ -285,14 +312,19 @@ nfrm = 1
 read_part,dir+'c.xp_'+strcompress(i,/remove_all),nfrm,Ni_max,xp1
 read_part,dir+'c.vp_'+strcompress(i,/remove_all),nfrm,Ni_max,vp1
 read_part_scalar,dir+'c.mrat_'+strcompress(i,/remove_all),nfrm,Ni_max,mrat1
+read_part_scalar,dir+'c.beta_p_'+strcompress(i,/remove_all),nfrm,Ni_max,pbeta1
+
+
 for i = 1,9 do begin
    read_part,dir+'c.xp_ '+strcompress(i,/remove_all),nfrm,Ni_max,xpp
    read_part,dir+'c.vp_ '+strcompress(i,/remove_all),nfrm,Ni_max,vpp
    read_part_scalar,dir+'c.mrat_ '+strcompress(i,/remove_all),nfrm,Ni_max,mratt
-
+   read_part_scalar,dir+'c.beta_p_ '+strcompress(i,/remove_all),nfrm,Ni_max,pbta
    xp1 = [xp1,xpp]
    vp1 = [vp1,vpp]
    mrat1 = [mrat1,mratt]
+   pbeta1 = [pbeta1,pbta]
+   
 ;read_part_scalar,dir+'c.mrat_0',nfrm,Ni_max,mrat
 endfor
 for i = 10,11 do begin
@@ -312,7 +344,7 @@ loadct,39
 
 !p.multi=[0,1,1]
 yy = ny/2
-zz = nz/2+10
+zz = nz/2
 w=window(DIMENSIONS=[700,700])
       
 while (yy ge 1) do begin
@@ -330,19 +362,18 @@ while (yy ge 1) do begin
       cursor,xx,zz,/data
       
       w.erase
-      get_dist,xx,yy,zz,xp,vp/va,x,y,z,up,temp,va,mrat,b1(xx,yy,zz,*),wh_part
+      get_dist,xx,yy,zz,xp,vp/va,x,y,z,up,temp,va,mrat,pbeta,b1(xx,yy,zz,*),wh_part
 
       window,2
       !p.multi=[0,2,1]
       contour,reform(mix(*,yy,*)<1.1),x,z,/fill,/isotropic,nlev=50
       oplot,xp1(wh_part,0),xp1(wh_part,2),psym=5,color=200
 
-      vscl=9
+      vscl=20
       plot,[-vscl,vscl],[-vscl,vscl],/nodata,/isotropic,/xsty,/ysty,$
            xtitle='vx',ytitle='vz'
       plots,vp1(wh_part,0)/va,vp1(wh_part,1)/va,psym=3,color=240
       
-
    endwhile
 endwhile
 

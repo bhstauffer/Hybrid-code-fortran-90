@@ -80,10 +80,10 @@ end
 pro plot_isosurface,nfrm,LINES=lines, TUBES=tubes
 ;-----------------------------------------------------------------------
 
-temp_val = 300 ;eV
+temp_val = 500 ;eV
 den_val = 0.5 ;c
 b_val = 0.0e-9
-edotb_val = 0.025
+edotb_val = 0.05
 
 Rio = 1200.
 ctbl = 13
@@ -92,7 +92,7 @@ ach = 0.7
 ;file_dir = '/Volumes/MacD97-2/hybrid/3d_buf/run_test/'
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_9/'
-dir = './run2_3d/'
+dir = './run_b1_v3_4/'
 ;dir = '/Volumes/Scratch/hybrid/KH3D/run_3_periodic/'
 ;dir = './tmp1/'
 
@@ -113,7 +113,7 @@ z = z/dz
 c_read_3d_vec_m_32,dir,'c.b1'+mrestart,nfrm,b1
 c_read_3d_vec_m_32,dir,'c.up'+mrestart,nfrm,up
 c_read_3d_vec_m_32,dir,'c.E'+mrestart,nfrm,Efld
-c_read_3d_m_32,dir,'c.np'+mrestart,nfrm,np
+C_read_3d_m_32,dir,'c.np'+mrestart,nfrm,np
 c_read_3d_m_32,dir,'c.mixed'+mrestart,nfrm,mixed
 c_read_3d_m_32,dir,'c.temp_p'+mrestart,nfrm,temp_p
 
@@ -129,7 +129,7 @@ Efld0 = abs(vtop)*b0_top*1.6e-19/mproton
 get_edotb,Efld,b1,edotb
 edotb = edotb/Efld0
 
-;swap y and z directions
+;Swap y and z directions
 
 swap_arr_v,b1,nx,ny,nz
 swap_arr_v,up,nx,ny,nz
@@ -231,7 +231,7 @@ iseed=0L
 
 ;for k = nz/2+1,nz/2+2,4 do begin
 ;for j = ny/2-2,ny/2+2,3 do begin
-for j = 52,56,3 do begin
+for j = 53,58,3 do begin
 ;j = 29
    for i = 10,nx-10,4 do begin
       print,i,j
@@ -422,7 +422,7 @@ otemp = OBJ_NEW('IDLgrPolygon',outverts, POLYGONS=outconn, $
                           SHADING = 1,alpha_channel=ach,palette=opalette,$
 	  color=!color.red)
 
-edotb = smooth(edotb,2)
+edotb = edotb
 ;edotb = abs(edotb)
 
 isosurface,edotb(2:nx-2,*,*),edotb_val,$
@@ -451,7 +451,7 @@ outverts=MESH_SMOOTH(outverts,outconn)
 
 oedotb_p = OBJ_NEW('IDLgrPolygon',outverts, POLYGONS=outconn, $
                           SHADING = 1,alpha_channel=ach,palette=opalette,$
-	  color=!color.red)
+	  color=!color.blue)
 
 oModel->Add, oedotb_p
 endif
@@ -482,7 +482,7 @@ outverts=MESH_SMOOTH(outverts,outconn)
 
 oedotb_m = OBJ_NEW('IDLgrPolygon',outverts, POLYGONS=outconn, $
                           SHADING = 1,alpha_channel=ach,palette=opalette,$
-	  color=!color.red)
+	  color=!color.green)
 
 oModel->Add, oedotb_m
 endif
@@ -668,7 +668,7 @@ view->add, oModel
 ;endfor
 ;xinteranimate,/keep_pixmaps
 
-XOBJVIEW, oModel, scale=1.0,/BLOCK,xsize=1200,ysize=1200
+XOBJVIEW, oModel, scale=1.0,/BLOCK,xsize=1000,ysize=1000
 ;xOBJVIEW, oModel,scale=0.9,xsize=1200,ysize=1200
 ;xobjview_write_image,'test.png','png'
 

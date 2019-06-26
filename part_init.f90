@@ -357,6 +357,138 @@ module part_init
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine load_Maxwellian_KH_aniso(vth,Ni_tot_1,Ni_tot_2,mass,mratio,beta_part,rL,region,tperp_par)
+!!!!!! Adds particles to bottom if .true. else add to top.
+
+            use dimensions
+            use boundary
+            use inputs, only: PI, va_f, dx, dy, delz,km_to_m, beta_particle, kboltz, mion, amp, grad, nf_init,b0_init,mu0,boundx, Lo, q, mO
+            use grid, only: qx,qy,qz,dz_grid
+            use gutsp
+            use var_arrays, only: np,vp,vp1,xp,input_p,up,Ni_tot,input_E,ijkp,m_arr,mrat,beta,beta_p,wght,grav,temp_p,mix_ind,b0
+            implicit none
+            integer(4), intent(in):: Ni_tot_1, Ni_tot_2
+            real, intent(in):: beta_part
+            real, intent(in):: mratio, mass, vth, rL,tperp_par
+            real:: Lo_y
+                                  
+            integer:: disp
+            real:: vth2, vx, vy, vz, va, va_x, Temp, Tempcalc, pl_beta(nx,ny,nz)
+            integer:: l,m,i,j,k,ii,kk
+            integer:: region
+            real:: rnd
+            integer:: flg
+            
+            disp = 0 !Displacement of gradient
+!            amp = 100.0
+!            grad = 100.0 ! density gradient (larger = more gradual
+            
+
+
+            do i=1,nx
+                  do j=1,ny
+                        do k=1,nz
+                              pl_beta(i,j,k) = 1.0 !2.0 + 1.0*exp(-(real(i-nx/2)**2+real(k-nz/2)**2)/(10**2))
+                        enddo
+                  enddo
+            enddo
+            va_x = (mO/q)*abs(b0(1,1,1,1))/sqrt(mu0*mion*nf_init/1e9)/1e3
+            va = b0_init/sqrt(mu0*mion*nf_init/1e9)/1e3
+
+            do l = Ni_tot_1,Ni_tot_2
+               xp(l,1) = qx(1)+(1.0-pad_ranf())*(qx(nx-1)-qx(1))
+               xp(l,2) = qy(1)+(1.0-pad_ranf())*(qy(ny-1)-qy(1))
+               
+               flg = 0
+               do 20 while (flg .eq. 0)
+                  if (boundx .eq. 1) then
+                     xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz-1)-qz(1))
+                  else
+                     xp(l,3) = qz(1)+(1.0-pad_ranf())*(qz(nz)-qz(1))
+                  endif
+
+                  if (region .eq. 1) then
+!                     rnd = ((1.0-tanh((xp(l,3)-qz(nz/2)-delz*0.5)/(Lo)))/2.0)  !for bottom
+                     rnd = ((1.0-tanh((xp(l,3)-qz(nz/2)-delz*0.5)/(rL)))/2.0)  !for bottom
+                  endif
+                  if (region .eq. 2) then
+!                     rnd = (1.0+tanh((xp(l,3)-qz(nz/2)-delz*0.5)/(Lo)))/2.0 !for top
+                     rnd = (1.0+tanh((xp(l,3)-qz(nz/2)-delz*0.5)/(rL)))/2.0 !for top
+                  endif
+                  if (pad_ranf() .le. rnd) flg = 1
+                  
+20                continue
+                  
+                  if (xp(l,3) .gt. qz(nz/2)) mix_ind(l) = 1
+                  if (xp(l,3) .le. qz(nz/2)) mix_ind(l) = 0
+            
+                  m_arr(l) = mass
+                  mrat(l) = mratio
+
+!                  beta_p(l) = 1.0/(beta_particle+beta_particle*amp*exp(-((xp(l,3)-qz(nz/2-disp))/ &
+!                        (grad*dz_grid(nz/2-disp)))**2))
+                  beta_p(l) = beta_part
+
+                  call get_pindex(i,j,k,l)
+
+!                  vth2=sqrt(vth*vth*beta_p(l)) !thermal speed dependent on np to set up pressure balance for density gradient
+
+!                  vth2=va*sqrt(pl_beta(ijkp(l,1),ijkp(l,2),ijkp(l,3)))
+
+                  vth2 = vth !+ va_x*cosh((qz(nz/2)-qz(k))/Lo)**(-2) 
+
+                  !perp is xz plane, tperp_par gt 1, vy (v_parallel) modified to preserve pressure balance.
+                  vx = tperp_par*vth2*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf()) !remember to add in vsw to get the flow velocity
+                  vy = sqrt(3*vth2**2-2*(tperp_par*vth2)**2)*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+                  vz = tperp_par*vth2*sqrt(-log(pad_ranf()))*cos(PI*pad_ranf())
+
+!                  write(*,*) 'vx, vy, vz...', tperp_par*vth2,sqrt(3*vth2**2-2*(tperp_par*vth2)**2),tperp_par*vth2,vth2
+!                  stop
+                  
+                  ii = ijkp(l,1)
+                  kk = ijkp(l,3)
+
+!                  Lo_y = 2*Lo*(1.0-exp(-(xp(l,2)-qy(ny/2))**2/(5*dy)**2)) + Lo
+                  
+!                  vp(l,1) = -0.0*(exp(-(xp(l,3)-qz(nz/2))**2/(10.*delz)**2)
+!               x        *exp(-(xp(l,1)-qx(nx/2))**2/(10.*dx)**2))+vx
+                  vp(l,1) =  va_f*va*(tanh((qz(k)-qz(nz/2))/(Lo))) + vx + &
+                       -0.0*va*cosh((qz(nz/2)-qz(k))/Lo)**(-2)*tanh((qz(nz/2)-qz(k))/Lo)*cos(qx(i)*PI/(0.5*nx*dx))
+!vx!+57.0*exp(-(xp(l,3)-qz(nz/2))**2/(5*dz_grid(nz/2))**2) !Gaussian velocity perturbation (20)
+                  vp(l,2) = vy! +57.0*(1+0.5*cos(8*pi*qx(ii)/qx(nx-1)))* &
+                       !(1+0.5*cos(8*pi*qz(kk)/qz(nz)))* &
+                       !exp(-((qx(ii)-qx(nx/2))**2 + (qz(kk)-qz(nz/2))**2)/(10*dx)**2)
+                  vp(l,3) = vz !+0.1*0.5*va*cosh((qz(nz/2)-qz(k))/Lo)**(-2)*sin(PI*qx(i)/(20*dx))
+                  
+                  do m=1,3
+                        vp1(l,m) = vp(l,m)
+                        input_E = input_E + 0.5*m_arr(l)*(vp(l,m)*km_to_m)**2/(beta * beta_p(l))
+                        input_p(m) = input_p(m) + m_arr(l) * vp(l,m) / (beta * beta_p(l))
+                  enddo
+                  
+            enddo
+            
+            call get_interp_weights()
+            call update_np()
+            call update_up(vp)
+
+                       
+            do i=1,nx
+               do j=1,ny
+                  do k=1,nz
+                     grav(i,j,k) = 0.0
+                  enddo
+               enddo
+            enddo
+            
+      end subroutine load_Maxwellian_KH_aniso
+      
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+      
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine init_KH_part()
         
@@ -395,11 +527,11 @@ module part_init
         
         vth1 = vth
         vth2 = vth
-        vth3 = vth
+        vth3 = 1.0*vth
 
         m1 = 1.0
         m2 = 1.0
-        m3 = m_pu
+        m3 = 1.0
         
 !!        vth1 = sqrt((m2/m1)*(N2/N1)*(beta1/beta2)*vth2*vth2 + (m3/m1)*(N3/N1)*(beta1/beta3)*vth3*vth3)
         vth2 = sqrt((m1/m2)*(N1/N2)*(beta2/beta1)*vth1*vth1 - (m3/m2)*(N3/N2)*(beta2/beta3)*vth3*vth3)
@@ -416,7 +548,9 @@ module part_init
 !        stop
 
         call load_Maxwellian_KH(vth1,1,N_1,m1*mion,1/m1,beta1,rL1,1)
+!        call load_Maxwellian_KH_aniso(vth1,1,N_1,m1*mion,1/m1,beta1,rL1,1,1.1)
         call load_Maxwellian_KH(vth2,N_1+1,N_2,m2*mion,1/m2,beta2,rL2,2)
+!        call load_Maxwellian_KH_aniso(vth2,N_1+1,N_2,m2*mion,1/m2,beta2,rL2,2,1.1)
         call load_Maxwellian_KH(vth3,N_2+1,N_3,m3*mion,1/m3,beta3,rL3,2)
         
       end subroutine init_KH_part

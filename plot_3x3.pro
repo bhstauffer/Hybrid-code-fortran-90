@@ -39,7 +39,9 @@ pro plot_3x3,nf,yslc
   loadct,27
   
 ;  dir = '/Volumes/Scratch/hybrid/KH3D/run_test/'
-  dir = './run2_3d/'
+  dir = './run_test/'
+;  dir = './run_b3_v3_4/'
+;  dir = './run_29/'
   
   nframe=nf
   read_para,dir
@@ -103,9 +105,18 @@ pro plot_3x3,nf,yslc
      upx = reform(up(*,yslc,minz:maxz,0))
      upy = reform(up(*,yslc,minz:maxz,1))
      upz = reform(up(*,yslc,minz:maxz,2))
+
+     u = sqrt(upx*upx + upy*upy + upz*upz)
+     b = sqrt(bx*bx + by*by + bz*bz)
+     udotb = upx*bx + upy*by + upz*bz
+     udotb = udotb/(max(u)*max(b))
+    
+     
      mixarr = reform(mixed(*,yslc,minz:maxz))
 ;     tparr = 0.0*(binplane*1e-9)^2/(2*!pi*4e-7)+nparr;*1e6*reform(tp(*,yslc,minz:maxz))*1.6e-19
      tparr = reform(tp(*,yslc,minz:maxz))
+     nTarr = nparr*tparr
+     
      tparr = tparr/(total(tparr(10,*))/nz)
 ;     plot,nparr(10,*),charsize=3
 ;     stop
@@ -114,7 +125,9 @@ pro plot_3x3,nf,yslc
      
 ;     plot_image,by,x,z,sclf,2,'$B_y$ (nT)'
      
-     plot_image,binplane,x,z,sclf,1,'$B_{inplane}$ (nT)'
+;     plot_image,binplane,x,z,sclf,1,'$B_{inplane}$ (nT)'
+;     plot_image,udotb,x,z,sclf,1,'$u dot B$'
+     plot_image,nTarr,x,z,sclf,1,'$nT$'
      
 ;     plot_image,upx,x,z,sclf,4,'$u_x$ (km/s)'
      
@@ -137,6 +150,8 @@ pro plot_3x3,nf,yslc
      if(wh(0) gt -1.0) then begin
         mixarr(wh) = 1.0
      endif
+
+     mixarr = (-abs(mixarr - 0.5)+0.5)
      
      plot_image,mixarr,x,z,sclf,4,'mixing'
      
