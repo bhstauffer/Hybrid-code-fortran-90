@@ -23,9 +23,9 @@ end
 pro mix_rat,nf,yslc
 
 
-  sclf = 1.3
-  xsz = 1600.
-  ysz = 800.
+  sclf = 1.2
+  xsz = 1200.
+  ysz = 900.
   file = 'ion_cyclotron.mp4'
   width = xsz
   height = ysz
@@ -39,13 +39,14 @@ pro mix_rat,nf,yslc
   loadct,27
   
 ;  dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_30/'
-  dir = './run_test/'
-  
+  dir = './run_nu_0.0200/'
+
+     
   nframe=nf
   read_para,dir
   restore,filename=dir+'para.sav'
   read_coords,dir,x,y,z
-@get_const
+  @get_const
   wpi = sqrt(q*q*(np_top/1e9)/(epo*mproton))
   coverwpi = 3e8/wpi/1e3
   print,coverwpi
@@ -80,8 +81,8 @@ pro mix_rat,nf,yslc
 ;  close,1
   
   window,2
-  dt = 0.08
-  nt = 500.
+  dt = 0.05 ;time step
+  nt = 200. ;diagnostic output interval
   
   !p.multi=[0,1,1]
   for nfrm = 1,nframe,1 do begin
@@ -114,13 +115,14 @@ pro mix_rat,nf,yslc
 ;     plot,nparr(10,*),charsize=3
 ;     stop
 
-     if (nfrm le 2) then  begin
+     if (nfrm le 1) then  begin
         wh0 = where((mixed ge 0.25) and (mixed le 0.75))
         wharr = float(n_elements(wh0))/ float(n_elements(wh0))
         tarr = dt*nfrm*nt
      endif
      wh = where((mixed ge 0.25) and (mixed le 0.75))
-     wharr = [wharr,float(n_elements(wh))/ float(n_elements(wh0))]
+;     wharr = [wharr,float(n_elements(wh))/ float(n_elements(wh0))]
+     wharr = [wharr,float(n_elements(wh))]
      tarr = [tarr,dt*nfrm*nt]
      
      print,'mixed...',float(n_elements(wh)),float(n_elements(wh0))
@@ -165,10 +167,13 @@ pro mix_rat,nf,yslc
      
   endfor
 
+
   p = plot(tarr,wharr,'2b+')
   p.xtitle='t ($\Omega_i^{-1}$)'
   p.ytitle='Mixed area'
   p.save,'mixed_area.png'
+
+
   
   video.cleanup
   xinteranimate,/keep_pixmaps
@@ -186,6 +191,7 @@ pro mix_rat,nf,yslc
   
   npim.save,'entropy.tif'
   
-  
+
+
   return
 end

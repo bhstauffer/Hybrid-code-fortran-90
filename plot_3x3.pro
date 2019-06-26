@@ -23,9 +23,9 @@ end
 pro plot_3x3,nf,yslc
 
 
-  sclf = 1.3
-  xsz = 1600.
-  ysz = 800.
+  sclf = 1.2
+  xsz = 1200.
+  ysz = 900.
   file = 'ion_cyclotron.mp4'
   width = xsz
   height = ysz
@@ -39,7 +39,7 @@ pro plot_3x3,nf,yslc
   loadct,27
   
 ;  dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_30/'
-  dir = './run_test/'
+  dir = './run_nu_0.0002/'
   
   nframe=nf
   read_para,dir

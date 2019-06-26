@@ -24,7 +24,7 @@ module initial
             eoverm = q/mO
             mO_q = mO/q
             
-            phi = 2.0*PI/180.0
+            phi = 5.0*PI/180.0
             
             b0_1x = b0_init*eoverm*sin(phi)
             b0_2x = b0_bottom*eoverm*sin(phi)
@@ -164,12 +164,14 @@ module initial
             qz(1) = delz
             
             do k=2,nz
-                  qz(k) = qz(k-1)+dz_grid(k)
+               qz(k) = qz(k-1)+dz_grid(k)
             enddo
-            
+
             do k=1, nz-1
                   dz_grid(k) = qz(k+1)-qz(k)
             enddo
+
+            
             
             dz_grid(nz) = dz_grid(nz-1)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
