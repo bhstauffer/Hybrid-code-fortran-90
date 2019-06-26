@@ -27,9 +27,9 @@ pro plot_2d_slc,nf,slc,pln
 ;3 = xz
 
 
-  sclf = 0.8
-  xsz = 1600.
-  ysz = 1000.
+  sclf = 0.9
+  xsz = 1500.
+  ysz = 900.
   file = 'ion_cyclotron.mp4'
   width = xsz
   height = ysz
@@ -43,7 +43,7 @@ loadct,27
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_24/'
 ;dir = '/Volumes/Scratch/hybrid/KH3D/run_1_periodic/'
-dir = './run_test/'
+dir = './run_va_0.8_159/'
 
 nrestart = ''
 
@@ -182,6 +182,8 @@ for nfrm = 1,nframe,1 do begin
       mixarr(wh) = 1.0
    endif
 
+   mixarr = (-abs(mixarr - 0.5)+0.5)
+   
    plot_image,mixarr,x,y,sclf,9,'mixing'
 
    img = w.CopyWindow()

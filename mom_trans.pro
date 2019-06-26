@@ -45,7 +45,7 @@ loadct,27
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_30/'
 ;dir = '/Volumes/Scratch/hybrid/KH3d/run_3_periodic/'
-dir='./run1_3d/'
+dir='./run7_3d/'
 
 nframe=nf
 read_para,dir
@@ -111,6 +111,7 @@ nfrm = nf
    c_read_3d_vec_m_32,dir,'c.b1'+mrestart,nfrm,b1
    c_read_3d_vec_m_32,dir,'c.up'+mrestart,nfrm,up
    c_read_3d_m_32,dir,'c.np'+mrestart,nfrm,np
+   c_read_3d_m_32,dir,'c.mnp'+mrestart,nfrm,mnp
    c_read_3d_m_32,dir,'c.mixed'+mrestart,nfrm,mixed
    c_read_3d_m_32,dir,'c.temp_p'+mrestart,nfrm,tp
 
@@ -130,6 +131,7 @@ nfrm = nf
          bz = (reform(b1(*,*,slc,2))*mp/q)/1e-9
          
          nparr = reform(np(*,*,slc))/1e15
+         mnparr = reform(mnp(*,*,slc))/1e15
          upx = reform(up(*,*,slc,0))
          upy = reform(up(*,*,slc,1))
          upz = reform(up(*,*,slc,2))
@@ -144,6 +146,7 @@ nfrm = nf
          bz = (reform(b1(slc,*,*,2))*mp/q)/1e-9
          
          nparr = reform(np(slc,*,*))/1e15
+         mnparr = reform(mnp(slc,*,*))/1e15
          upx = reform(up(slc,*,*,0))
          upy = reform(up(slc,*,*,1))
          upz = reform(up(slc,*,*,2))
@@ -158,6 +161,7 @@ nfrm = nf
          bz = (reform(b1(*,slc,*,2))*mp/q)/1e-9
          
          nparr = reform(np(*,slc,*))/1e15
+         mnparr = reform(mnp(*,slc,*))/1e15
          upx = reform(up(*,slc,*,0))
          upy = reform(up(*,slc,*,1))
          upz = reform(up(*,slc,*,2))
@@ -171,12 +175,15 @@ nfrm = nf
 
    rhouu = 0.0
    npave = total(np(*,1,2))/nx
+   mnpave = total(mnp(*,1,2))/nx
    upave = total(up(*,1,2,0))/nx
-   rhouu0 = mp*npave/1e9*(upave*1e3)^2
+;   rhouu0 = mp*npave/1e9*(upave*1e3)^2
+   rhouu0 = mnpave/1e9*(upave*1e3)^2
    bb = 0.0
 
    TM = bx(*,*)*1e-9*bz(*,*)*1e-9/muo/rhouu0
-   TR = -mp*nparr(*,*)*1e6*upx(*,*)*upz(*,*)*1e6/rhouu0
+;   TR = -mp*nparr(*,*)*1e6*upx(*,*)*upz(*,*)*1e6/rhouu0
+   TR= -mnparr(*,*)*1e6*upx(*,*)*upz(*,*)*1e6/rhouu0
    TM(0,0) = 0.3
    TR(0,0) = 0.3
 
@@ -184,7 +191,8 @@ nfrm = nf
       for j = 0,ny-1 do begin
 ;         rhouu = rhouu-mp*nparr(i,j)*1e6*upx(i,j)*upz(i,j)*1e6/rhouu0
 ;         bb = bb+bx(i,j)*1e-9*bz(i,j)*1e-9/muo/rhouu0
-         rhouu = rhouu-mp*nparr(i,j)*1e6*upx(i,j)*upz(i,j)*1e6
+;         rhouu = rhouu-mp*nparr(i,j)*1e6*upx(i,j)*upz(i,j)*1e6
+         rhouu = rhouu-mnparr(i,j)*1e6*upx(i,j)*upz(i,j)*1e6
          bb = bb+bx(i,j)*1e-9*bz(i,j)*1e-9/muo
 
       endfor
@@ -245,10 +253,10 @@ bb_arr = 0.0
 
 ;ntot = 109.*99.
 
-ntot = 209*129
+ntot = 209*159.
 
-for i = 1,15 do begin
-   mom_trans,i,55,rhouu,bb,TM,TR,x,y,w,dt,omega_p
+for i = 1,16 do begin
+   mom_trans,i,60,rhouu,bb,TM,TR,x,y,w,dt,omega_p
    plot_image,TM,x,y,0.8,1,'$T^M_{xz}$'
    plot_image,TR,x,y,0.8,2,'$T^R_{xz}$'
 
@@ -258,7 +266,7 @@ for i = 1,15 do begin
    bb_arr = [bb_arr,bb]
 endfor
 
-tm = dt*100*findgen(n_elements(bb_arr))*omega_p
+tm = dt*200*findgen(n_elements(bb_arr))*omega_p
 
 p=plot(tm,bb_arr/ntot/1e-13,'b',name='$B_xB_z \mu_o^{-1}$',/xsty,font_size=18)
 p1=plot(tm,rhouu_arr/ntot/1e-13,'r',name='$\rho u_x u_z$',/overplot)

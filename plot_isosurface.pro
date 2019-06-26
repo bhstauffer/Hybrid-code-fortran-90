@@ -80,7 +80,7 @@ end
 pro plot_isosurface,nfrm,LINES=lines, TUBES=tubes
 ;-----------------------------------------------------------------------
 
-temp_val = 300 ;eV
+temp_val = 500 ;eV
 den_val = 0.5 ;c
 b_val = 0.0e-9
 edotb_val = 0.025
@@ -92,7 +92,7 @@ ach = 0.7
 ;file_dir = '/Volumes/MacD97-2/hybrid/3d_buf/run_test/'
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_9/'
-dir = './run2_3d/'
+dir = './run_0.5/'
 ;dir = '/Volumes/Scratch/hybrid/KH3D/run_3_periodic/'
 ;dir = './tmp1/'
 
@@ -231,7 +231,7 @@ iseed=0L
 
 ;for k = nz/2+1,nz/2+2,4 do begin
 ;for j = ny/2-2,ny/2+2,3 do begin
-for j = 52,56,3 do begin
+for j = 57,61,3 do begin
 ;j = 29
    for i = 10,nx-10,4 do begin
       print,i,j

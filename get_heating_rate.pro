@@ -20,11 +20,9 @@ pro plot_image,img,x,y,sclf,loc,tit
 
 end
 
-
-
 @get_const
 
-dir = './run_38/'
+dir = './run_va_0.8_159/'
 read_para,dir
 restore,filename=dir+'para.sav'
 read_coords,dir,x,y,z
@@ -36,7 +34,7 @@ cwpi = cwpi/1e3
 
 dx = x(1)-x(0)
 
-nfr = 10
+nfr = 16
 poft = 0.0
 for i = 1,nfr do begin
    nfrm = i
@@ -49,22 +47,46 @@ for i = 1,nfr do begin
    
    p = np*tp
    
-   parr = reform(p(*,ny/2,*))
-   parr1 = reform(p(*,ny/2,nz/2-5:nz/2+5))
+;   parr = reform(p(*,ny/2,*))
+;   parr1 = reform(p(*,ny/2,*))
+
+   parr = reform(p(*,*,nz/2-60:nz/2+60))
+   parr1 = reform(p(*,*,nz/2-60:nz/2+60))
+
    
-   ;plot_image,reform(p(*,ny/2,*)),x,z,1.0,1,'p'
+;   plot_image,reform(p(*,ny/2,*)),x,z,0.8,1,'p'
    
    sz = size(parr)
 ;   print,total(parr1)/(float(sz(1))*11.)
-   poft = [poft,total(parr1)/(float(sz(1))*11.)]
+   poft = [poft,total(parr1)/(float(sz(1))*float(sz(3))*float(sz(2)))]
    
 endfor
-tm = dt*100.*findgen(n_elements(poft(1:*)))
 
-plot,tm,poft(1:*),yrange=[min(poft(1:*)),max(poft(1:*))]
+poft_arr = poft(4:*)*1.6e-19/1e9/1e-11
 
-dEdt = (6.8e18-6.3e18)/300
-print,dEdt*1.6e-19/1e9
+tm = dt*200.*findgen(n_elements(poft_arr))
+
+p=plot(tm,poft_arr,yrange=[min(poft_arr),max(poft_arr)])
+p.ytitle='np*Tp ($10^{-11}$ J/m$^{3}$)'
+p.xtitle='time (s)'
+
+fit = poly_fit(tm,poft_arr,1,sigma=sig)
+
+p = plot(tm,fit(0)+fit(1)*tm,'b',/current,/overplot)
+
+dEdt_1 = (poft_arr-shift(poft_arr,1))/(dt*200.)*1e-11/1e-15
+p1 = plot(tm,smooth(dEdt_1>0,2),'4rD')
+p1.sym_filled=1
+p1.ytitle='Heating rate density [$10^{-15}$ W/m$^{3}$]'
+p1.xtitle='time (s)'
+;dEdt = (1e17-7.5e16)/1000
+p1.save,'heat_rate.png'
+
+dEdt = fit(1)
+print,dEdt,sig
+
+p.title='Heating rate density: '+strmid(strtrim(string(dEdt*1e-11/1e-15),2),0,4)+'$\pm$'+strmid(strtrim(string(sig(1)*1e-11/1e-15),2),0,4)+' [$10^{-15}$ W/m$^{3}$]'
+p.save,'heat_rate_run7.png'
 
 bx = b1(*,ny/2,nz/2,0)
 bz = b1(*,ny/2,nz/2,2)
@@ -73,10 +95,10 @@ uz = up(*,ny/2,nz/2,2)*1e3
 dens = np(*,ny/2,nz/2)/1e9
 temp_p = tp(*,ny/2,nz/2)
 
-print,'bx...',b1(*,ny/2,nz/2,0)
+;print,'bx...',b1(*,ny/2,nz/2,0)
 
 x = x*1e3
-save,filename='KH_profiles.sav',x,bx,bz,ux,uz,dens,temp_p
+;save,filename='KH_profiles.sav',x,bx,bz,ux,uz,dens,temp_p
 
 stop
 

@@ -23,9 +23,9 @@ end
 pro plot_3x3,nf,yslc
 
 
-  sclf = 1.3
-  xsz = 1600.
-  ysz = 800.
+  sclf = 1.2
+  xsz = 1600./2
+  ysz = 1200./2
   file = 'ion_cyclotron.mp4'
   width = xsz
   height = ysz
@@ -39,7 +39,8 @@ pro plot_3x3,nf,yslc
   loadct,27
   
 ;  dir = '/Volumes/Scratch/hybrid/KH3D/run_test/'
-  dir = './run2_3d/'
+  dir = './run_va_0/'
+;  dir = '../run1/'
   
   nframe=nf
   read_para,dir
@@ -137,6 +138,8 @@ pro plot_3x3,nf,yslc
      if(wh(0) gt -1.0) then begin
         mixarr(wh) = 1.0
      endif
+
+     mixarr = (-abs(mixarr - 0.5)+0.5)
      
      plot_image,mixarr,x,z,sclf,4,'mixing'
      

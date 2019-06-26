@@ -17,21 +17,20 @@ Lo = 1.5*dx
 
 Am = 1.5*(nx-1)*(ny-1)
 
-nfrm = 12
+nfrm = 16
 
 lnvz = fltarr(nfrm)
 mix_arr = fltarr(nfrm)
 
-nout=500
+nout=200
 ;dt = 0.5
 tm = dt*nout+findgen(nfrm)*nout*dt
 
-t1 = min(tm)
+t1 = 280;min(tm)
 t2 = max(tm)
 
-t1 = 250
+t1 = 280;min(tm)
 t2 = max(tm)
-
 
 for i = 1,nfrm do begin 
    c_read_3d_vec_m_32,dir,'c.up',i,up
@@ -41,7 +40,6 @@ for i = 1,nfrm do begin
    mix_arr(i-1) = dx*1e3*n_elements(wh)/Am
 
    lnvz(i-1) = alog(max(abs(smooth(up(*,1,*,2),2))))
-
 endfor
 
 !x.title='time (s)'
@@ -74,97 +72,55 @@ end
 ;-------------------------------------------------------------------------
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_19/'
-dir = '../run2/'
+;beta runs
+files=['./run1_3d/','./run2_3d/','./run3_3d/']
+
+;heavy fraction
+files=['./run1_3d/','./run4_3d/','./run5_3d/']
+
+;mach number
+files=['./run1_3d/','./run6_3d/','./run7_3d/']
+
+
+;files=['./run1_3d/','./run2_3d/','./run3_3d/','./run4_3d/','./run5_3d/','./run6_3d/','./run7_3d/']
+
+files = ['./run_va_0.8_121/','./run_va_0.8_159/']
+
+dir = files(0)
 read_data,dir,f,s
 
+for i = 1,n_elements(files)-1 do begin
 
-;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_20/'  
-dir = '../run3/'
-read_data,dir,ff,ss
+   print,'file...',files(i)
+   dir = files(i)
+   read_data,dir,ff,ss
+   
+   f = [f,ff]
+   s = [s,ss]
 
-f = [f,ff]
-s = [s,ss]
+endfor
 
+xarr = indgen(n_elements(files))+1
 
-dir = '../run4/'
-read_data,dir,ff,ss
+xarr = [121,159]
 
-f = [f,ff]
-s = [s,ss]
+;b2 = barplot(xarr,(f-s)/1e9, bottom_color="white", fill_color='yellow', index=0,name='beta 1.0',xtick;dir=1,ytickdir=1)
+b = barplot(xarr,f/1e9, bottom_color="white",fill_color='red', index=0,name='beta 1.0',xtickdir=1,ytickdir=1,xminor=0)
+;b3 = barplot(xarr,(f+s)/1e9, bottom_color="white", fill_color='yellow', index=0,name='beta 1.0',xtick;dir=1,ytickdir=1,/overplot,bottom_values=f/1e9)
+b = errorplot(xarr,f/1e9,s/1e9,/overplot,linestyle=6,thick=4)
 
-dir = '../run5/'
-read_data,dir,ff,ss
-
-f = [f,ff]
-s = [s,ss]
-
-
-dir = '../run6/'
-read_data,dir,ff,ss
-
-f = [f,ff]
-s = [s,ss]
-
-dir = '../run7/'
-read_data,dir,ff,ss
-
-f = [f,ff]
-s = [s,ss]
-
-
-
-
-;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_21/'  
-;read_data,dir,ff,ss
-
-;f = [f,ff]
-;s = [s,ss]
-
-
-
-;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_24/'  
-;read_data,dir,ff,ss
-
-;f = [f,ff]
-;s = [s,ss]
-
-
-;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_25/'  
-;read_data,dir,ff,ss
-
-
-;f = [f,ff]
-;s = [s,ss]
-
-;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_24/'  
-;read_data,dir,f1,s1
-
-
-;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_23/'  
-;read_data,dir,ff,ss
-
-;f1 = [f1,ff]
-;s1 = [s1,ss]
-
-
-;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_22/'  
-;read_data,dir,ff,ss
-
-;f1 = [f1,ff]
-;s1 = [s1,ss]
-
-xarr = [2,3,4,5,6,7]
-
-b = barplot(xarr,f/1e9, nbars = 2, fill_color='red', index=0,name='beta 1.0',xtickdir=1,ytickdir=1)
 ;b.title='$\beta$ = 1.0'
-b.xtitle='run'
+;b.xtitle='plasma $\beta$'
+;b.xtitle='Heavy ion fraction'
+b.xtitle='$\Delta v$ (M_A)'
 b.ytitle='$D (10^9 m^2/s)$'
+b.yrange=[0,max(f+2*s)/1e9]
 
 ;b1 = barplot(xarr,f1/1e9, nbars = 2, fill_color='blue',index=1,/overplot,name='beta 0.5')
 
 ;l = legend(target=[b,b1])
 
-;l.save,"diffusion_coeff.pdf"
+b.save,"diffusion_coeff_mach.png"
 
 stop
 end
