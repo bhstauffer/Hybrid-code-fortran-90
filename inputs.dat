@@ -3,13 +3,13 @@
 17                    !mass of pickup ion species
 0.4e15                 !minimum density (km^-3) (40)
 1.0                   !maximum density (scaled by minimum density) (50)
-0.2                   !particle time step (fraction of omega_i) (0.08 is the default)
+0.05                   !particle time step (fraction of omega_i) (0.08 is the default)
 2800                  !number of time steps (10000)
 100                    !diagnostic output interval (100)
 150.0                   !flow speed (km/s) 
 1.0                  !plasma beta !was thermal speed for Maxwellian (40 km/s)
 1.0                   !Ni_tot initial (fraction of Ni_max)
-1.0                   !grid size as fraction of lambda_i
+0.25                   !grid size as fraction of lambda_i
 1000                   !density scale height (multiple of dx) (3000 for full torus)
 1.0                   !scale height to start stretching
 0.0                   !dz stretching scale
@@ -19,4 +19,4 @@
 10.0                   !mass load rate scalar (default = 1.0)
 10.0                !electron temperature (eV)  
 2                     ! Boundary condition (1: fully periodic   2: Periodic on xy, zero derivative on z)  
-'./run_38/'             !output directory 
+'./run_39/'             !output directory 

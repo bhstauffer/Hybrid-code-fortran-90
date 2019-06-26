@@ -245,7 +245,7 @@ bb_arr = 0.0
 
 ;ntot = 109.*99.
 
-ntot = 239*129
+ntot = 239*129.
 
 for i = 1,28 do begin
    mom_trans,i,55,rhouu,bb,TM,TR,x,y,w,dt,omega_p
