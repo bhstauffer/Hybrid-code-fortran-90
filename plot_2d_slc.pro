@@ -43,7 +43,7 @@ loadct,27
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_24/'
 ;dir = '/Volumes/Scratch/hybrid/KH3D/run_1_periodic/'
-dir = './run_va_0.8_159/'
+dir = './run_va_0.8_209/'
 
 nrestart = ''
 
@@ -173,9 +173,9 @@ for nfrm = 1,nframe,1 do begin
 
    plot_image,upz,x,y,sclf,6,'uz (km/s)'
 
-   plot_image,tparr,x,y,sclf,7,'Tp (eV)'
+   plot_image,smooth(tparr,2),x,y,sclf,7,'Tp (eV)'
 
-   plot_image,nparr,x,y,sclf,8,'np (cm$^{-3}$)'
+   plot_image,smooth(nparr,2),x,y,sclf,8,'np (cm$^{-3}$)'
 
    wh = where(mixarr gt 1.0)
    if(wh(0) gt -1.0) then begin

@@ -68,6 +68,8 @@ endfor
 
 c(*,*,*) = ahat(*,*,*,0)*bhat(*,*,*,0) + ahat(*,*,*,1)*bhat(*,*,*,1) + ahat(*,*,*,2)*bhat(*,*,*,2)
 
+;print,c
+
 ;c = abs(c)
 
 ;c = c/max(c)
@@ -80,10 +82,10 @@ end
 pro plot_isosurface,nfrm,LINES=lines, TUBES=tubes
 ;-----------------------------------------------------------------------
 
-temp_val = 500 ;eV
+temp_val = 150 ;eV
 den_val = 0.5 ;c
 b_val = 0.0e-9
-edotb_val = 0.025
+edotb_val = 0.0015
 
 Rio = 1200.
 ctbl = 13
@@ -92,7 +94,7 @@ ach = 0.7
 ;file_dir = '/Volumes/MacD97-2/hybrid/3d_buf/run_test/'
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_9/'
-dir = './run_0.5/'
+dir = './run_va_0.8_beta_1/'
 ;dir = '/Volumes/Scratch/hybrid/KH3D/run_3_periodic/'
 ;dir = './tmp1/'
 
@@ -128,6 +130,7 @@ b1(*,*,nz-1,*) = b1(*,*,nz-2,*)
 Efld0 = abs(vtop)*b0_top*1.6e-19/mproton
 get_edotb,Efld,b1,edotb
 edotb = edotb/Efld0
+;stop
 
 ;swap y and z directions
 
