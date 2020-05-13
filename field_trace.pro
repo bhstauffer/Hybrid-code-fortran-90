@@ -144,7 +144,7 @@ pro field_trace,nfrm,yslc
   
 ;dir = './run_29/'
 ;dir = './run_b3_v3_4/'
-dir = './run_va_0.8_beta_1_Epar/'
+dir = './run_va_0.8_beta_1/'
 
 nframe=nfrm
 read_para,dir
@@ -238,7 +238,7 @@ for k = 1,nz-1 do begin
 endfor
 
 maxIterations=3000
-stepSize=0.25
+stepSize=0.5
 
 PARTICLE_TRACE,data,seeds(0:iseed-1),verts,conn,outnormals, $
                MAX_ITERATIONS=maxIterations, MAX_STEPSIZE=stepSize,  $

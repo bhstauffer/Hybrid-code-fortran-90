@@ -4,14 +4,16 @@ pro plot_image,img,x,y,sclf,loc,tit
   
    im = image(img,x,y,/current,rgb_table=33,layout=[1,1,loc],font_size=12)
 
-   xax = axis('x',axis_range=[min(x),max(x)],location=[0,min(y)],thick=2,tickdir=1,target=im,tickfont_size=12)
-   yax = axis('y',axis_range=[min(y),max(y)],location=[0,0],thick=2,tickdir=1,target=im,tickfont_size=12)
+   xax = axis('x',axis_range=[min(x),max(x)],location=[0,min(y)],thick=2,$
+              tickdir=1,target=im,tickfont_size=12)
+   yax = axis('y',axis_range=[min(y),max(y)],location=[0,0],thick=2,$
+              tickdir=1,target=im,tickfont_size=12)
 
    im.xtitle='$x (c/\omega_{pi})$'
    im.ytitle='$z (c/\omega_{pi})$'
 
-;   ct = colorbar(target = im,title=tit,orientation=1,textpos=1,font_size=12);,$                                                                      
-;                 position=[max(x), min(y),                                                                                                           
+;   ct = colorbar(target = im,title=tit,orientation=1,textpos=1,font_size=12);,$                                 
+;                 position=[max(x), min(y),                                 
 ;                 0.05*(max(x)-min(x)),max(y)],/data)                                                                                                 
    im.scale,sclf,sclf
    ct = colorbar(target = im,title=tit,textpos=1,font_size=12,orientation=1,$
@@ -33,9 +35,9 @@ function geomean,arr
   geomean = prod^(1/float(sz(1)))
   return,geomean
 end
-
 ;--------------------------------------------------------------------------
 
+w = window()
 @clr_win
 @get_const
 
@@ -44,83 +46,51 @@ read_para,dir
 restore,filename=dir+'para.sav'
 read_coords,dir,x,y,z
 
-
+beta = 3
 wpi = sqrt(q*q*np_top/1e9/(epo*mproton))
 cwpi = 3e8/wpi
+rhoi = sqrt(beta)*cwpi
 ;cwpi = cwpi/1e3
 
 dx = (x(1)-x(0))*1e3
 
-nfr = 25
+nfr = 16
 poft = 0.0
 
-w = window()
-for i = 1,nfr do begin
-   nfrm = i
-   c_read_3d_vec_m_32,dir,'c.b1',nfrm,b1
-;   c_read_3d_vec_m_32,dir,'c.up',nfrm,up
-   c_read_3d_m_32,dir,'c.temp_p',nfrm,tp
-   c_read_3d_m_32,dir,'c.np',nfrm,np
+;w = window()
+;for i = 1,nfr do begin
+;   nfrm = i
+;   c_read_3d_vec_m_32,dir,'c.b1',nfrm,b1
+;;   c_read_3d_vec_m_32,dir,'c.up',nfrm,up
+;   c_read_3d_m_32,dir,'c.temp_p',nfrm,tp
+;   c_read_3d_m_32,dir,'c.np',nfrm,np
 
-   b1 = b1*mproton/q
+;   b1 = b1*mproton/q
    
-   p = np*tp
+;   p = np*tp
    
-;   parr = reform(p(*,*,nz/2))
-;   parr1 = reform(p(*,*,nz/2))
+;   parr = reform(p(*,*,*))
+;   parr1 = reform(p(*,*,*))
 
-   parr = reform(p(*,*,*))
-   parr1 = reform(p(*,*,*))
+;   sz = size(parr)
 
-;   plot_image,reform(p(*,ny/2,*)),x,z,0.8,1,'p'
+;   poft = [poft,total(parr1)/(float(sz(1))*float(sz(3))*float(sz(2)))]
    
-   sz = size(parr)
-;   print,total(parr1)/(float(sz(1))*11.)
-   poft = [poft,total(parr1)/(float(sz(1))*float(sz(3))*float(sz(2)))]
-   
-endfor
+;endfor
 
-poft_arr = poft(4:*)*1.6e-19/1e9
+;poft_arr = poft(2:*)*1.6e-19/1e9
 
-tm = dt*200.*findgen(n_elements(poft_arr))
+;tm = dt*200.*findgen(n_elements(poft_arr))
 
-;p=plot(tm,poft_arr,yrange=[min(poft_arr),max(poft_arr)],/current)
-;p.ytitle='np*Tp ($10^{-11}$ J/m$^{3}$)'
-;p.xtitle='time (s)'
-
-;fit = poly_fit(tm,poft_arr,1,sigma=sig)
-
-;p = plot(tm,fit(0)+fit(1)*tm,'b',/current,/overplot)
-
-w1=window()
-dEdt_1 = (shift(poft_arr,-1)-shift(poft_arr,1))/(2*dt*200.)/1e-15
-p1 = plot(tm,dEdt_1>0,'4r-D',/current)
-p1.sym_filled=1
-p1.ytitle='Heating rate density [$10^{-15}$ W/m$^{3}$]'
-p1.xtitle='time (s)'
-;dEdt = (1e17-7.5e16)/1000
-p1.save,'heat_rate.png'
-
-;dEdt = fit(1)
-;print,dEdt,sig
-
-;p.title='Heating rate density: '+strmid(strtrim(string(dEdt/1e-15),2),0,4)+'$\pm$'+strmid(strtrim(string(sig(1)/1e-15),2),0,4)+' [$10^{-15}$ W/m$^{3}$]'
-;p.save,'heat_rate_run7.png'
-
-;bx = b1(*,ny/2,nz/2,0)
-;bz = b1(*,ny/2,nz/2,2)
-;ux = up(*,ny/2,nz/2,0)*1e3
-;uz = up(*,ny/2,nz/2,2)*1e3
-;dens = np(*,ny/2,nz/2)/1e9
-;temp_p = tp(*,ny/2,nz/2)
-
-;print,'bx...',b1(*,ny/2,nz/2,0)
-
-;x = x*1e3
-;save,filename='KH_profiles.sav',x,bx,bz,ux,uz,dens,temp_p
+;w1=window()
+;dEdt_1 = (shift(poft_arr,-1)-shift(poft_arr,1))/(2*dt*200.)/1e-15
+;p1 = plot(tm,dEdt_1>0,'4r-D',/current)
+;p1.sym_filled=1
+;p1.ytitle='Heating rate density [$10^{-15}$ W/m$^{3}$]'
+;p1.xtitle='time (s)'
+;p1.save,'heat_rate.png'
 
 barr = fltarr(nx)
-;for i = 0,nx-1 do begin
 pmhd = 0
 pkaw = 0
 w2 = window()
@@ -132,106 +102,96 @@ for i = 1,nfr do begin
    cnt = 0
    pmhd_arr = 0
    pkaw_arr = 0
-
    
+   bx = reform(b1(*,1,1,0))
+   bz = reform(b1(*,1,1,2))
+   barr = sqrt(bx^2 + bz^2) 
+   fx = FFT_PowerSpectrum(barr, dx, FREQ=freq)
+   parr = fltarr(n_elements(fx))
    
-   for k = nz/2-15,nz/2+15 do begin
-      for j = 1,ny-2 do begin
-;k = nz/2
-;      j= ny/2
+   for k = nz/2-5,nz/2+5 do begin
+      for j = ny/2-20,ny/2+20 do begin
       bx = reform(b1(*,j,k,0))
       bz = reform(b1(*,j,k,2))
       density = reform(np(*,j,k))
-      barr = sqrt(bx^2 + bz^2) ;reform(b1(*,k,nz/2-1,2))
-      ;barr = bx
-;      plot,x,barr
+      rho = mean(mp*density/1e9)
+
+;      tvscl,reform(p(*,ny/2,*))
+
+      barr = sqrt(bx^2 + bz^2)  ;reform(b1(*,k,nz/2-1,2))
       cnt = cnt+1
       fx = FFT_PowerSpectrum(bx, dx, FREQ=freq)
       fz = FFT_PowerSpectrum(bz, dx, FREQ=freq)
+      fperp = FFT_PowerSpectrum(barr, dx, FREQ= freq)
       
       freq = 2*!pi*freq(1:*)
+      kperp = freq
       fx = fx(1:*)
-      fz = fz(1:*);*n_elements(freq)
+      fz = fz(1:*)
+      fperp = fperp(1:*)
       
-      psd = (2*(fz+fx))^(3./2); + (2*fx)^(3./2)
-      rho = mp*density/1e9
-      wh_mhd = where(freq lt 0.5*2*!pi/cwpi)
-      wh_kaw = where(freq ge 0.1*2*!pi/cwpi)
+;      psd = ((abs(fz)^2+abs(fx)^2))  ; + (2*fx)^(3./2)
+      parr = parr + fx + fz
+;      wh_mhd = where(freq lt sqrt(beta)*2*!pi/cwpi)
+;      wh_kaw = where(freq ge sqrt(beta)*2*!pi/cwpi)
       
-      pwr_mhd = (psd(wh_mhd)*freq(wh_mhd))/sqrt(muo^3*rho(wh_mhd))
-      pwr_kaw = (freq(wh_kaw)*cwpi)*(psd(wh_kaw)*freq(wh_kaw))/sqrt(muo^3*rho(wh_mhd))
-;           pwr_kaw = (psd(wh_kaw)*freq(wh_kaw))/sqrt(muo^3*rho)
-
-; Plot the results
-;      w2.erase
-;      p2 = plot(freq(wh_mhd), pwr_mhd, /YLOG, /xlog,XTITLE='$k_\perp$',/xsty,/ysty,/current)
-;      p2 = plot(freq,fx,/ylog,/xlog,XTITLE='$k_\perp$',/xsty,/ysty,/current)
-;      xrange=[min(freq),max(freq)]
-;      yrange=[min(pwr_mhd),max(pwr_mhd)]
-;      P2.ytitle='heating rate density [W/m$^3$]'
-;      p2 = plot([2*!pi/cwpi,2*!pi/cwpi],[min(pwr_mhd),max(pwr_mhd)],':',/overplot,/current)
-;      p2 = plot([freq(4),freq(4)],[min(pwr_mhd),max(pwr_mhd)],':',/overplot,/current)
-;     fkx = 5e-32*freq^(-5./3.)
-;     wh = where(freq lt 0.5*2*!pi/cwpi)
-;     p = plot(freq(wh),fkx(wh),/overplot,/current,'2r')
-;     fkx = 5e-37*freq^(-8./3.)
-;     wh = where(freq gt 0.5*2*!pi/cwpi)
-;     p = plot(freq(wh),fkx(wh),/overplot,/current,'2b')
+;      pwr_mhd = (psd(wh_mhd)*kperp(wh_mhd))/sqrt(muo^3*rho)
+;      pwr_kaw = (kperp(wh_kaw)*rhoi)*(psd(wh_kaw)*kperp(wh_kaw))/sqrt(muo^3*rho)
       
-;      wait,0.2
-
-;     p2 = plot(freq(wh_kaw),pwr_kaw,/overplot,'2b')
+;      wh = where((kperp lt 0.25*2*!pi/cwpi) and (freq gt freq(0)))
       
-      
-      wh = where((freq lt 0.25*2*!pi/cwpi) and (freq gt freq(0)))
-;      wh = where((freq lt max(freq)/2) and (freq gt f(2)))
-;      wh = where(freq lt 2*!pi/cwpi)
-;      print,'wh....',n_elements(wh)
-;print,'pwr_mhd...',total(pwr_mhd(wh))/n_elements(wh)
-;print,'pwr_kaw...',total(pwr_kaw)/n_elements(wh_kaw)
-      
-      pmhd_arr = pmhd_arr + mean(pwr_mhd(wh));total(pwr_mhd(wh))/n_elements(wh)
-      pkaw_arr = pkaw_arr + total(pwr_kaw)/n_elements(wh_kaw)
-      
-;      p2 = plot(freq(wh),pwr_mhd(wh),/overplot,/current,'2r')
+;      pmhd_arr = pmhd_arr + mean(pwr_mhd(wh))
+;      pkaw_arr = pkaw_arr + total(pwr_kaw)/n_elements(wh_kaw)
       
    endfor
    endfor
-   print,'pmhd...',pmhd_arr/cnt
-   print,'pkaw...',pkaw_arr/cnt
+;   print,'pmhd...',pmhd_arr/cnt
+;   print,'pkaw...',pkaw_arr/cnt
    
-   pmhd = [pmhd,(pmhd_arr)/cnt]
-   pkaw = [pkaw,(pkaw_arr)/cnt]
+;   pmhd = [pmhd,(pmhd_arr)/cnt]
+;   pkaw = [pkaw,(pkaw_arr)/cnt]
 
 endfor
 
-p1.window.SetCurrent
-p1 = plot(tm,pmhd(4:*)/1e-15,'4b-D',/overplot)
-p1.sym_filled=1
-p1 = plot(tm,pkaw(4:*)/1e-15,'4g-D',/overplot)
-p1.sym_filled=1
-p1.ylog=1
-p1.yrange=[1e-2,10]
+parr = parr/cnt
+k = freq/((1/sqrt(beta))*2*!pi/cwpi)
+psd = parr/(max(parr));>1e-8
 
-;w4 = window()
+wh = where((k ge k(1)) and (k le 0.3))
+fkx_mhd = poly_fit(alog(k(wh)),alog(psd(wh)),1)
 
-;p = plot(freq,f,/current,/xlog,/ylog)
+p = plot(alog(k(1:*)),alog(psd(1:*)))
+p.xtitle='$k_\perp \rho_i$'
+p.ytitle='Power'
+;p.xrange=[min(k),max(k)]
+p1 = plot(alog(k(wh)), fkx_mhd(0) + fkx_mhd(1)*alog(k(wh)),'r',/overplot,name=string(fkx_mhd(1)))
 
-fkx = 5e-20*freq^(-5./3.)
+wh = where((k gt 0.3) and (k le 1.0))
+fkx_mid = poly_fit(alog(k(wh)),alog(psd(wh)),1)
 
-wh = where(freq lt 2*!pi/cwpi)
-p = plot(freq(wh),fkx(wh),/overplot,/current,'2r')
+p3 = plot(alog(k(wh)), fkx_mid(0) + fkx_mid(1)*alog(k(wh)),'b',/overplot,name=string(fkx_mid(1)))
 
-;fkx = 4e-11*freq^(-8./3.)
+wh = where((k gt 1.0) and (k le 2.0))
+fkx_kaw = poly_fit(alog(k(wh)),alog(psd(wh)),1)
+p2 = plot(alog(k(wh)), fkx_kaw(0) + fkx_kaw(1)*alog(k(wh)),'g',/overplot,name=string(fkx_kaw(1)))
 
-;wh = where(freq gt 2*!pi/cwpi)
-;p = plot(freq(wh),fkx(wh),/overplot,/current,'2b')
+wh = where((k gt k(0)) and (k le 2.0))
+fkx_tot = poly_fit(alog(k(wh)),alog(psd(wh)),1)
+p4 = plot(alog(k(wh)), fkx_tot(0) + fkx_tot(1)*alog(k(wh)),'c',/overplot,name=string(fkx_tot(1)))
+l = legend(target=[p1,p3,p2,p4])
 
-;fkx = 3e-10*freq^(-7./3.)
 
-;wh = where(freq gt 2*!pi/cwpi)
-;p = plot(freq(wh),fkx(wh),/overplot,/current,'2g')
+;p1.window.SetCurrent
+;p1 = plot(tm,pmhd(4:*)/1e-15,'4b-D',/overplot)
+;p1.sym_filled=1
+;p1 = plot(tm,pkaw(4:*)/1e-15,'4g-D',/overplot)
+;p1.sym_filled=1
+;p1.ylog=1
+;p1.yrange=[1e-2,10]
 
-;p.save,'ps_kaw.png'
+;fkx = 5e-20*freq^(-5./3.)
+
+;wh = where(freq lt 2*!pi/cwpi)
+;p = plot(freq(wh),fkx(wh),/overplot,/current,'2r')
 
 end
