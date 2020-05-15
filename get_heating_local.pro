@@ -2,11 +2,11 @@
 pro plot_image,img,x,y,sclf,loc,ii,kk,nxz,plt_tit,l_tit
 ;---------------------------------------------------------------------------
 
-   ctbl = colortable(20)
-   im = image(img<250,x,y,/current,rgb_table=ctbl,layout=[1,1,loc],font_size=14)
+   ctbl = colortable(15,/reverse)
+   im = image(img,x,y,/current,rgb_table=ctbl,layout=[1,1,loc],font_size=16)
 
-   xax = axis('x',axis_range=[min(x),max(x)],location=[min(y)],thick=1,tickdir=1,target=im,tickfont_size=14)
-   yax = axis('y',axis_range=[min(y),max(y)],location=[min(x)],thick=1,tickdir=1,target=im,tickfont_size=14)
+   xax = axis('x',axis_range=[min(x),max(x)],location=[min(y)],thick=1,tickdir=1,target=im,tickfont_size=16)
+   yax = axis('y',axis_range=[min(y),max(y)],location=[min(x)],thick=1,tickdir=1,target=im,tickfont_size=16)
 
    im.xtitle='$x (c/\omega_{pi})$'
    im.ytitle='$z (c/\omega_{pi})$'
@@ -15,13 +15,14 @@ pro plot_image,img,x,y,sclf,loc,ii,kk,nxz,plt_tit,l_tit
    im.xrange=[min(x(whx)),max(x)]
    im.yrange=[min(y(why)),max(y)]
    im.title = plt_tit
-   
+   im.position=[0.2,0.2,0.8,0.8]
+   im.font_size=16
 ;   ct = colorbar(target = im,title=tit,orientation=1,textpos=1,font_size=12);,$                                                                      
 ;                 position=[max(x), min(y),                                                                                                           
 ;                 0.05*(max(x)-min(x)),max(y)],/data)                                                                                                 
    im.scale,sclf,sclf
    ct = colorbar(target = im,title=l_tit,textpos=1,font_size=14,orientation=1,$
-                 position=[1.01,0,1.06,1.0],/relative)
+                 position=[1.01,0.0,1.05,1.0],/relative)
 
 ;   im = plot([x(ii-nxz/2),x(ii+nxz/2)],[y(kk-nxz/2),y(kk-nxz/2)],'4w',/overplot)
 ;   im = plot([x(ii-nxz/2),x(ii+nxz/2)],[y(kk+nxz/2),y(kk+nxz/2)],'4w',/overplot)
@@ -68,7 +69,7 @@ end
 pro get_particle_heating,info,s,poft,dEdt_1,p1,tm,w4
 ;---------------------------------------------------------------------------      
   
-  for i = 1,info.nfr do begin
+  for i = info.nfr0,info.nfr1 do begin
      nfrm = i
      
      c_read_3d_m_32,info.dir,'c.temp_p',nfrm,tp
@@ -111,6 +112,8 @@ pro get_curl,bx,bz,dx,curlb
         curlb(i,k) = -(bz(i+1,k)-bz(i-1,k))/dx + (bx(i,k+1) - bx(i,k-1))/dx
      endfor
   endfor
+  curlb(*,sz(2)-1) = curlb(*,sz(2)-3)
+  curlb(*,sz(2)-2) = curlb(*,sz(2)-3)
 end
 ;---------------------------------------------------------------------------
 
@@ -151,7 +154,8 @@ end
 ;dir = './run_va_0.8_beta_1/'
 dir = './run_va_0.8_beta_3/'
 
-nfr = 19   ;number of frames.
+nfr0 = 18
+nfr1 = 19                        ;number of frames.
 nxz = 6   ;fft domain
 
 ;initialize
@@ -166,7 +170,7 @@ cwpi = 3e8/wpi
 cwpi = cwpi
 rhoi = sqrt(beta)*cwpi
 
-info = {info, nfr:nfr, dt:dt, t0:200., dir:dir, nxz:nxz}
+info = {info, nfr0:nfr0, nfr1:nfr1, dt:dt, t0:200., dir:dir, nxz:nxz}
 s = {plasma_params, Omega_i:Omega_i, wpi:wpi, $
               cwpi:cwpi, beta:beta, rhoi:rhoi, kp_rhoi:(1/sqrt(beta))*2*!pi/cwpi }
 
@@ -197,11 +201,11 @@ w5 = window(dimensions=[900,600])
 qmhd = 0.
 qkaw = 0.
 
-for j = 15,info.nfr do begin
+for j = info.nfr0,info.nfr1 do begin
    qmhd_1 = 0.
    qkaw_1 = 0.
-;   for jj = 1,ny-2,10 do begin
-   jj = ny/2
+   for jj = 1,ny-2,10 do begin
+;   jj = ny/2
       nfrm = j
       print,'nfrm....',nfrm
       c_read_3d_vec_m_32,dir,'c.b1',nfrm,b1
@@ -360,34 +364,41 @@ for j = 15,info.nfr do begin
 ;      qmhd_arr = median(qmhd_arr,8)
 ;      qkaw_arr = median(qkaw_arr,8)
       
-      ctbl = colortable(3,/reverse)      
+      ctbl = colortable(3)
+      cclr = [10,50,100,150,250]
       w1.erase
       w1.SetCurrent
       plt_tit = '$B_{in-plane}$'
-      l_tit = '$B$ (nT)'
+      l_tit = '$|B|$ (nT)'
       plot_image,bperp/1e-9,x*1e3/s.cwpi,z*1e3/s.cwpi,$
                  1,1,ii,kk,nxz,plt_tit,l_tit
       c = contour(bperp,x*1e3/s.cwpi,z*1e3/s.cwpi,/overplot,n_levels=5,c_value=0,c_label_show=0,c_thick=1,$
-                  rgb_table=ctbl,c_color=[50,100,150,200,250])
-
-      ctbl = colortable(3,/reverse)      
+                  rgb_table=ctbl,c_color=cclr)
+      
+;      ctbl = colortable(3,/reverse)      
       w5.erase
       w5.SetCurrent
-      plt_tit = '$J_{y}$'
-      l_tit = '$J$'
-      get_curl,ux,uz,dx,curlb
+      plt_tit = 'Elsasser vortices'
+      l_tit = '$ |\omega^-| = |\nabla \times a^-|$ (s$^{-1}$ )'
+      get_curl,bx,bz,dx,curlb
+      get_curl,ux,uz,dx,curlu
       muo=!pi*4e-7
       apx = ux + bx/sqrt(muo*rho)
       amx = ux - bx/sqrt(muo*rho)
       apz = uz + bz/sqrt(muo*rho)
       amz = uz - bz/sqrt(muo*rho)
-      get_curl,amx,amz,dx,curlb
-;      plot_image,abs(smooth(curlb,2)/muo)<1.5e-8,x*1e3/s.cwpi,z*1e3/s.cwpi,$
-;                 1,1,ii,kk,nxz,plt_tit,l_tit
-      plot_image,abs(smooth(curlb,2))<0.8,x*1e3/s.cwpi,z*1e3/s.cwpi,$
+      get_curl,amx,amz,dx,omegam
+      get_curl,apx,apz,dx,omegap
+      awx = -amz*omegap
+      awz = amx*omegap
+      get_curl,awx,awz,dx,curlaw
+      ;get_curl,bx,bz,dx,curlb
+      ;plot_image,abs(smooth(curlb,2)/muo)<1.5e-8,x*1e3/s.cwpi,z*1e3/s.cwpi,$
+      ;           1,1,ii,kk,nxz,plt_tit,l_tit
+      plot_image,abs(smooth(omegam,2))>0.2,x*1e3/s.cwpi,z*1e3/s.cwpi,$
                  1,1,ii,kk,nxz,plt_tit,l_tit
       c = contour(bperp,x*1e3/s.cwpi,z*1e3/s.cwpi,/overplot,n_levels=5,c_value=0,c_label_show=0,c_thick=1,$
-                 rgb_table=ctbl,c_color=[50,100,150,200,250])
+                 rgb_table=ctbl,c_color=cclr)
       
       w2.erase
       w2.SetCurrent
@@ -397,16 +408,16 @@ for j = 15,info.nfr do begin
       plot_image,qmhd_arr/1e-15,x*1e3/s.cwpi,z*1e3/s.cwpi,$
                  1,1,ii,kk,nxz,plt_tit,l_tit
       c = contour(bperp,x*1e3/s.cwpi,z*1e3/s.cwpi,/overplot,n_levels=5,c_value=0,c_label_show=0,c_thick=1,$
-                 rgb_table=ctbl,c_color=[50,100,150,200,250])
+                 rgb_table=ctbl,c_color=cclr)
       
       w3.erase
       w3.SetCurrent
 ;   w3 = window(dimensions=[900,600])
-      plt_tit = '$q_{KAW}$'
-      plot_image,qkaw_arr/1e-15,x*1e3/s.cwpi,z*1e3/s.cwpi,$
+      plt_tit = 'Heating rate density'
+      plot_image,qkaw_arr/1e-15<300,x*1e3/s.cwpi,z*1e3/s.cwpi,$
                  1,1,ii,kk,nxz,plt_tit,l_tit
       c = contour(bperp,x*1e3/s.cwpi,z*1e3/s.cwpi,/overplot,n_levels=5,c_value=0,c_label_show=0,c_thick=1,$
-                 rgb_table=ctbl,c_color=[50,100,150,200,250])
+                 rgb_table=ctbl,c_color=cclr)
       
       qkaw_back = geo_mean(qkaw_arr(*,0:20))/1e-15
       print,'qkaw_back...',qkaw_back
@@ -447,7 +458,7 @@ for j = 15,info.nfr do begin
       qmhd_1 = [qmhd_1,mean(qmhd_arr/1e-15)]
       qkaw_1 = [qkaw_1,mean(qkaw_arr/1e-15)]
       
-;   endfor
+   endfor
    qmhd = [qmhd, mean(qmhd_1(1:*))]
    qkaw = [qkaw, mean(qkaw_1(1:*))]
 ;print,'mean qkaw 1...',qkaw
@@ -471,7 +482,7 @@ p1.position=[0.2,0.15,0.95,0.9]
 p1.font_size=18
 l1 = legend(target=[p1,p1a,p1b])
 l1.font_size=18
-save,tm,s.Omega_i,qmhd,qkaw,filename='beta_3_8x8.sav'
+;save,tm,s.Omega_i,qmhd,qkaw,filename='beta_3_8x8.sav'
 
 
 end

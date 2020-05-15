@@ -101,7 +101,7 @@ w = window()
 dir = './run_va_0.8_beta_3/'
 
 nfr = 24   ;number of frames.
-nxz = 10   ;fft domain
+nxz = 12   ;fft domain
 
 ;initialize
 read_para,dir
@@ -202,7 +202,9 @@ for j = 1,nfr do begin
  ;              if ((k_perp lt s.kp_rhoi) and (k_perp gt kx(0))) then pwr_mhd(i,k) = $
  ;                 (psd(i,k)*k_perp)/sqrt(muo^3*rho)
                if (k_perp gt kx(0)) then pwr_mhd(i,k) = (psd(i,k)*k_perp)/sqrt(muo^3*rho)
-;               if (k_perp ge s.kp_rhoi) then pwr_kaw(i,k) = (k_perp*rhoi)*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
+;               if (k_perp ge s.kp_rhoi) then pwr_kaw(i,k) =
+;               (k_perp*rhoi)*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
+              ; print,'k_perp*rhoi...',k_perp*rhoi
 
               if (k_perp gt kx(0)) then pwr_kaw(i,k) = sqrt(1+(0.75*k_perp^2*rhoi^2))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
             endfor
@@ -260,12 +262,14 @@ endfor
 
 w3=window(dimensions=[900,600])
 w3.SetCurrent
-p3 = barplot(kx/s.kp_rhoi,pwr_arr_sum/1e-15,/ylog,index=0,nbars=2,fill_color='blue',name='$q_{MHD}$',/current)
+;p3 = barplot(kx/s.kp_rhoi,pwr_arr_sum/1e-15,/ylog,index=0,nbars=2,fill_color='blue',name='$q_{MHD}$',/current)
+p3 = barplot(kx*rhoi,pwr_arr_sum/1e-15,/ylog,index=0,nbars=2,fill_color='blue',name='$q_{MHD}$',/current)
 p3.xtitle='$k_\perp \rho_i$'
 p3.ytitle='Heating rate density ($10^{-15}$ W/m$^3$)'
-p3.xrange=[0,2.5]
+p3.xrange=[0,15]
 p3.yrange=[0.1,50]
-p4 = barplot(kx/s.kp_rhoi,pwr_kaw_arr_sum/1e-15,index=1,nbars=2,fill_color='green',/overplot,name='$q_{KAW}$')
+;p4 = barplot(kx/s.kp_rhoi,pwr_kaw_arr_sum/1e-15,index=1,nbars=2,fill_color='green',/overplot,name='$q_{KAW}$')
+p4 = barplot(kx*rhoi,pwr_kaw_arr_sum/1e-15,index=1,nbars=2,fill_color='green',/overplot,name='$q_{KAW}$')
 l3 = legend(target=[p3,p4])
 l3.font_size=18
 p3.font_size=18
