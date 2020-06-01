@@ -154,7 +154,7 @@ end
 ;dir = './run_va_0.8_beta_1/'
 dir = './run_va_0.8_beta_3/'
 
-nfr0 = 18
+nfr0 = 6
 nfr1 = 19                        ;number of frames.
 nxz = 6   ;fft domain
 
@@ -163,7 +163,7 @@ read_para,dir
 restore,filename=dir+'para.sav'
 read_coords,dir,x,y,z
 
-beta = 3.0
+beta = 1.0
 Omega_i = q*b0_top/mproton
 wpi = sqrt(q*q*np_top/1e9/(epo*mproton))
 cwpi = 3e8/wpi
@@ -204,8 +204,8 @@ qkaw = 0.
 for j = info.nfr0,info.nfr1 do begin
    qmhd_1 = 0.
    qkaw_1 = 0.
-   for jj = 1,ny-2,10 do begin
-;   jj = ny/2
+;   for jj = 1,ny-2,10 do begin
+   jj = ny/2
       nfrm = j
       print,'nfrm....',nfrm
       c_read_3d_vec_m_32,dir,'c.b1',nfrm,b1
@@ -309,7 +309,15 @@ for j = info.nfr0,info.nfr1 do begin
                      (psd(i,k)*k_perp)/sqrt(muo^3*rho)
 ;               if ((k_perp ge s.kp_rhoi) and (k_perp gt kx(0))) then pwr_kaw(i,k) = (k_perp*rhoi)*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
                   ;if (k_perp ge s.kp_rhoi) then pwr_kaw(i,k) = (sqrt(0.75)*k_perp*rhoi)*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
-                  if (k_perp gt kx(0)) then pwr_kaw(i,k) = sqrt(1+(0.75*k_perp^2*rhoi^2))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
+                  if (k_perp gt kx(0)) then begin
+                     b = double(k_perp^2*rhoi^2)
+                     gamma0 = beseli(b,0)*exp(-b)
+                     gamma1 = beseli(b,1)*exp(-b)
+                     ;print,'gamma...',b,gamma0,gamma1
+                     pwr_kaw(i,k) = sqrt(1+(0.75*k_perp^2*rhoi^2))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
+                     ;pwr_kaw(i,k) = sqrt((1 - gamma0)/b)*((gamma0-gamma1)*b/(1 - gamma0))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
+                     ;pwr_kaw(i,k) = (psd(i,k)*k_perp)/sqrt(muo^3*rho)/(1 + 1.25*b)
+                  endif
                endfor
             endfor
             
@@ -379,7 +387,7 @@ for j = info.nfr0,info.nfr1 do begin
       w5.erase
       w5.SetCurrent
       plt_tit = 'Elsasser vortices'
-      l_tit = '$ |\omega^-| = |\nabla \times a^-|$ (s$^{-1}$ )'
+      l_tit = '$ln( |\omega^+||\omega^-|)$'
       get_curl,bx,bz,dx,curlb
       get_curl,ux,uz,dx,curlu
       muo=!pi*4e-7
@@ -395,7 +403,7 @@ for j = info.nfr0,info.nfr1 do begin
       ;get_curl,bx,bz,dx,curlb
       ;plot_image,abs(smooth(curlb,2)/muo)<1.5e-8,x*1e3/s.cwpi,z*1e3/s.cwpi,$
       ;           1,1,ii,kk,nxz,plt_tit,l_tit
-      plot_image,abs(smooth(omegam,2))>0.2,x*1e3/s.cwpi,z*1e3/s.cwpi,$
+      plot_image,smooth(alog((abs(omegam)*abs(omegap))>0.1),3),x*1e3/s.cwpi,z*1e3/s.cwpi,$
                  1,1,ii,kk,nxz,plt_tit,l_tit
       c = contour(bperp,x*1e3/s.cwpi,z*1e3/s.cwpi,/overplot,n_levels=5,c_value=0,c_label_show=0,c_thick=1,$
                  rgb_table=ctbl,c_color=cclr)
@@ -458,7 +466,7 @@ for j = info.nfr0,info.nfr1 do begin
       qmhd_1 = [qmhd_1,mean(qmhd_arr/1e-15)]
       qkaw_1 = [qkaw_1,mean(qkaw_arr/1e-15)]
       
-   endfor
+;   endfor
    qmhd = [qmhd, mean(qmhd_1(1:*))]
    qkaw = [qkaw, mean(qkaw_1(1:*))]
 ;print,'mean qkaw 1...',qkaw
@@ -470,9 +478,9 @@ qkaw = qkaw(1:*)
 
 ;tm = info.dt*info.t0*findgen(n_elements(qmhd))
 w4.SetCurrent
-p1a = plot(tm*s.Omega_i,qmhd,'2b-tu',/overplot,NAME='q_MHD')
+p1a = plot(tm*s.Omega_i,qmhd,'2b-tu',/overplot,NAME='$q_{MHD}$')
 p1a.sym_filled=1
-p1b = plot(tm*s.Omega_i,qkaw,'2g-s',/overplot,NAME='q_KAW')
+p1b = plot(tm*s.Omega_i,qkaw,'2g-s',/overplot,NAME='$q_{KAW}$')
 p1b.sym_filled=1
 p1.ylog=1
 p1.yrange=[0.1,30]

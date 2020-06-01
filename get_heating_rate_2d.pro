@@ -100,8 +100,8 @@ w = window()
 ;dir = './run_va_0.8_beta_1/'
 dir = './run_va_0.8_beta_3/'
 
-nfr = 24   ;number of frames.
-nxz = 12   ;fft domain
+nfr = 25   ;number of frames.
+nxz = 10   ;fft domain
 
 ;initialize
 read_para,dir
@@ -155,7 +155,7 @@ for j = 1,nfr do begin
    psd_k_mhd = 0.
    psd_k_kaw = 0.
    
-   for jj = 2, ny-2 do begin
+   for jj = ny/2-10, ny/2+10 do begin
 ;   jj = ny/2
       x0 = nxz/2 + 1
       while((x0 + nxz/2) lt nx-2) do begin
@@ -263,13 +263,13 @@ endfor
 w3=window(dimensions=[900,600])
 w3.SetCurrent
 ;p3 = barplot(kx/s.kp_rhoi,pwr_arr_sum/1e-15,/ylog,index=0,nbars=2,fill_color='blue',name='$q_{MHD}$',/current)
-p3 = barplot(kx*rhoi,pwr_arr_sum/1e-15,/ylog,index=0,nbars=2,fill_color='blue',name='$q_{MHD}$',/current)
-p3.xtitle='$k_\perp \rho_i$'
+p3 = barplot(kx/s.kp_rhoi,pwr_arr_sum/1e-15,/ylog,index=0,nbars=2,fill_color='blue',name='$q_{MHD}$',/current)
+p3.xtitle='$\rho_i (\lambda_\perp)^{-1}$'
 p3.ytitle='Heating rate density ($10^{-15}$ W/m$^3$)'
-p3.xrange=[0,15]
+p3.xrange=[0,2.5]
 p3.yrange=[0.1,50]
 ;p4 = barplot(kx/s.kp_rhoi,pwr_kaw_arr_sum/1e-15,index=1,nbars=2,fill_color='green',/overplot,name='$q_{KAW}$')
-p4 = barplot(kx*rhoi,pwr_kaw_arr_sum/1e-15,index=1,nbars=2,fill_color='green',/overplot,name='$q_{KAW}$')
+p4 = barplot(kx/s.kp_rhoi,pwr_kaw_arr_sum/1e-15,index=1,nbars=2,fill_color='green',/overplot,name='$q_{KAW}$')
 l3 = legend(target=[p3,p4])
 l3.font_size=18
 p3.font_size=18
@@ -295,18 +295,20 @@ l1.font_size=18
 w2=window(dimensions=[800,600])
 w2.SetCurrent
 ;p2=plot(tm(2:*)*Omega_i,psd_av(2:*),'4r-D')
-p2=plot(tm(2:*)*Omega_i,psd_av_mhd(2:*),'2b-D',NAME='$k_\perp \rho_i < 1$',/current)
+p2=plot(tm(2:*)*Omega_i,psd_av_mhd(2:*),'2b-D',NAME='$\rho_i (\lambda_\perp)^{-1} < 1$',/current)
 p2.sym_filled=1
 ;p2=errorplot(tm(2:*)*Omega_i,psd_av_mhd(2:*),psd_sd_mhd(2:*),'2r-D',NAME='k_MHD')
-p3=plot(tm(2:*)*Omega_i,psd_av_kaw(2:*),'2g-s',/overplot,NAME='$k_\perp \rho_i > 1$')
+p3=plot(tm(2:*)*Omega_i,psd_av_kaw(2:*),'2g-s',/overplot,NAME='$\rho_i (\lambda_\perp)^{-1} > 1$')
 p3.sym_filled=1
 ;p3=errorplot(tm(2:*)*Omega_i,psd_av_kaw(2:*),psd_sd_kaw(2:*),'2b-s',/overplot,NAME='k_KAW')
 p2.ytitle='spectral index'
 p2.xtitle='time ($\Omega_i^{-1}$)'
-p2.title = '$\beta$ = 3'
+;p2.title = '$\beta$ = 3'
+t2 = text(tm(3)*Omega_i,-5./3.+0.02,'-5/3',/data,font_size=16)
+t2 = text(tm(3)*Omega_i,-8./3.+0.02,'-8/3',/data,font_size=16)
 p2.font_size =18
-p4 = plot([tm(2),tm(-1)]*Omega_i,[-5/3.,-5/3.],':',/overplot)
-p5 = plot([tm(2),tm(-1)]*Omega_i,[-8/3.,-8/3.],':',/overplot)
+p4 = plot([0,tm(-1)]*Omega_i,[-5/3.,-5/3.],':',/overplot)
+p5 = plot([0,tm(-1)]*Omega_i,[-8/3.,-8/3.],':',/overplot)
 l2 = legend(target=[p2,p3],font_size=14)
 
 end
