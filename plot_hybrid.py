@@ -59,6 +59,6 @@ h = Hybrid_read(dir)
 p = plot_hybrid()
 #print(p.nx,p.ny,p.nz)
 file = 'c.mixed'
-p.s_animate_xz(file,7,np.int(p.ny/2))
+p.s_animate_xz(file,12,np.int(p.ny/2))
 #print(p.di,np.max(p.x))
 #p.s_plot_iso(file,17)

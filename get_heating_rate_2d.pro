@@ -28,7 +28,7 @@ end
 pro plot_psd,kx,s,psd_arr_sum,psd_k_mhd,psd_k_kaw
 ;---------------------------------------------------------------------------
   
-  wh = where((kx gt kx(0)) and (kx le s.kp_rhoi))
+  wh = where((kx ge kx(0)) and (kx le s.kp_rhoi))
   fkx_mhd = poly_fit(alog(kx(wh)),alog(psd_arr_sum(wh)),1)
   psd_k_mhd = [psd_k_mhd,fkx_mhd(1)]
   
@@ -101,7 +101,7 @@ w = window()
 dir = './run_va_0.8_beta_3/'
 
 nfr = 25   ;number of frames.
-nxz = 10   ;fft domain
+nxz = 6  ;fft domain
 
 ;initialize
 read_para,dir
@@ -155,8 +155,8 @@ for j = 1,nfr do begin
    psd_k_mhd = 0.
    psd_k_kaw = 0.
    
-   for jj = ny/2-10, ny/2+10 do begin
-;   jj = ny/2
+;   for jj = 1, ny-2 do begin
+   jj = ny/2
       x0 = nxz/2 + 1
       while((x0 + nxz/2) lt nx-2) do begin
          
@@ -206,7 +206,10 @@ for j = 1,nfr do begin
 ;               (k_perp*rhoi)*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
               ; print,'k_perp*rhoi...',k_perp*rhoi
 
-              if (k_perp gt kx(0)) then pwr_kaw(i,k) = sqrt(1+(0.75*k_perp^2*rhoi^2))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
+               if (k_perp gt kx(0)) then begin
+                  KAW_Walen = 0.5+0.5*(1./(1. + k_perp^2*rhoi^2))*(1./(1. + 1.25*k_perp^2*rhoi^2))^2
+                  pwr_kaw(i,k) = KAW_Walen*sqrt(1+(0.75*k_perp^2*rhoi^2))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
+               endif
             endfor
          endfor
          
@@ -246,7 +249,7 @@ for j = 1,nfr do begin
          x0 = x0 + nxz
       endwhile
       
-   endfor
+;   endfor
    
    pmhd = [pmhd,mean(pwr(1:*))]
    pkaw = [pkaw,mean(pwrk(1:*))]
@@ -263,13 +266,13 @@ endfor
 w3=window(dimensions=[900,600])
 w3.SetCurrent
 ;p3 = barplot(kx/s.kp_rhoi,pwr_arr_sum/1e-15,/ylog,index=0,nbars=2,fill_color='blue',name='$q_{MHD}$',/current)
-p3 = barplot(kx/s.kp_rhoi,pwr_arr_sum/1e-15,/ylog,index=0,nbars=2,fill_color='blue',name='$q_{MHD}$',/current)
-p3.xtitle='$\rho_i (\lambda_\perp)^{-1}$'
+p3 = barplot(kx*s.rhoi,pwr_arr_sum/1e-15,/ylog,index=0,nbars=2,fill_color='blue',name='$q_{MHD}$',/current)
+p3.xtitle='$k_\perp \rho_i$'
 p3.ytitle='Heating rate density ($10^{-15}$ W/m$^3$)'
-p3.xrange=[0,2.5]
+p3.xrange=[2,16]
 p3.yrange=[0.1,50]
 ;p4 = barplot(kx/s.kp_rhoi,pwr_kaw_arr_sum/1e-15,index=1,nbars=2,fill_color='green',/overplot,name='$q_{KAW}$')
-p4 = barplot(kx/s.kp_rhoi,pwr_kaw_arr_sum/1e-15,index=1,nbars=2,fill_color='green',/overplot,name='$q_{KAW}$')
+p4 = barplot(kx*s.rhoi,pwr_kaw_arr_sum/1e-15,index=1,nbars=2,fill_color='green',/overplot,name='$q_{KAW}$')
 l3 = legend(target=[p3,p4])
 l3.font_size=18
 p3.font_size=18

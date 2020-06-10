@@ -3,7 +3,8 @@ pro plot_image,img,x,y,sclf,loc,ii,kk,nxz,plt_tit,l_tit
 ;---------------------------------------------------------------------------
 
    ctbl = colortable(15,/reverse)
-   im = image(img,x,y,/current,rgb_table=ctbl,layout=[1,1,loc],font_size=16)
+   im = image(img,x,y,/current,rgb_table=ctbl,layout=[1,1,loc],font_size=16,$
+              aspect_ratio=1.0)
 
    xax = axis('x',axis_range=[min(x),max(x)],location=[min(y)],thick=1,tickdir=1,target=im,tickfont_size=16)
    yax = axis('y',axis_range=[min(y),max(y)],location=[min(x)],thick=1,tickdir=1,target=im,tickfont_size=16)
@@ -154,7 +155,7 @@ end
 ;dir = './run_va_0.8_beta_1/'
 dir = './run_va_0.8_beta_3/'
 
-nfr0 = 6
+nfr0 = 18
 nfr1 = 19                        ;number of frames.
 nxz = 6   ;fft domain
 
@@ -163,7 +164,7 @@ read_para,dir
 restore,filename=dir+'para.sav'
 read_coords,dir,x,y,z
 
-beta = 1.0
+beta = 3.0
 Omega_i = q*b0_top/mproton
 wpi = sqrt(q*q*np_top/1e9/(epo*mproton))
 cwpi = 3e8/wpi
@@ -204,8 +205,8 @@ qkaw = 0.
 for j = info.nfr0,info.nfr1 do begin
    qmhd_1 = 0.
    qkaw_1 = 0.
-;   for jj = 1,ny-2,10 do begin
-   jj = ny/2
+   for jj = 1,ny-2,10 do begin
+;   jj = ny/2+10
       nfrm = j
       print,'nfrm....',nfrm
       c_read_3d_vec_m_32,dir,'c.b1',nfrm,b1
@@ -313,8 +314,13 @@ for j = info.nfr0,info.nfr1 do begin
                      b = double(k_perp^2*rhoi^2)
                      gamma0 = beseli(b,0)*exp(-b)
                      gamma1 = beseli(b,1)*exp(-b)
-                     ;print,'gamma...',b,gamma0,gamma1
-                     pwr_kaw(i,k) = sqrt(1+(0.75*k_perp^2*rhoi^2))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
+                                ;print,'gamma...',b,gamma0,gamma1
+                     ;original formulation
+                     ;pwr_kaw(i,k) = sqrt(1+(0.75*k_perp^2*rhoi^2))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
+                                ; modified for no flow energy in wave
+                                ;factor to reduce wave energy for KAW
+                     KAW_Walen = 0.5+0.5*(1./(1. + k_perp^2*rhoi^2))*(1./(1. + 1.25*k_perp^2*rhoi^2))^2
+                     pwr_kaw(i,k) = KAW_Walen*sqrt(1+(0.75*k_perp^2*rhoi^2))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
                      ;pwr_kaw(i,k) = sqrt((1 - gamma0)/b)*((gamma0-gamma1)*b/(1 - gamma0))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
                      ;pwr_kaw(i,k) = (psd(i,k)*k_perp)/sqrt(muo^3*rho)/(1 + 1.25*b)
                   endif
@@ -386,7 +392,7 @@ for j = info.nfr0,info.nfr1 do begin
 ;      ctbl = colortable(3,/reverse)      
       w5.erase
       w5.SetCurrent
-      plt_tit = 'Elsasser vortices'
+      plt_tit = 'Els'+string(228b)+'sser vortices'
       l_tit = '$ln( |\omega^+||\omega^-|)$'
       get_curl,bx,bz,dx,curlb
       get_curl,ux,uz,dx,curlu
@@ -401,9 +407,9 @@ for j = info.nfr0,info.nfr1 do begin
       awz = amx*omegap
       get_curl,awx,awz,dx,curlaw
       ;get_curl,bx,bz,dx,curlb
-      ;plot_image,abs(smooth(curlb,2)/muo)<1.5e-8,x*1e3/s.cwpi,z*1e3/s.cwpi,$
+      ;plot_image,smooth(abs(curlaw),2)>0.4,x*1e3/s.cwpi,z*1e3/s.cwpi,$
       ;           1,1,ii,kk,nxz,plt_tit,l_tit
-      plot_image,smooth(alog((abs(omegam)*abs(omegap))>0.1),3),x*1e3/s.cwpi,z*1e3/s.cwpi,$
+      plot_image,smooth(alog((abs(omegam)*abs(omegap))>0.06),3),x*1e3/s.cwpi,z*1e3/s.cwpi,$
                  1,1,ii,kk,nxz,plt_tit,l_tit
       c = contour(bperp,x*1e3/s.cwpi,z*1e3/s.cwpi,/overplot,n_levels=5,c_value=0,c_label_show=0,c_thick=1,$
                  rgb_table=ctbl,c_color=cclr)
@@ -422,10 +428,19 @@ for j = info.nfr0,info.nfr1 do begin
       w3.SetCurrent
 ;   w3 = window(dimensions=[900,600])
       plt_tit = 'Heating rate density'
-      plot_image,qkaw_arr/1e-15<300,x*1e3/s.cwpi,z*1e3/s.cwpi,$
+      plot_image,qkaw_arr/1e-15<200,x*1e3/s.cwpi,z*1e3/s.cwpi,$
                  1,1,ii,kk,nxz,plt_tit,l_tit
       c = contour(bperp,x*1e3/s.cwpi,z*1e3/s.cwpi,/overplot,n_levels=5,c_value=0,c_label_show=0,c_thick=1,$
-                 rgb_table=ctbl,c_color=cclr)
+                  rgb_table=ctbl,c_color=cclr)
+; draw box
+      x1 = x(10)*1e3/s.cwpi
+      x2 = x(16)*1e3/s.cwpi
+      z1 = z(10)*1e3/s.cwpi
+      z2 = z(16)*1e3/s.cwpi
+      p = plot([x1,x2],[z1,z1],/overplot)
+      p = plot([x1,x2],[z2,z2],/overplot)
+      p = plot([x1,x1],[z1,z2],/overplot)
+      p = plot([x2,x2],[z1,z2],/overplot)
       
       qkaw_back = geo_mean(qkaw_arr(*,0:20))/1e-15
       print,'qkaw_back...',qkaw_back
@@ -466,7 +481,7 @@ for j = info.nfr0,info.nfr1 do begin
       qmhd_1 = [qmhd_1,mean(qmhd_arr/1e-15)]
       qkaw_1 = [qkaw_1,mean(qkaw_arr/1e-15)]
       
-;   endfor
+   endfor
    qmhd = [qmhd, mean(qmhd_1(1:*))]
    qkaw = [qkaw, mean(qkaw_1(1:*))]
 ;print,'mean qkaw 1...',qkaw
