@@ -80,7 +80,7 @@ end
 pro plot_isosurface,nfrm,LINES=lines, TUBES=tubes
 ;-----------------------------------------------------------------------
 
-temp_val = 500 ;eV
+temp_val = 200 ;eV
 den_val = 0.5 ;c
 b_val = 0.0e-9
 edotb_val = 0.05
@@ -92,7 +92,7 @@ ach = 0.7
 ;file_dir = '/Volumes/MacD97-2/hybrid/3d_buf/run_test/'
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_9/'
-dir = './run_b1_v3_4/'
+dir = './run_test/'
 ;dir = '/Volumes/Scratch/hybrid/KH3D/run_3_periodic/'
 ;dir = './tmp1/'
 
@@ -110,6 +110,8 @@ y = y/dy
 z = z/dz
 
 @get_const
+valfven = b0_top/sqrt(np_top*1e-9*mproton*4*3.14e-7)/1e3
+
 c_read_3d_vec_m_32,dir,'c.b1'+mrestart,nfrm,b1
 c_read_3d_vec_m_32,dir,'c.up'+mrestart,nfrm,up
 c_read_3d_vec_m_32,dir,'c.E'+mrestart,nfrm,Efld
@@ -125,9 +127,11 @@ Efld(*,*,0,*) = Efld(*,*,1,*)
 Efld(*,*,nz-1,*) = Efld(*,*,nz-2,*)
 b1(*,*,0,*) = b1(*,*,1,*)
 b1(*,*,nz-1,*) = b1(*,*,nz-2,*)
-Efld0 = abs(vtop)*b0_top*1.6e-19/mproton
+;Efld0 = abs(vtop)*b0_top*1.6e-19/mproton
+Efld0 = valfven*b0_top*1.6e-19/mproton
 get_edotb,Efld,b1,edotb
 edotb = edotb/Efld0
+
 
 ;Swap y and z directions
 
@@ -422,7 +426,7 @@ otemp = OBJ_NEW('IDLgrPolygon',outverts, POLYGONS=outconn, $
                           SHADING = 1,alpha_channel=ach,palette=opalette,$
 	  color=!color.red)
 
-edotb = edotb
+;edotb = smooth(edotb,2)
 ;edotb = abs(edotb)
 
 isosurface,edotb(2:nx-2,*,*),edotb_val,$

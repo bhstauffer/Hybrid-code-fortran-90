@@ -1,20 +1,27 @@
 ;----------------------------------------------------------------
 pro plot_image,img,x,y,sclf,loc,tit
 ;----------------------------------------------------------------
-  
-   im = image(img(*,*),x,y,rgb_table=33,layout=[1,1,loc],font_size=12,aspect_ratio=1.0)
 
-   xax = axis('x',axis_range=[min(x),max(x)],location=[0,min(y(*))],thick=2,tickdir=1,target=im,tickfont_size=12)
-   yax = axis('y',axis_range=[min(y),max(y)],location=[0,0],thick=2,tickdir=1,target=im,tickfont_size=12)
+  im = image(img(*,*),x,y,rgb_table=33,layout=[1,6,loc],$
+                                ;font_size=12,$
+             aspect_ratio=1.0,/current)
 
-   im.xtitle='$x (c/\omega_{pi})$'
-   im.ytitle='$z (c/\omega_{pi})$'
+ 
+   xax = axis('x',axis_range=[min(x),max(x)],location=[0,min(y(*))],thick=2,tickdir=1,target=im);,$
+;              tickfont_size=12)
+   yax = axis('y',axis_range=[min(y),max(y)],location=[0,0],thick=2,tickdir=1,target=im);,$
+;              tickfont_size=12)
+
+   im.ytitle='$\alpha$'
+   im.xtitle='$s (c/\omega_{pi})$'
 
 ;   ct = colorbar(target = im,title=tit,orientation=1,textpos=1,font_size=12);,$
 ;                 position=[max(x), min(y),
 ;                 0.05*(max(x)-min(x)),max(y)],/data)
    im.scale,sclf,sclf
-   ct = colorbar(target = im,title=tit,textpos=1,font_size=12,orientation=1,$
+   ct = colorbar(target = im,title=tit,textpos=1,$
+                 ;font_size=12,$
+                 orientation=1,$
                  position=[1.01,0,1.06,1.0],/relative)
 
    
@@ -105,6 +112,7 @@ return
 end
 ;----------------------------------------------------------------
 
+
 ;-----------------------------------------------------------------------
 pro get_edotb,a,b,c
 ;-----------------------------------------------------------------------
@@ -134,16 +142,104 @@ end
 ;-----------------------------------------------------------------------
 
 
-;----------------------------------------------------------------------
-;main program
-;----------------------------------------------------------------------
-pro field_trace,nfrm,yslc
+;----------------------------------------------------------------
+pro get_dist,xx,yy,zz,xp,vp,x,y,z,mrat,B,wfv,f_of_alpha,s
+;----------------------------------------------------------------
 
-;yslc = 150
+wfv.SetCurrent
+
+
+B = reform(B)
+bx = B(0)
+by = B(1)
+bz = B(2)
+B2 = bx^2 + by^2 + bz^2
+
+bxhat = bx/sqrt(B2)
+byhat = by/sqrt(B2)
+bzhat = bz/sqrt(B2)
+
+vscl=6
+dx = x(1)-x(0)
+
+xd = x(floor(xx))
+yd = y(floor(yy))
+zd = z(floor(zz))
+
+r = sqrt((xp(*,0)-xd)^2 + (xp(*,1)-yd)^2 + (xp(*,2)-zd)^2)
+
+wh = where(r lt 3*dx and mrat eq 1.0)
+wh_part = wh
+whh = where(r lt 3*dx and mrat lt 1.0)
+
+if (whh(0) lt 0) then return
+
+m = bzhat/bxhat
+
+m = byhat/bxhat
+
+nvx = 140
+dx=0.2
+vx_arr = (findgen(nvx)-nvx/2)*dx
+vy_arr = (findgen(nvx)-nvx/2)*dx
+fv_p =fltarr(nvx,nvx)
+
+alpha_arr = fltarr(n_elements(whh))
+
+for k = 0,n_elements(whh)-1 do begin
+
+   vx = vp(whh(k),0)
+   vy = vp(whh(k),1)
+   vz = vp(whh(k),2)
+
+   v2 = sqrt(vx*vx + vy*vy + vz*vz)
+   
+   vdotb = vx*bxhat + vy*byhat + vz*bzhat
+   alpha = acos(vdotb/v2)
+   alpha_arr(k) = alpha
+   
+   vperp = v2*sin(alpha)
+   vpar = v2*cos(alpha)
+   
+endfor
+
+alpha_arr = alpha_arr*!radeg
+h = histogram(alpha_arr, binsize=5, LOCATIONS = xbin)
+
+h1 = fltarr(36)
+sz = size(h)
+h1(0:sz(1)-1)= h
+
+f_of_alpha = [[f_of_alpha],[h1]]
+
+tvscl,f_of_alpha
+
+wfv.erase
+
+img = transpose(f_of_alpha)
+
+sz = size(img)
+plot_image,img,findgen(sz(1)),findgen(36)*5,0.9,1,'counts'
+
+return
+end
+;----------------------------------------------------------------------
+
+;----------------------------------------------------------------------
+pro field_trace_fv,nfrm,yslc
+;----------------------------------------------------------------------
+w = window()
+@clr_win
   
-;dir = './run_29/'
-;dir = './run_b3_v3_4/'
-dir = './run_test/'
+dir = './run_29/'
+
+device,decomposed=0
+loadct,33
+
+wfv = window(dimensions=[700,900])
+wfv.erase
+
+f_of_alpha = fltarr(36)
 
 nframe=nfrm
 read_para,dir
@@ -162,15 +258,41 @@ z = z/coverwpi
 xx = [x-max(x),x,x+max(x)]
 xx = xx(1:n_elements(xx)-2)
 
-;np = np_top/1e9
-;va = b0_bottom/sqrt(muo*np*mproton)/1e3
-
-;c_read_3d_m_32,dir,'c.np',nfrm,np
 c_read_3d_m_32,dir,'c.mixed',nfrm,mix
-;c_read_3d_m_32,dir,'c.temp_p',nfrm,temp
 c_read_3d_vec_m_32,dir,'c.b1',nfrm,b1
 c_read_3d_vec_m_32,dir,'c.E',nfrm,Efld
 c_read_3d_vec_m_32,dir,'c.up',nfrm,up
+c_read_3d_vec_m_32,dir,'c.aj',nfrm,aj
+
+nfrm = nfrm/4
+i=0
+read_part,dir+'c.xp_'+strcompress(i,/remove_all),nfrm,Ni_max,xp
+read_part,dir+'c.vp_'+strcompress(i,/remove_all),nfrm,Ni_max,vp
+read_part_scalar,dir+'c.mrat_'+strcompress(i,/remove_all),nfrm,Ni_max,mrat
+read_part_scalar,dir+'c.beta_p_'+strcompress(i,/remove_all),nfrm,Ni_max,pbeta
+
+for i = 1,9 do begin
+   read_part,dir+'c.xp_ '+strcompress(i,/remove_all),nfrm,Ni_max,xpp
+   read_part,dir+'c.vp_ '+strcompress(i,/remove_all),nfrm,Ni_max,vpp
+   read_part_scalar,dir+'c.mrat_ '+strcompress(i,/remove_all),nfrm,Ni_max,mratt
+   read_part_scalar,dir+'c.beta_p_ '+strcompress(i,/remove_all),nfrm,Ni_max,pbta
+
+   xp = [xp,xpp]
+   vp = [vp,vpp]
+   mrat = [mrat,mratt]
+   pbeta = [pbeta,pbta]
+
+endfor
+for i = 10,11 do begin
+   read_part,dir+'c.xp_'+strcompress(i,/remove_all),nfrm,Ni_max,xpp
+   read_part,dir+'c.vp_'+strcompress(i,/remove_all),nfrm,Ni_max,vpp
+   read_part_scalar,dir+'c.mrat_'+strcompress(i,/remove_all),nfrm,Ni_max,mratt
+   xp = [xp,xpp]
+   vp = [vp,vpp]
+   mrat = [mrat,mratt]
+endfor
+
+xp = xp/coverwpi
 
 mixarr = fltarr(3*nx-2,ny,nz)
 mixarr(0:nx-2,*,*) = mix(0:nx-2,*,*)
@@ -196,9 +318,6 @@ uparr(0:nx-2,*,*,*) = up(0:nx-2,*,*,*)
 uparr(nx-1:2*nx-2,*,*,*) = up(*,*,*,*)
 uparr(2*nx-1:3*nx-3,*,*,*) = up(1:nx-1,*,*,*)
 
-plot_image,reform(mix(*,0,*))<1.0,x,z,0.8,1,'mix'
-plot_image,reform(mix(*,yslc,*))<1.0,x,z,0.8,1,'mix'
-
 data = FLTARR(3,3*n_elements(x)-2, n_elements(y), n_elements(z))
 data(0,0:nx-2,*,*) = b1(0:nx-2,*,*,0)
 data(0,nx-1:2*nx-2,*,*) = b1(*,*,*,0)
@@ -209,8 +328,6 @@ data(1,2*nx-1:3*nx-3,*,*) = b1(1:nx-1,*,*,1)
 data(2,0:nx-2,*,*) = b1(0:nx-2,*,*,2)
 data(2,nx-1:2*nx-2,*,*) = b1(*,*,*,2)
 data(2,2*nx-1:3*nx-3,*,*) = b1(1:nx-1,*,*,2)
-;data(1,*,*,*) = b1(*,*,*,1)
-;data(2,*,*,*) = b1(*,*,*,2)
 
 xstep = 1
 zstep = 1
@@ -220,14 +337,14 @@ iseed=0L
 
 ;k = round(nz/2.)-2
 i = round(nx/2.)
-for k = 1,nz-1 do begin
-   for i = nx-1,2*nx-2 do begin
+for k = nz/2-5,nz/2,2 do begin
+   for i = nx+10,2*nx-10,10 do begin
       print,i,k
       if ((xx(i) gt xx(1)) and (xx(i) lt max(xx)) $
          and (z(k) gt z(1)) and (z(k) lt max(z))) then begin
 ;         and (y(j) gt y(1)) and (y(j) lt max(y))) then begin
          seeds(iseed) = FLOAT(i)
-         seeds(iseed+1) = FLOAT(0)
+         seeds(iseed+1) = FLOAT(1)
          seeds(iseed+2) = FLOAT(k)
 ;         print,seeds(iseed:iseed+3),iseed
          iseed = iseed+3
@@ -236,8 +353,9 @@ for k = 1,nz-1 do begin
    endfor
 endfor
 
+
 maxIterations=3000
-stepSize=0.5
+stepSize=1.0
 
 PARTICLE_TRACE,data,seeds(0:iseed-1),verts,conn,outnormals, $
                MAX_ITERATIONS=maxIterations, MAX_STEPSIZE=stepSize,  $
@@ -246,7 +364,12 @@ PARTICLE_TRACE,data,seeds(0:iseed-1),verts,conn,outnormals, $
 epotarr = reform(edotbarr(*,0,*))
 mixarr1=reform(mixarr(*,0,*))
 uparr1=reform(uparr(*,0,*,*))
-
+mixpfl = 0
+eparpfl = 0
+bperp_pfl = 0
+upxpfl = 0
+ajypfl = 0
+s = 0
 i = 0
 sz = SIZE(verts, /STRUCTURE)
 WHILE (i LT sz.dimensions[1]) DO BEGIN
@@ -262,16 +385,10 @@ WHILE (i LT sz.dimensions[1]) DO BEGIN
    j0 = round(yIndices(0))
    k0 = round(zIndices(0))
    
-;   i1 = round(xIndices(nverts-1))-(nx-1)
-;   j1 = round(yIndices(nverts-1))
-;   k1 = round(zIndices(nverts-1))
- 
    i1 = round(xIndices(wh(0)))
    j1 = round(yIndices(wh(0)))
    k1 = round(zIndices(wh(0)))
       
-;   if (i1 gt nx-1) then i1 = nx-1
-   
    print,'indices...',wh(0),i0,i1,j0,j1,k0,k1,mixarr(i0,j0,k0),mixarr(i1,j1,k1)
    i += nverts + 1
    mixarr1(i0,k0) = mixarr(i1,j1,k1)
@@ -279,11 +396,75 @@ WHILE (i LT sz.dimensions[1]) DO BEGIN
    uparr1(i0,k0,1) = uparr(i1,j1,k1,1)
    uparr1(i0,k0,2) = uparr(i1,j1,k1,2)
 
-   for ii = 0,n_elements(xIndices(0:wh(0)))-1 do begin
-      epotarr(i0,k0) = epotarr(i0,k0) $
-         + edotbarr(round(xIndices(ii)),round(yIndices(ii)),round(zIndices(ii)))
-   endfor
+   xind0 = round(xIndices(0)) mod nx
+   yind0 = round(yIndices(0))
+   zind0 = round(zIndices(0))
+
+   s0 = sqrt(x(xind0)^2 + y(yind0)^2 + z(zind0)^2)
    
+   for ii = 0,n_elements(xIndices(0:wh(0)))-1 do begin
+      xind = round(xIndices(ii)) mod nx
+      yind = round(yIndices(ii))
+      zind = round(zIndices(ii))
+;      print,'indices...',xind,(xind mod nx),nx
+      epotarr(i0,k0) = epotarr(i0,k0) $
+                       + edotbarr(round(xIndices(ii)),round(yIndices(ii)),round(zIndices(ii)))
+      s = [s,sqrt(x(xind)^2 + y(yind)^2 + z(zind)^2)-s0]
+      get_dist,xind,yind,zind,xp,vp,x,y,z,mrat,b1(xind,yind,zind,*),wfv,f_of_alpha,s
+      mixpfl = [mixpfl,mix(xind,yind,zind)]
+      ;bperp_b0 = sqrt(b1(xind,yind,zind,0)^2 + b1(xind,yind,zind,2)^2)/(q*b0_top/mproton)
+      eparpfl = [eparpfl,edotbarr(xind,yind,zind)]
+      bperp_pfl = [bperp_pfl,sqrt(b1(xind,yind,zind,0)^2 + b1(xind,yind,zind,2)^2)/(q*b0_top/mproton)]
+      upxpfl = [upxpfl,up(xind,yind,zind,0)/valfven]
+      ajypfl = [ajypfl,aj(xind,yind,zind,1)]
+
+      print,'s...',s
+      p = plot(s(1:*),mixpfl(1:*),/current,layout=[1,6,2],/xsty,/ysty,margin=0.05)
+      ax = p.axes
+      ax[0].showtext=0
+      p.ytitle='mixing'
+;      p.xtitle='s ($c/\omega_{pi})$'
+
+      p0 = plot(s(1:*),upxpfl(1:*),'r',/current,layout=[1,6,3],/xsty,/ysty,margin=0.05)
+      ax0 = p0.axes
+      ax0[0].showtext=0
+      p0.ytitle='$up_x$'
+;      p0.xtitle='s ($c/\omega_{pi})$'
+      ;xaxis1 = axis('x',location='top',target=p0,title='$up_x/v_A$')
+      ;xaxis2 = axis('x',location='bottom',target=p,title='mixing')
+      ;yaxis = axis('y',location='left',target=p,title='s ($c/\omega_{pi}$)')
+      p.Scale,0.9,0.9
+      p0.Scale,0.9,0.9
+      ;xaxis1.Scale,0.9,0.9
+      ;xaxis2.Scale,0.9,0.9
+      ;yaxis.Scale,0.9,0.9
+      
+      p1 = plot(s(1:*), eparpfl(1:*),/current,layout=[1,6,4],/xsty,/ysty,margin=0.05)
+      ax1 = p1.axes
+      ax1[0].showtext=0
+      p1.ytitle='$E_\parallel/(v_A B_0)$'
+ ;     p1.xtitle='s ($c/\omega_{pi})$'
+      p1 = plot([min(s),max(s)],[0,0],':',/current,/overplot,layout=[4,1,3])
+      p1.Scale,0.9,0.9
+      p2 = plot(s(1:*),bperp_pfl(1:*),/current,layout=[1,6,5],/xsty,/ysty,margin=0.05)
+      ax2 = p2.axes
+      ax2[0].showtext=0
+      p2.ytitle='$B_\perp/B_0$'
+;      p2.xtitle='s ($c/\omega_{pi})$'
+      p2.Scale,0.9,0.9
+      p2 = plot(s(1:*),ajypfl(1:*),/current,layout=[1,6,6],/xsty,/ysty,margin=0.05)
+      p2.ytitle='$J_y$'
+      p2.xtitle='s ($c/\omega_{pi})$'
+      p2.Scale,0.9,0.9
+   endfor
+
+wfv.save,'fv'+strcompress(string(i),/remove_all)+'.png'
+f_of_alpha = fltarr(36)
+eparpfl = 0
+bperp_pfl = 0
+mixpfl = 0
+upxpfl = 0
+
 ENDWHILE
 
 up1_2 = sqrt(uparr1(*,*,0)^2 + uparr1(*,*,1)^2 + uparr1(*,*,2)^2)
