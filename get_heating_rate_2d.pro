@@ -28,7 +28,9 @@ end
 pro plot_psd,kx,s,psd_arr_sum,psd_k_mhd,psd_k_kaw
 ;---------------------------------------------------------------------------
   
-  wh = where((kx ge kx(0)) and (kx le s.kp_rhoi))
+;  wh = where((kx gt kx(0)) and (kx le s.kp_rhoi))
+  wh = where((kx gt kx(0)) and (kx*s.rhoi le 2*!pi))
+;  print,'wh mhd...',wh
   fkx_mhd = poly_fit(alog(kx(wh)),alog(psd_arr_sum(wh)),1)
   psd_k_mhd = [psd_k_mhd,fkx_mhd(1)]
   
@@ -37,13 +39,15 @@ pro plot_psd,kx,s,psd_arr_sum,psd_k_mhd,psd_k_kaw
 ;  oplot,alog(kx(wh)),fkx_mhd(0) + fkx_mhd(1)*alog(kx(wh))
 ;  oplot,alog(kx(wh)),fkx_mhd(0) - (5./3.)*alog(kx(wh))
   
-  wh = where((kx ge s.kp_rhoi))
+;  wh = where((kx ge s.kp_rhoi))
+  wh = where((kx*s.rhoi ge 2*!pi))
+;  print,'wh kaw...',wh
   fkx_kaw = poly_fit(alog(kx(wh)),alog(psd_arr_sum(wh)),1)
   psd_k_kaw = [psd_k_kaw,fkx_kaw(1)]
 ;  print,'alpha mhd, kaw...',fkx_mhd(1),fkx_kaw(1)
   
 ;  oplot,alog(kx(wh)),fkx_kaw(0) + fkx_kaw(1)*alog(kx(wh))
-
+  ;wait,0.1
 end
 ;---------------------------------------------------------------------------      
 
@@ -101,7 +105,7 @@ w = window()
 dir = './run_va_0.8_beta_3/'
 
 nfr = 25   ;number of frames.
-nxz = 6  ;fft domain
+nxz = 10  ;fft domain
 
 ;initialize
 read_para,dir
@@ -155,7 +159,7 @@ for j = 1,nfr do begin
    psd_k_mhd = 0.
    psd_k_kaw = 0.
    
-;   for jj = 1, ny-2 do begin
+;   for jj = 1, ny-2,10 do begin
    jj = ny/2
       x0 = nxz/2 + 1
       while((x0 + nxz/2) lt nx-2) do begin
@@ -266,16 +270,24 @@ endfor
 w3=window(dimensions=[900,600])
 w3.SetCurrent
 ;p3 = barplot(kx/s.kp_rhoi,pwr_arr_sum/1e-15,/ylog,index=0,nbars=2,fill_color='blue',name='$q_{MHD}$',/current)
-p3 = barplot(kx*s.rhoi,pwr_arr_sum/1e-15,/ylog,index=0,nbars=2,fill_color='blue',name='$q_{MHD}$',/current)
+p3 = barplot(kx*s.rhoi,pwr_arr_sum/1e-15,/ylog,index=0,nbars=2,$
+             fill_color='blue',name='$q_{MHD}$',/current)
+
 p3.xtitle='$k_\perp \rho_i$'
 p3.ytitle='Heating rate density ($10^{-15}$ W/m$^3$)'
-p3.xrange=[2,16]
+p3.xrange=[0,16]
 p3.yrange=[0.1,50]
 ;p4 = barplot(kx/s.kp_rhoi,pwr_kaw_arr_sum/1e-15,index=1,nbars=2,fill_color='green',/overplot,name='$q_{KAW}$')
 p4 = barplot(kx*s.rhoi,pwr_kaw_arr_sum/1e-15,index=1,nbars=2,fill_color='green',/overplot,name='$q_{KAW}$')
 l3 = legend(target=[p3,p4])
 l3.font_size=18
 p3.font_size=18
+ax = p3.axes
+ax[2].hide=1
+xaxis = axis('x',location='top',title='$\rho_i (\lambda_\perp)^{-1}$',coord_transform=[0,1/(2*!pi)],$
+            tickfont_size=18)
+;xaxis.font_size=22
+;ax[2].font_size=16
 
 p1.window.SetCurrent
 p1a = plot(tm(2:*)*Omega_i,pmhd(2:*)/1e-15,'2b-tu',/overplot,NAME='q_MHD')

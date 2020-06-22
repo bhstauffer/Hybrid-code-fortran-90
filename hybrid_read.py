@@ -128,14 +128,33 @@ class Hybrid_read:
             print(frm)
             x = f.read_reals('f4').reshape((self.nx,self.ny,self.nz,3),order = 'F')
         return x
-        
+
+    def write_hdf5(self,filename,arr):
+        import h5py
+        self.read_coords()
+        self.read_para()
+        with h5py.File(filename+'.hdf5','w') as f:
+            dt = f.create_dataset("dt", data = self.dt)
+            nout = f.create_dataset("nout", data = self.nout)
+            nx = f.create_dataset("nx", data = self.nx)
+            ny = f.create_dataset("ny", data = self.ny)
+            nz = f.create_dataset("nz", data = self.nz)
+            x = f.create_dataset("x", data = self.x)
+            y = f.create_dataset("y", data = self.y)
+            z = f.create_dataset("z", data = self.z)
+            dset = f.create_dataset("array",data = arr,compression="gzip")
+    
 #---------------------------------------------------------        
-#dir = './run_va_0.8_beta_1/'
-#h = Hybrid_read(dir)
-#h.read_para()
-#h.read_coords()
+dir = './run_va_0.8_beta_1/'
+h = Hybrid_read(dir)
+h.read_para()
+h.read_coords()
 #mix = h.read_scalar('c.mixed',20)
-#up = h.read_vector('c.up',20)
+for i in range(1,25):
+    b1 = h.read_vector('c.E',i)
+    b1 = b1*h.mproton*1e3/1.6e-19
+    print(i,b1.max())
+    h.write_hdf5('./hdf5/electric_field_'+str(i),b1)
 
       
 #plt.imshow(mix[:,np.int(h.ny/2),:].T,origin='lower')

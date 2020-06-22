@@ -199,14 +199,15 @@ w1 = window(dimensions=[900,600])
 w2 = window(dimensions=[900,600])
 w3 = window(dimensions=[900,600])
 w5 = window(dimensions=[900,600])
+w6 = window(dimensions=[900,600])
 qmhd = 0.
 qkaw = 0.
 
 for j = info.nfr0,info.nfr1 do begin
    qmhd_1 = 0.
    qkaw_1 = 0.
-   for jj = 1,ny-2,10 do begin
-;   jj = ny/2+10
+;   for jj = 1,ny-2,10 do begin
+   jj = ny/2
       nfrm = j
       print,'nfrm....',nfrm
       c_read_3d_vec_m_32,dir,'c.b1',nfrm,b1
@@ -441,6 +442,38 @@ for j = info.nfr0,info.nfr1 do begin
       p = plot([x1,x2],[z2,z2],/overplot)
       p = plot([x1,x1],[z1,z2],/overplot)
       p = plot([x2,x2],[z1,z2],/overplot)
+
+      w6.erase
+      w6.SetCurrent
+      wh = qkaw_arr(*,fix(nz/2))/1e-15 > 0.0
+      p = plot(x*1e3/s.cwpi,qkaw_arr(*,fix(nz/2))/1e-15, ylog=1, /current,/xsty,/ysty,layout=[1,2,1])
+      p.ytitle='q (10$^{-15}$ W/m$^3$)'
+      p.position=[0.2,0.51,0.9,0.81]
+      p.xshowtext=0
+      p.font_size=14
+
+      ;print,'z coord....',z(fix(nz/2))*1e3/s.cwpi
+      ;stop
+      p11 = plot(x(4:nx-5)*1e3/s.cwpi,b1(4:nx-5,fix(ny/2),fix(nz/2),0)/1e-9,'r', $
+                 /current, /xsty,/ysty, layout=[1,2,2],NAME = '$B_x$')
+      
+      p12 = plot(x(4:nx-5)*1e3/s.cwpi,b1(4:nx-5,fix(ny/2),fix(nz/2),2)/1e-9,'g', $
+                 /current, /xsty,/ysty, /overplot, layout=[1,2,2],NAME = '$B_z$')
+      p12.position=[0.2,0.2,0.9,0.5]
+      ;p13 = plot(x*1e3/s.cwpi,b1(*,fix(ny/2),fix(nz/2),1)/1e-9,'g', $
+                                ;          /current, /xsty,/ysty,
+                                ;          /overplot,
+                                ;          layout=[1,2,2],NAME =
+                                ;          '$B_y$')
+
+      p11.ytitle='B (nT)'
+     
+      p11.xtitle='x (c/$\omega_{pi}$)'
+      p11.font_size=14
+      p14 = plot([x(4),x(nx-5)]*1e3/s.cwpi,[0,0],linestyle=1,/current,/overplot,layout=[1,2,2])
+      l = legend(target=[p11,p12])
+    
+      ;p.xrange=[0.1,200]
       
       qkaw_back = geo_mean(qkaw_arr(*,0:20))/1e-15
       print,'qkaw_back...',qkaw_back
@@ -481,7 +514,7 @@ for j = info.nfr0,info.nfr1 do begin
       qmhd_1 = [qmhd_1,mean(qmhd_arr/1e-15)]
       qkaw_1 = [qkaw_1,mean(qkaw_arr/1e-15)]
       
-   endfor
+;   endfor
    qmhd = [qmhd, mean(qmhd_1(1:*))]
    qkaw = [qkaw, mean(qkaw_1(1:*))]
 ;print,'mean qkaw 1...',qkaw

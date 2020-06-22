@@ -144,7 +144,7 @@ pro field_trace,nfrm,yslc
   
 ;dir = './run_29/'
 ;dir = './run_b3_v3_4/'
-dir = './run_va_0.8_beta_1/'
+dir = './run_va_0.8_beta_3/'
 
 nframe=nfrm
 read_para,dir
@@ -322,9 +322,6 @@ plot_image,reform(mixarr1(nx-1:2*nx-2,*)<1.0),x,z,0.8,1,'mix'
 plot_image,reform(abs(mixarr1(nx-1:2*nx-2,*)-mixarr(nx-1:2*nx-2,0,*)))<1.0,x,z,0.8,1,'mix'
 plot_image,epotarr(nx-1:2*nx-2,*),x,z,0.8,1,'Field-aligned potential (V)'
 plot_image,up1dotup0(nx-1:2*nx-2,*),x,z,0.8,1,'upxdiff'
-
-
-
 
 return
 
