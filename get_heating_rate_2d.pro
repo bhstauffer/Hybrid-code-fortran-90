@@ -29,15 +29,15 @@ pro plot_psd,kx,s,psd_arr_sum,psd_k_mhd,psd_k_kaw
 ;---------------------------------------------------------------------------
   
 ;  wh = where((kx gt kx(0)) and (kx le s.kp_rhoi))
-  wh = where((kx gt kx(0)) and (kx*s.rhoi le 2*!pi))
+  wh = where((kx ge kx(1)) and (kx*s.rhoi le 2*!pi))
 ;  print,'wh mhd...',wh
   fkx_mhd = poly_fit(alog(kx(wh)),alog(psd_arr_sum(wh)),1)
   psd_k_mhd = [psd_k_mhd,fkx_mhd(1)]
   
-;  plot,alog(kx(1:*)),alog(psd_arr_sum(1:*)),charsize=2,psym=1 ;,/ylog,/xlog
-;  oplot,[s.kp_rhoi,s.kp_rhoi],[min(psd_arr_sum),max(psd_arr_sum)],linestyle=1
-;  oplot,alog(kx(wh)),fkx_mhd(0) + fkx_mhd(1)*alog(kx(wh))
-;  oplot,alog(kx(wh)),fkx_mhd(0) - (5./3.)*alog(kx(wh))
+  plot,alog(kx(1:*)),alog(psd_arr_sum(1:*)),charsize=2,psym=1 ;,/ylog,/xlog
+  oplot,[s.kp_rhoi,s.kp_rhoi],[min(psd_arr_sum),max(psd_arr_sum)],linestyle=1
+  oplot,alog(kx(wh)),fkx_mhd(0) + fkx_mhd(1)*alog(kx(wh))
+  oplot,alog(kx(wh)),fkx_mhd(0) - (5./3.)*alog(kx(wh))
   
 ;  wh = where((kx ge s.kp_rhoi))
   wh = where((kx*s.rhoi ge 2*!pi))
@@ -46,7 +46,7 @@ pro plot_psd,kx,s,psd_arr_sum,psd_k_mhd,psd_k_kaw
   psd_k_kaw = [psd_k_kaw,fkx_kaw(1)]
 ;  print,'alpha mhd, kaw...',fkx_mhd(1),fkx_kaw(1)
   
-;  oplot,alog(kx(wh)),fkx_kaw(0) + fkx_kaw(1)*alog(kx(wh))
+  oplot,alog(kx(wh)),fkx_kaw(0) + fkx_kaw(1)*alog(kx(wh))
   ;wait,0.1
 end
 ;---------------------------------------------------------------------------      
@@ -105,7 +105,7 @@ w = window()
 dir = './run_va_0.8_beta_3/'
 
 nfr = 25   ;number of frames.
-nxz = 10  ;fft domain
+nxz = 6                              ;fft domain
 
 ;initialize
 read_para,dir
@@ -147,6 +147,7 @@ for j = 1,nfr do begin
    nfrm = j
    print,'nfrm....',nfrm
    c_read_3d_vec_m_32,dir,'c.b1',nfrm,b1
+;   c_read_3d_vec_m_32,dir,'c.E',nfrm,b1
    c_read_3d_m_32,dir,'c.np',nfrm,np
    b1 = b1*mproton/q
    cnt = 0
@@ -166,8 +167,8 @@ for j = 1,nfr do begin
          
          x1 = x0-nxz/2
          x2 = x0+nxz/2-1
-         z1 = nz/2-nxz/2
-         z2 = nz/2+nxz/2-1
+         z1 = nz/2-nxz/2-10
+         z2 = nz/2+nxz/2-1-10
          
          fx = fft(reform(b1(x1:x2,jj,z1:z2,0)))
          fz = fft(reform(b1(x1:x2,jj,z1:z2,2)))
@@ -212,7 +213,7 @@ for j = 1,nfr do begin
 
                if (k_perp gt kx(0)) then begin
                   KAW_Walen = 0.5+0.5*(1./(1. + k_perp^2*rhoi^2))*(1./(1. + 1.25*k_perp^2*rhoi^2))^2
-                  pwr_kaw(i,k) = KAW_Walen*sqrt(1+(0.75*k_perp^2*rhoi^2))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
+                  pwr_kaw(i,k) = KAW_Walen*sqrt(1+(1.0*k_perp^2*rhoi^2))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
                endif
             endfor
          endfor
@@ -241,7 +242,7 @@ for j = 1,nfr do begin
          plot_psd,kx,s,psd_arr_sum,psd_k_mhd,psd_k_kaw
          
 ;         wset,2
-;      plot_q,kx,beta,cwpi,pwr_arr_sum,pwr_kaw_arr_sum
+      plot_q,kx,beta,cwpi,pwr_arr_sum,pwr_kaw_arr_sum
          
          wh = where((pwr_arr_sum gt 0) and (kx/s.kp_rhoi le 1.0))
          pwr = [pwr,pwr_arr_sum(wh)]

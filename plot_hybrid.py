@@ -25,6 +25,20 @@ class plot_hybrid(Hybrid_read):
                                         repeat_delay=100)
         plt.show()
 
+    def s_animate_vec_xz(self,file,nfrm,yslc,v_comp):
+        import matplotlib.animation as animation
+        fig = plt.figure()
+        plt.set_cmap('seismic')
+        ims = []
+        for i in range(nfrm):
+            x = self.read_vector(file,i+1)
+#            x[x>1] = 1.0
+            im = plt.imshow(x[:,yslc,:,v_comp].T,origin='lower',animated=True)
+            ims.append([im])
+        ani = animation.ArtistAnimation(fig,ims[1:],interval=200,blit=True,
+                                        repeat_delay=100)
+        plt.show()
+
     def s_plot_iso(self,nfrm):
         
         fig = mlab.figure(size=(800,600),bgcolor=(1,1,1),
@@ -99,13 +113,15 @@ class plot_hybrid(Hybrid_read):
         return b_lines,topo
 
     
-dir = './run_va_0.8_beta_3/'
+dir = '/data/hybrid/run_tel_10/'
 h = Hybrid_read(dir)
 
 p = plot_hybrid()
 #print(p.nx,p.ny,p.nz)
 file = 'c.mixed'
-#p.s_animate_xz(file,12,np.int(p.ny/2))
+p.s_animate_xz(file,10,np.int(p.ny/2))
+#file = 'c.up'
+#p.s_animate_vec_xz(file,10,np.int(p.ny/2),2)
 #print(p.di,np.max(p.x))
-p.s_plot_iso(17)
+#p.s_plot_iso(17)
 #p.get_stream('c.b1',17)

@@ -144,7 +144,9 @@ pro field_trace,nfrm,yslc
   
 ;dir = './run_29/'
 ;dir = './run_b3_v3_4/'
-dir = './run_va_0.8_beta_3/'
+
+;dir = './run_va_0.8_beta_3/'
+dir = '/data/KH3D/run_test/
 
 nframe=nfrm
 read_para,dir

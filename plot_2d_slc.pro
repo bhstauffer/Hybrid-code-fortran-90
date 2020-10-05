@@ -73,7 +73,7 @@ stream = video.addvideostream(xsz, ysz, framerate)
 ;   xp = [xp,xpart]
 ;endwhile
 ;close,1
-
+print,pln
 case pln of
    1: begin
       x = x 

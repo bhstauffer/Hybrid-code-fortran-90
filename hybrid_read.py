@@ -96,7 +96,6 @@ class Hybrid_read:
         
         f.close()
 
-
     def read_coords(self):
         f = FortranFile(self.dir + 'c.coord.dat','r')
         nnx = f.read_ints('i4').item()
@@ -118,6 +117,7 @@ class Hybrid_read:
             frm = f.read_ints('i4').item()
             print(frm)
             x = f.read_reals('f4').reshape((self.nx,self.ny,self.nz),order = 'F')
+        f.close()
         return x
 
     def read_vector(self,file,nfrm):
@@ -127,8 +127,29 @@ class Hybrid_read:
             frm = f.read_ints('i4').item()
             print(frm)
             x = f.read_reals('f4').reshape((self.nx,self.ny,self.nz,3),order = 'F')
+        f.close()
         return x
 
+    def read_part(self,file,nfrm):
+        file = self.dir+file+'.dat'
+        f = FortranFile(file,'r')
+        for _ in range(nfrm):
+            frm = f.read_ints('i4').item()
+            print(frm)
+            x = f.read_reals('f4').reshape((self.Ni_max,3),order = 'F')
+        f.close()
+        return x
+
+    def read_part_scalar(self,file,nfrm):
+        file = self.dir+file+'.dat'
+        f = FortranFile(file,'r')
+        for _ in range(nfrm):
+            frm = f.read_ints('i4').item()
+            print(frm)
+            x = f.read_reals('f4').reshape((self.Ni_max),order = 'F')
+        f.close()
+        return x
+            
     def write_hdf5(self,filename,arr):
         import h5py
         self.read_coords()
@@ -145,17 +166,18 @@ class Hybrid_read:
             dset = f.create_dataset("array",data = arr,compression="gzip")
     
 #---------------------------------------------------------        
-dir = './run_va_0.8_beta_1/'
-h = Hybrid_read(dir)
-h.read_para()
-h.read_coords()
+#dir = './run_va_0.8_beta_1/'
+#h = Hybrid_read(dir)
+#h.read_para()
+#h.read_coords()
 #mix = h.read_scalar('c.mixed',20)
-for i in range(1,25):
-    b1 = h.read_vector('c.E',i)
-    b1 = b1*h.mproton*1e3/1.6e-19
-    print(i,b1.max())
-    h.write_hdf5('./hdf5/electric_field_'+str(i),b1)
+#for i in range(1,25):
+#    b1 = h.read_vector('c.E',i)
+#    b1 = b1*h.mproton*1e3/1.6e-19
+#    print(i,b1.max())
+#    h.write_hdf5('./hdf5/electric_field_'+str(i),b1)
 
+#mrat = h.read_part_scalar('c.mrat_ 1',1)
       
 #plt.imshow(mix[:,np.int(h.ny/2),:].T,origin='lower')
 #plt.show()

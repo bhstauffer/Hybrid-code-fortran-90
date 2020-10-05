@@ -155,8 +155,8 @@ end
 ;dir = './run_va_0.8_beta_1/'
 dir = './run_va_0.8_beta_3/'
 
-nfr0 = 18
-nfr1 = 19                        ;number of frames.
+nfr0 = 1
+nfr1 = 25                        ;number of frames.
 nxz = 6   ;fft domain
 
 ;initialize
@@ -206,8 +206,10 @@ qkaw = 0.
 for j = info.nfr0,info.nfr1 do begin
    qmhd_1 = 0.
    qkaw_1 = 0.
-;   for jj = 1,ny-2,10 do begin
-   jj = ny/2
+   pwr = 0.
+   pwrk = 0.
+   for jj = 1,ny-2,10 do begin
+;   jj = ny/2
       nfrm = j
       print,'nfrm....',nfrm
       c_read_3d_vec_m_32,dir,'c.b1',nfrm,b1
@@ -237,8 +239,8 @@ for j = info.nfr0,info.nfr1 do begin
 ;surface,reform(sqrt(b2p(*,jj,*)^2 + b3p(*,jj,*)^2)),charsize=5
       
       cnt = 0
-      pwr = 0.
-      pwrk = 0.
+      pwr = fltarr(nxz)
+      pwrk = fltarr(nxz)
       psd_k_mhd = 0.
       psd_k_kaw = 0.
       
@@ -282,7 +284,7 @@ for j = info.nfr0,info.nfr1 do begin
             sz = size(fx)
             N = sz(1)
             dx = (x(1)-x(0))*1e3
-            kx = indgen(N)
+            kx = indgen(N)       
             N21x = N/2+1
             kx(N21x)= N21x - N + findgen(N21x-2)
             kx = 2*!pi*kx/(N*dx)
@@ -307,11 +309,11 @@ for j = info.nfr0,info.nfr1 do begin
 ;               psd(i,k) = (abs(fx(i,k))^(3.) + abs(fz(i,k))^(3.)) 
                   fftpwr(i,k) = (abs(fx(i,k))^(2.) + abs(fz(i,k))^(2.)) 
                   
-                  if ((k_perp lt s.kp_rhoi) and (k_perp gt kx(0))) then pwr_mhd(i,k) = $
+                  if ((k_perp lt s.kp_rhoi) and (k_perp ge kx(2))) then pwr_mhd(i,k) = $
                      (psd(i,k)*k_perp)/sqrt(muo^3*rho)
 ;               if ((k_perp ge s.kp_rhoi) and (k_perp gt kx(0))) then pwr_kaw(i,k) = (k_perp*rhoi)*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
                   ;if (k_perp ge s.kp_rhoi) then pwr_kaw(i,k) = (sqrt(0.75)*k_perp*rhoi)*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
-                  if (k_perp gt kx(0)) then begin
+                  if (k_perp ge kx(2)) then begin
                      b = double(k_perp^2*rhoi^2)
                      gamma0 = beseli(b,0)*exp(-b)
                      gamma1 = beseli(b,1)*exp(-b)
@@ -321,7 +323,7 @@ for j = info.nfr0,info.nfr1 do begin
                                 ; modified for no flow energy in wave
                                 ;factor to reduce wave energy for KAW
                      KAW_Walen = 0.5+0.5*(1./(1. + k_perp^2*rhoi^2))*(1./(1. + 1.25*k_perp^2*rhoi^2))^2
-                     pwr_kaw(i,k) = KAW_Walen*sqrt(1+(0.75*k_perp^2*rhoi^2))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
+                     pwr_kaw(i,k) = KAW_Walen*sqrt(1+(1.0*k_perp^2*rhoi^2))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
                      ;pwr_kaw(i,k) = sqrt((1 - gamma0)/b)*((gamma0-gamma1)*b/(1 - gamma0))*(psd(i,k)*k_perp)/sqrt(muo^3*rho)
                      ;pwr_kaw(i,k) = (psd(i,k)*k_perp)/sqrt(muo^3*rho)/(1 + 1.25*b)
                   endif
@@ -348,21 +350,29 @@ for j = info.nfr0,info.nfr1 do begin
                endfor
             endfor
             
-            wh = where((pwr_arr_sum gt 0) and (kx/s.kp_rhoi le 1.0))
+            wh = where((pwr_arr_sum gt 0)); and (kx/s.kp_rhoi lt 1.0))
             pmhd = mean(pwr_arr_sum(wh))
                                 ;print,pmhd
-            
-            wh = where((pwr_arr_kaw gt 0) and (kx/s.kp_rhoi ge 1.0))
+
+            wh = where((pwr_arr_kaw gt 0)); and (kx/s.kp_rhoi ge 1.0))
             pkaw = mean(pwr_kaw_arr_sum(wh))
                                 ;print,pkaw
-            
+
             cnt = cnt+1
             
             qmhd_arr(ii,kk) = pmhd
             qkaw_arr(ii,kk) = pkaw
+
+            pwr = pwr + pwr_arr_sum
+            pwrk = pwrk + pwr_kaw_arr_sum
+            
             
          endfor
       endfor
+
+      plot,kx,pwr/cnt,psym=10,thick=2
+      oplot,kx,pwrk/cnt,psym=10
+            
       
       bperp = reform(sqrt(b1(*,jj,*,0)^2 + b1(*,jj,*,2)^2))
       tvscl,bperp
@@ -446,32 +456,53 @@ for j = info.nfr0,info.nfr1 do begin
       w6.erase
       w6.SetCurrent
       wh = qkaw_arr(*,fix(nz/2))/1e-15 > 0.0
-      p = plot(x*1e3/s.cwpi,qkaw_arr(*,fix(nz/2))/1e-15, ylog=1, /current,/xsty,/ysty,layout=[1,2,1])
-      p.ytitle='q (10$^{-15}$ W/m$^3$)'
-      p.position=[0.2,0.51,0.9,0.81]
-      p.xshowtext=0
-      p.font_size=14
-
-      ;print,'z coord....',z(fix(nz/2))*1e3/s.cwpi
-      ;stop
-      p11 = plot(x(4:nx-5)*1e3/s.cwpi,b1(4:nx-5,fix(ny/2),fix(nz/2),0)/1e-9,'r', $
-                 /current, /xsty,/ysty, layout=[1,2,2],NAME = '$B_x$')
+      p11 = plot(x(4:nx-5)*1e3/s.cwpi,b1(4:nx-5,fix(ny/2),fix(nz/2),0)/1e-9,'b', $
+                 /current, /xsty,/ysty, layout=[1,2,1],NAME = '$B_x$')
       
-      p12 = plot(x(4:nx-5)*1e3/s.cwpi,b1(4:nx-5,fix(ny/2),fix(nz/2),2)/1e-9,'g', $
-                 /current, /xsty,/ysty, /overplot, layout=[1,2,2],NAME = '$B_z$')
-      p12.position=[0.2,0.2,0.9,0.5]
-      ;p13 = plot(x*1e3/s.cwpi,b1(*,fix(ny/2),fix(nz/2),1)/1e-9,'g', $
+      p12 = plot(x(4:nx-5)*1e3/s.cwpi,b1(4:nx-5,fix(ny/2),fix(nz/2),2)/1e-9,'r', $
+                 /current, /xsty,/ysty, /overplot, layout=[1,2,1],NAME = '$B_z$')
+      p12.position=[0.2,0.51,0.9,0.81]
+      p11.position=[0.2,0.51,0.9,0.81]
+      p12.xshowtext=0
+      p11.xshowtext=0
+                                ;p13 = plot(x*1e3/s.cwpi,b1(*,fix(ny/2),fix(nz/2),1)/1e-9,'g', $
                                 ;          /current, /xsty,/ysty,
                                 ;          /overplot,
                                 ;          layout=[1,2,2],NAME =
                                 ;          '$B_y$')
 
       p11.ytitle='B (nT)'
-     
-      p11.xtitle='x (c/$\omega_{pi}$)'
+      p14 = plot([x(4),x(nx-5)]*1e3/s.cwpi,[0,0],linestyle=1,/current,/overplot,layout=[1,2,1])
       p11.font_size=14
-      p14 = plot([x(4),x(nx-5)]*1e3/s.cwpi,[0,0],linestyle=1,/current,/overplot,layout=[1,2,2])
-      l = legend(target=[p11,p12])
+      
+      p = plot(x*1e3/s.cwpi,qkaw_arr(*,fix(nz/2))/1e-15, ylog=1, /current,/xsty,/ysty,layout=[1,2,2])
+      p.ytitle='q (10$^{-15}$ W/m$^3$)'
+      p.position=[0.2,0.2,0.9,0.5]
+;      p.xshowtext=1
+      p.font_size=14
+      p.xtitle='x (c/$\omega_{pi}$)'
+;      
+      l = legend(target=[p11,p12],font_size=14)
+
+;       w8=window(dimensions=[900,600])
+;       w8.SetCurrent
+;;p3 = barplot(kx/s.kp_rhoi,pwr_arr_sum/1e-15,/ylog,index=0,nbars=2,fill_color='blue',name='$q_{MHD}$',/current)
+;       p8 = barplot(kx*s.rhoi,pwr/cnt/1e-15,/ylog,index=0,nbars=2,$
+;                    fill_color='blue',name='$q_{MHD}$',/current)
+       
+;       p8.xtitle='$k_\perp \rho_i$'
+;       p8.ytitle='Heating rate density ($10^{-15}$ W/m$^3$)'
+;       p8.xrange=[0,16]
+;       p8.yrange=[0.1,50]
+;;p4 = barplot(kx/s.kp_rhoi,pwr_kaw_arr_sum/1e-15,index=1,nbars=2,fill_color='green',/overplot,name='$q_{KAW}$')
+;       p9 = barplot(kx*s.rhoi,pwrk/cnt/1e-15,index=1,nbars=2,fill_color='green',/overplot,name='$q_{KAW}$')
+;       l8 = legend(target=[p8,p9])
+;       l8.font_size=18
+;       p8.font_size=18
+;       ax = p8.axes
+;       ax[2].hide=1
+;       xaxis = axis('x',location='top',title='$\rho_i (\lambda_\perp)^{-1}$',coord_transform=[0,1/(2*!pi)],$
+;                    tickfont_size=18)
     
       ;p.xrange=[0.1,200]
       
@@ -514,12 +545,20 @@ for j = info.nfr0,info.nfr1 do begin
       qmhd_1 = [qmhd_1,mean(qmhd_arr/1e-15)]
       qkaw_1 = [qkaw_1,mean(qkaw_arr/1e-15)]
       
-;   endfor
+   endfor
    qmhd = [qmhd, mean(qmhd_1(1:*))]
    qkaw = [qkaw, mean(qkaw_1(1:*))]
 ;print,'mean qkaw 1...',qkaw
 ;print,'mean qmhd 1...',qmhd
+
+  
+;xaxis.font_size=22
+;ax[2].font_size=16
+
+
+
 endfor
+
 
 qmhd = qmhd(1:*)
 qkaw = qkaw(1:*)
@@ -536,9 +575,10 @@ p1.xrange=[90,250]
 p1.title='$\beta$ = 3'
 p1.position=[0.2,0.15,0.95,0.9]
 p1.font_size=18
-l1 = legend(target=[p1,p1a,p1b])
+l1 = legend(target=[p1,p1b])
 l1.font_size=18
 ;save,tm,s.Omega_i,qmhd,qkaw,filename='beta_3_8x8.sav'
+
 
 
 end

@@ -16,9 +16,9 @@
 0.0         !dz stretching scale
 0.002      !nu_init_frac, fraction of gyrofrequency for nu_init (0.002)
 100          !number of particles per cell per species
-0.0         !electron temperature (eV)  
+10.0         !electron temperature (eV)  
 2           ! Boundary condition (1: fully periodic   2: Periodic on xy, zero derivative on z)  
-'/data/hybrid/run_1/'             !output directory 
+'/data/hybrid/run_tel_10/'             !output directory 
 
 
 ! Blake's parameters
