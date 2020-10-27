@@ -5,7 +5,7 @@
 1.0	    !d2 (magnetospheric proton density)
 0.01	    !d3 (magnetospheric heavy ion density)
 0.05         !particle time step (fraction of omega_i) (0.08 is the default)
-5000       !number of time steps (10000)
+4000       !number of time steps (10000)
 200          !diagnostic output interval (100)
 0.8         !flow speed (v_Alfven) 
 1.0         !plasma beta !was thermal speed for Maxwellian (40 km/s)
@@ -15,10 +15,10 @@
 1.0         !scale height to start stretching
 0.0         !dz stretching scale
 0.002      !nu_init_frac, fraction of gyrofrequency for nu_init (0.002)
-100          !number of particles per cell per species
-10.0         !electron temperature (eV)  
+50          !number of particles per cell per species
+50.0         !electron temperature (eV)  
 2           ! Boundary condition (1: fully periodic   2: Periodic on xy, zero derivative on z)  
-'/data/hybrid/run_tel_10/'             !output directory 
+'/data/hybrid/run_tel_50_gradP2/'             !output directory 
 
 
 ! Blake's parameters

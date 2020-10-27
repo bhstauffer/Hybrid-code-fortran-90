@@ -232,7 +232,7 @@ pro field_trace_fv,nfrm,yslc
 w = window()
 @clr_win
   
-dir = '/data/hybrid/run_1/'
+dir = '/data/hybrid/run_tel_12/'
 
 nplts = 6
 plt_dy = 1./(1.05*nplts)
@@ -477,7 +477,7 @@ WHILE (i LT sz.dimensions[1]) DO BEGIN
          
       endfor
 
-wfv.save,'./fv_figs/fv'+strcompress(string(i),/remove_all)+'.png'
+wfv.save,'./fv_figs_tel_10/fv'+strcompress(string(i),/remove_all)+'.png'
 f_of_alpha = fltarr(36)
 eparpfl = 0
 bperp_pfl = 0

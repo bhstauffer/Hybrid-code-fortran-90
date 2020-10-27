@@ -51,9 +51,10 @@ class plot_hybrid(Hybrid_read):
         bx = b[:,:,:,0]
         by = b[:,:,:,1]
         bz = b[:,:,:,2]
-        x,y,z = np.mgrid[0:np.max(self.x):self.dx,
+        x,y,z = np.mgrid[np.min(self.x):np.max(self.x):self.dx,
                          np.min(self.y):np.max(self.y):self.dy,
                          np.min(self.z):np.max(self.z):self.delz]/(self.di/1e3)
+
         mlab.volume_slice(x,y,z,arr,plane_orientation='y_axes',
                           slice_index=0,colormap=clr)
         mlab.volume_slice(x,y,z,arr,plane_orientation='y_axes',
@@ -113,13 +114,14 @@ class plot_hybrid(Hybrid_read):
         return b_lines,topo
 
     
-dir = '/data/hybrid/run_tel_10/'
+dir = '/data/hybrid/run_tel_20/'
+#dir = './run_va_0.8_beta_1/'
 h = Hybrid_read(dir)
 
 p = plot_hybrid()
 #print(p.nx,p.ny,p.nz)
 file = 'c.mixed'
-p.s_animate_xz(file,10,np.int(p.ny/2))
+p.s_animate_xz(file,15,np.int(p.ny/2))
 #file = 'c.up'
 #p.s_animate_vec_xz(file,10,np.int(p.ny/2),2)
 #print(p.di,np.max(p.x))

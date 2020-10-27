@@ -157,7 +157,50 @@ module misc
             !gradP(:,:,:,:) = 0
             
       end subroutine get_gradP
+
+
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+      subroutine get_gradP2()
+            use dimensions
+            use grid_interp
+            use var_arrays, only: np, gradP
+            use grid, only: dx_grid, dy_grid, dz_grid
+            use inputs, only: etemp0, mion, kboltz
+            implicit none
+            real:: np1,gdnp,a0,etemp,gnpf(nx,ny,nz,3)
+            integer:: i,j,k
             
+            etemp = etemp0*11604.505  !eV to Kelvin
+            do i=2,nx-1
+                  do j=2,ny-1
+                        do k=2,nz-1
+                              !np1 =  0.5*(np(i+1,j,k)+np(i,j,k))
+                              gdnp = (np(i+1,j,k)-np(i-1,j,k))/(2*dx_grid(i))
+                              a0 = kboltz*etemp/(mion*np(i,j,k))
+!                             a(i,j,k,1) = a0*gdnp
+                              gnpf(i,j,k,1) = a0*gdnp
+
+                              !np1 =  0.5*(np(i,j+1,k)+np(i,j,k))
+                              gdnp = (np(i,j+1,k)-np(i,j-1,k))/(2*dy_grid(j))
+                              a0 = kboltz*etemp/(mion*np(i,j,k))
+!                              a(i,j,k,2) = a0*gdnp
+                              gnpf(i,j,k,2) = a0*gdnp
+
+                              !np1 =  0.5*(np(i,j,k+1)+np(i,j,k))
+                              gdnp = (np(i,j,k+1)-np(i,j,k-1))/(2*dz_grid(k))
+                              a0 = kboltz*etemp/(mion*np(i,j,k))
+!                              a(i,j,k,3) = a0*gdnp
+                              gnpf(i,j,k,3) = a0*gdnp
+                        enddo
+                  enddo
+            enddo
+            
+!            call face_to_center(gnpf,gradP)
+            !gradP(:,:,:,:) = 0
+            
+      end subroutine get_gradP2
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !      subroutine get_np3(nfp,np3)

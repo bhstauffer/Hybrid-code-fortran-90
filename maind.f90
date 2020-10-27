@@ -279,7 +279,7 @@ program hybrid
             call get_bndry_Eflux(b1,E,bndry_Eflux)
 
             call Energy_diag(Evp,Euf,EB1,EB1x,EB1y,EB1z,EE,EeP)
-            call get_gradP()
+            call get_gradP2()
  
             call curlB(bt,np,aj)
             call edge_to_center(bt,btc)
@@ -304,7 +304,7 @@ program hybrid
             call update_up(vp)            !up at n+1/2
 !            call up_fld_mv()
             
-            call get_gradP()
+            call get_gradP2()
       
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
