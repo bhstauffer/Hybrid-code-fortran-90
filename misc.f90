@@ -179,19 +179,19 @@ module misc
                               gdnp = (np(i+1,j,k)-np(i-1,j,k))/(2*dx_grid(i))
                               a0 = kboltz*etemp/(mion*np(i,j,k))
 !                             a(i,j,k,1) = a0*gdnp
-                              gnpf(i,j,k,1) = a0*gdnp
+                              gradP(i,j,k,1) = a0*gdnp
 
                               !np1 =  0.5*(np(i,j+1,k)+np(i,j,k))
                               gdnp = (np(i,j+1,k)-np(i,j-1,k))/(2*dy_grid(j))
                               a0 = kboltz*etemp/(mion*np(i,j,k))
 !                              a(i,j,k,2) = a0*gdnp
-                              gnpf(i,j,k,2) = a0*gdnp
+                              gradP(i,j,k,2) = a0*gdnp
 
                               !np1 =  0.5*(np(i,j,k+1)+np(i,j,k))
                               gdnp = (np(i,j,k+1)-np(i,j,k-1))/(2*dz_grid(k))
                               a0 = kboltz*etemp/(mion*np(i,j,k))
 !                              a(i,j,k,3) = a0*gdnp
-                              gnpf(i,j,k,3) = a0*gdnp
+                              gradP(i,j,k,3) = a0*gdnp
                         enddo
                   enddo
             enddo

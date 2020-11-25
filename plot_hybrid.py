@@ -39,6 +39,29 @@ class plot_hybrid(Hybrid_read):
                                         repeat_delay=100)
         plt.show()
 
+    def extract_1d_profile(self,file,nfrm,yslc,v_comp):
+#        import matplotlib.animation as animation
+        f = open('bz_profile','w')
+        fig = plt.figure()
+        plt.set_cmap('seismic')
+        ims = []
+        for i in range(nfrm):
+            x = self.read_vector(file,i+1)
+#            x[x>1] = 1.0
+            im = plt.imshow(x[:,yslc,:,v_comp].T,origin='lower',animated=True)
+#            ims.append([im])
+#        ani = animation.ArtistAnimation(fig,ims[1:],interval=200,blit=True,
+#                                        repeat_delay=100)
+        plt.show()
+        fig = plt.figure()
+        plt.plot(x[85,yslc,:,v_comp]*self.mproton/1.6e-19)
+        plt.show()
+        for k in range(self.nz):
+            f.write(f"{x[85,yslc,k,v_comp]*self.mproton/1.6e-19:.8e}\n")
+#            f.write("\n")
+
+        f.close()
+        
     def s_plot_iso(self,nfrm):
         
         fig = mlab.figure(size=(800,600),bgcolor=(1,1,1),
@@ -114,16 +137,17 @@ class plot_hybrid(Hybrid_read):
         return b_lines,topo
 
     
-dir = '/data/hybrid/run_tel_20/'
-#dir = './run_va_0.8_beta_1/'
+dir = '/data/hybrid/run_nu_001/'
+#dir = './run_va_0.8_beta_3/'
 h = Hybrid_read(dir)
 
 p = plot_hybrid()
 #print(p.nx,p.ny,p.nz)
-file = 'c.mixed'
-p.s_animate_xz(file,15,np.int(p.ny/2))
+file = 'c.b1'
+#p.extract_1d_profile(file,22,np.int(p.ny/2),2)
+#p.s_animate_xz(file,15,np.int(p.ny/2))
 #file = 'c.up'
-#p.s_animate_vec_xz(file,10,np.int(p.ny/2),2)
+p.s_animate_vec_xz(file,20,np.int(p.ny/2),0)
 #print(p.di,np.max(p.x))
 #p.s_plot_iso(17)
 #p.get_stream('c.b1',17)
