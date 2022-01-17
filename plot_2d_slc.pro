@@ -43,7 +43,7 @@ loadct,27
 
 ;dir = '/Volumes/Scratch/hybrid/KH_new/run_3d_24/'
 ;dir = '/Volumes/Scratch/hybrid/KH3D/run_1_periodic/'
-dir = './run_test/'
+dir = './run_nu_0.0002/'
 
 nrestart = ''
 
